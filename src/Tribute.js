@@ -261,7 +261,14 @@ class Tribute {
     let wrapper = this.range.getDocument().createElement("div"),
       ul = this.range.getDocument().createElement("ul");
     wrapper.className = containerClass;
+    wrapper.setAttribute("tabindex", "0"); 
     wrapper.appendChild(ul);
+    wrapper.boundKeydown = this.events.keydown.bind(this, this.events, true);
+    wrapper.boundKeyup = this.events.keyup.bind(this, this.events, true);
+    wrapper.boundInput = this.events.input.bind(this, this.events, true);
+    wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
+    wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
+    wrapper.addEventListener("input",  wrapper.boundInput, false);
 
     if (this.menuContainer) {
       return this.menuContainer.appendChild(wrapper);
@@ -457,7 +464,7 @@ class Tribute {
       this.menu.style.cssText = "display: none;";
       this.isActive = false;
       this.menuSelected = 0;
-      this.current = {};
+      this.current.element.focus();
     }
   }
 

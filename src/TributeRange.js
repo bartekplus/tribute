@@ -118,7 +118,7 @@ class TributeRange {
     }
 
     replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item) {
-        let info = this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
+        let info = this.tribute.current.info;//this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
 
         if (info !== undefined) {
             let context = this.tribute.current
@@ -161,6 +161,7 @@ class TributeRange {
 
             context.element.dispatchEvent(new CustomEvent('input', { bubbles: true }))
             context.element.dispatchEvent(replaceEvent)
+            context.element.focus()
         }
     }
 

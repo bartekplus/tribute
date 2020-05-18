@@ -139,9 +139,9 @@
     _createClass(TributeEvents, [{
       key: "bind",
       value: function bind(element) {
-        element.boundKeydown = this.keydown.bind(element, this);
-        element.boundKeyup = this.keyup.bind(element, this);
-        element.boundInput = this.input.bind(element, this);
+        element.boundKeydown = this.keydown.bind(element, this, false);
+        element.boundKeyup = this.keyup.bind(element, this, false);
+        element.boundInput = this.input.bind(element, this, false);
         element.addEventListener("keydown", element.boundKeydown, false);
         element.addEventListener("keyup", element.boundKeyup, false);
         element.addEventListener("input", element.boundInput, false);
@@ -158,8 +158,8 @@
       }
     }, {
       key: "keydown",
-      value: function keydown(instance, event) {
-        if (instance.shouldDeactivate(event)) {
+      value: function keydown(instance, isMenu, event) {
+        if (instance.shouldDeactivate(event, isMenu)) {
           instance.tribute.isActive = false;
           instance.tribute.hideMenu();
         }
@@ -185,10 +185,10 @@
       }
     }, {
       key: "input",
-      value: function input(instance, event) {
+      value: function input(instance, isMenu, event) {
         instance.inputEvent = event instanceof CustomEvent ? false : true;
         instance.commandEvent = !instance.inputEvent;
-        instance.keyup.call(this, instance, event);
+        instance.keyup.call(this, instance, isMenu, event);
       }
     }, {
       key: "click",
@@ -208,8 +208,8 @@
             }
           }
 
-          tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
-          tribute.hideMenu(); // TODO: should fire with externalTrigger and target is outside of menu
+          tribute.hideMenu();
+          tribute.selectItemAtIndex(li.getAttribute("data-index"), event); // TODO: should fire with externalTrigger and target is outside of menu
         } else if (tribute.current.element && !tribute.current.externalTrigger) {
           tribute.current.externalTrigger = false;
           setTimeout(function () {
@@ -219,12 +219,14 @@
       }
     }, {
       key: "keyup",
-      value: function keyup(instance, event) {
+      value: function keyup(instance, isMenu, event) {
         if (instance.inputEvent) {
           instance.inputEvent = false;
         }
 
-        instance.updateSelection(this);
+        if (!isMenu) {
+          instance.updateSelection(this);
+        }
 
         if (event instanceof KeyboardEvent) {
           TributeEvents.modifiers().forEach(function (o) {
@@ -270,15 +272,21 @@
       }
     }, {
       key: "shouldDeactivate",
-      value: function shouldDeactivate(event) {
-        if (!this.tribute.isActive) return false;
+      value: function shouldDeactivate(event, isMenu) {
+        if (!this.tribute.isActive) return false; //if (this.tribute.current.mentionText.length === 0) {
 
-        if (this.tribute.current.mentionText.length === 0) {
-          var eventKeyPressed = false;
-          TributeEvents.keys().forEach(function (o) {
-            if (event.keyCode === o.key) eventKeyPressed = true;
-          });
-          return !eventKeyPressed;
+        var eventKeyPressed = false;
+        TributeEvents.keys().forEach(function (o) {
+          if (event.keyCode === o.key) eventKeyPressed = true;
+        });
+        if (eventKeyPressed) return false; //}
+        // If it's a menu we need to forward the event
+
+        if (isMenu) {
+          setTimeout(function (element) {
+            element.dispatchEvent(event);
+          }, 0, this.tribute.current.element);
+          return true;
         }
 
         return false;
@@ -307,6 +315,7 @@
           this.tribute.current.mentionText = info.mentionText;
           this.tribute.current.fullText = info.fullText;
           this.tribute.current.selectedOffset = info.mentionSelectedOffset;
+          this.tribute.current.info = info;
         }
       }
     }, {
@@ -333,9 +342,9 @@
               e.preventDefault();
               e.stopPropagation();
               setTimeout(function () {
-                _this.tribute.selectItemAtIndex(_this.tribute.menuSelected, e);
-
                 _this.tribute.hideMenu();
+
+                _this.tribute.selectItemAtIndex(_this.tribute.menuSelected, e);
               }, 0);
             }
           },
@@ -464,8 +473,8 @@
           key: 9,
           value: "TAB"
         }, {
-          key: 8,
-          value: "DELETE"
+          key: 13,
+          value: "ENTER"
         }, {
           key: 27,
           value: "ESCAPE"
@@ -680,7 +689,7 @@
     }, {
       key: "replaceTriggerText",
       value: function replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item) {
-        var info = this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode);
+        var info = this.tribute.current.info; //this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
 
         if (info !== undefined) {
           var context = this.tribute.current;
@@ -726,6 +735,7 @@
             bubbles: true
           }));
           context.element.dispatchEvent(replaceEvent);
+          context.element.focus();
         }
       }
     }, {
@@ -1560,7 +1570,14 @@
         var wrapper = this.range.getDocument().createElement("div"),
             ul = this.range.getDocument().createElement("ul");
         wrapper.className = containerClass;
+        wrapper.setAttribute("tabindex", "0");
         wrapper.appendChild(ul);
+        wrapper.boundKeydown = this.events.keydown.bind(this, this.events, true);
+        wrapper.boundKeyup = this.events.keyup.bind(this, this.events, true);
+        wrapper.boundInput = this.events.input.bind(this, this.events, true);
+        wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
+        wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
+        wrapper.addEventListener("input", wrapper.boundInput, false);
 
         if (this.menuContainer) {
           return this.menuContainer.appendChild(wrapper);
@@ -1753,7 +1770,7 @@
           this.menu.style.cssText = "display: none;";
           this.isActive = false;
           this.menuSelected = 0;
-          this.current = {};
+          this.current.element.focus();
         }
       }
     }, {

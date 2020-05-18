@@ -11,8 +11,8 @@ class TributeEvents {
         value: "TAB"
       },
       {
-        key: 8,
-        value: "DELETE"
+        key: 13,
+        value: "ENTER"
       },
       {
         key: 27,
@@ -44,9 +44,9 @@ class TributeEvents {
   }
 
   bind(element) {
-    element.boundKeydown = this.keydown.bind(element, this);
-    element.boundKeyup = this.keyup.bind(element, this);
-    element.boundInput = this.input.bind(element, this);
+    element.boundKeydown = this.keydown.bind(element, this, false);
+    element.boundKeyup = this.keyup.bind(element, this, false);
+    element.boundInput = this.input.bind(element, this, false);
 
     element.addEventListener("keydown", element.boundKeydown, false);
     element.addEventListener("keyup", element.boundKeyup, false);
@@ -63,8 +63,8 @@ class TributeEvents {
     delete element.boundInput;
   }
 
-  keydown(instance, event) {
-    if (instance.shouldDeactivate(event)) {
+  keydown(instance, isMenu, event) {
+    if (instance.shouldDeactivate(event, isMenu)) {
       instance.tribute.isActive = false;
       instance.tribute.hideMenu();
     }
@@ -89,10 +89,10 @@ class TributeEvents {
     });
   }
 
-  input(instance, event) {
+  input(instance, isMenu, event) {
     instance.inputEvent = event instanceof CustomEvent ? false : true;
     instance.commandEvent = !instance.inputEvent;
-    instance.keyup.call(this, instance, event);
+    instance.keyup.call(this, instance, isMenu, event);
   }
 
   click(instance, event) {
@@ -107,8 +107,8 @@ class TributeEvents {
           throw new Error("cannot find the <li> container for the click");
         }
       }
-      tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
       tribute.hideMenu();
+      tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
 
       // TODO: should fire with externalTrigger and target is outside of menu
     } else if (tribute.current.element && !tribute.current.externalTrigger) {
@@ -117,11 +117,15 @@ class TributeEvents {
     }
   }
 
-  keyup(instance, event) {
+  keyup(instance, isMenu, event) {
     if (instance.inputEvent) {
       instance.inputEvent = false;
     }
-    instance.updateSelection(this);
+    
+    if (!isMenu)
+    {
+      instance.updateSelection(this);
+    }
 
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach(o => {
@@ -176,16 +180,24 @@ class TributeEvents {
     }
   }
 
-  shouldDeactivate(event) {
+  shouldDeactivate(event, isMenu) {
     if (!this.tribute.isActive) return false;
 
-    if (this.tribute.current.mentionText.length === 0) {
+    //if (this.tribute.current.mentionText.length === 0) {
       let eventKeyPressed = false;
       TributeEvents.keys().forEach(o => {
         if (event.keyCode === o.key) eventKeyPressed = true;
       });
 
-      return !eventKeyPressed;
+      if (eventKeyPressed) return false;
+    //}
+    // If it's a menu we need to forward the event
+    if (isMenu)
+    {
+        setTimeout( function(element) {         
+          element.dispatchEvent(event);
+        }, 0, this.tribute.current.element);
+        return true;
     }
 
     return false;
@@ -224,6 +236,7 @@ class TributeEvents {
       this.tribute.current.mentionText = info.mentionText;
       this.tribute.current.fullText = info.fullText;
       this.tribute.current.selectedOffset = info.mentionSelectedOffset;
+      this.tribute.current.info = info;
     }
   }
 
@@ -253,8 +266,8 @@ class TributeEvents {
           e.preventDefault();
           e.stopPropagation();
           setTimeout(() => {
-            this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
             this.tribute.hideMenu();
+            this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
           }, 0);
         }
       },
