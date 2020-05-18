@@ -371,7 +371,7 @@ class Tribute {
     };
 
     if (typeof this.current.collection.values === "function") {
-      this.current.collection.values(this.current.mentionText, processValues);
+      this.current.collection.values(this.current.fullText, processValues);
     } else {
       processValues(this.current.collection.values);
     }

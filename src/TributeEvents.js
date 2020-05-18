@@ -197,6 +197,7 @@ class TributeEvents {
     if (info) {
       this.tribute.current.selectedPath = info.mentionSelectedPath;
       this.tribute.current.mentionText = info.mentionText;
+      this.tribute.current.fullText = info.fullText;
       this.tribute.current.selectedOffset = info.mentionSelectedOffset;
     }
   }

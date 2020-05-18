@@ -66,7 +66,7 @@
     if (typeof o === "string") return _arrayLikeToArray(o, minLen);
     var n = Object.prototype.toString.call(o).slice(8, -1);
     if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Map" || n === "Set") return Array.from(o);
     if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
   }
 
@@ -284,6 +284,7 @@
         if (info) {
           this.tribute.current.selectedPath = info.mentionSelectedPath;
           this.tribute.current.mentionText = info.mentionText;
+          this.tribute.current.fullText = info.fullText;
           this.tribute.current.selectedOffset = info.mentionSelectedOffset;
         }
       }
@@ -866,6 +867,7 @@
           return {
             mentionPosition: effectiveRange.length - lastWordOfEffectiveRange.length,
             mentionText: lastWordOfEffectiveRange,
+            fullText: effectiveRange,
             mentionSelectedElement: selected,
             mentionSelectedPath: path,
             mentionSelectedOffset: offset
@@ -1666,7 +1668,7 @@
         };
 
         if (typeof this.current.collection.values === "function") {
-          this.current.collection.values(this.current.mentionText, processValues);
+          this.current.collection.values(this.current.fullText, processValues);
         } else {
           processValues(this.current.collection.values);
         }

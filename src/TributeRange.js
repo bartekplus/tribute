@@ -307,6 +307,7 @@ class TributeRange {
             return {
                 mentionPosition: effectiveRange.length - lastWordOfEffectiveRange.length,
                 mentionText: lastWordOfEffectiveRange,
+                fullText: effectiveRange,
                 mentionSelectedElement: selected,
                 mentionSelectedPath: path,
                 mentionSelectedOffset: offset
