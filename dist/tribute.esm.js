@@ -57,16 +57,8 @@ class TributeEvents {
         value: "DELETE"
       },
       {
-        key: 13,
-        value: "ENTER"
-      },
-      {
         key: 27,
         value: "ESCAPE"
-      },
-      {
-        key: 32,
-        value: "SPACE"
       },
       {
         key: 38,
@@ -76,6 +68,20 @@ class TributeEvents {
         key: 40,
         value: "DOWN"
       }
+    ];
+  }
+
+  static modifiers() {
+    return [
+      "CapsLock",
+      "Control",
+      "Fn",
+      "Hyper",
+      "Meta",
+      "OS",
+      "Super",
+      "Symbol",
+      "Win"
     ];
   }
 
@@ -108,6 +114,15 @@ class TributeEvents {
     let element = this;
     instance.commandEvent = false;
 
+    if (event instanceof KeyboardEvent) {
+      TributeEvents.modifiers().forEach(o => {
+        if (event.getModifierState(o)) {
+          instance.commandEvent = true;
+          return;
+        }
+      });
+    }
+
     TributeEvents.keys().forEach(o => {
       if (o.key === event.keyCode) {
         instance.commandEvent = true;
@@ -117,7 +132,8 @@ class TributeEvents {
   }
 
   input(instance, event) {
-    instance.inputEvent = true;
+    instance.inputEvent = event instanceof CustomEvent ? false : true;
+    instance.commandEvent = !instance.inputEvent;
     instance.keyup.call(this, instance, event);
   }
 
@@ -148,6 +164,15 @@ class TributeEvents {
       instance.inputEvent = false;
     }
     instance.updateSelection(this);
+
+    if (event instanceof KeyboardEvent) {
+      TributeEvents.modifiers().forEach(o => {
+        if (event.getModifierState(o)) {
+          instance.commandEvent = true;
+          return;
+        }
+      });
+    }
 
     if (event.keyCode === 27) return;
 
