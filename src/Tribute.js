@@ -463,7 +463,6 @@ class Tribute {
     if (this.menu) {
       this.menu.style.cssText = "display: none;";
       this.isActive = false;
-      this.menuSelected = 0;
       this.current.element.focus();
     }
   }
