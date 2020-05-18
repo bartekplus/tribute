@@ -168,27 +168,13 @@ class TributeRange {
         let range, sel
         sel = this.getWindowSelection()
         range = this.getDocument().createRange()
-        range.setStart(sel.anchorNode, startPos)
-        range.setEnd(sel.anchorNode, endPos)
-        range.deleteContents()
 
-        let el = this.getDocument().createElement('div')
-        el.innerHTML = html
-        let frag = this.getDocument().createDocumentFragment(),
-            node, lastNode
-        while ((node = el.firstChild)) {
-            lastNode = frag.appendChild(node)
-        }
-        range.insertNode(frag)
-
-        // Preserve the selection
-        if (lastNode) {
-            range = range.cloneRange()
-            range.setStartAfter(lastNode)
-            range.collapse(true)
-            sel.removeAllRanges()
-            sel.addRange(range)
-        }
+        sel.anchorNode.nodeValue = sel.anchorNode.nodeValue.substring(0, startPos)
+            + html + sel.anchorNode.nodeValue.substring(endPos, sel.anchorNode.nodeValue.length)
+        range.setStart(sel.anchorNode, startPos + html.length)
+        range.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(range)
     }
 
     getWindowSelection() {
