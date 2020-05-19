@@ -36,6 +36,7 @@ class Tribute {
     this.current = {};
     this.inputEvent = false;
     this.isActive = false;
+    this.activationPending = false;
     this.menuContainer = menuContainer;
     this.allowSpaces = allowSpaces;
     this.replaceTextSuffix = replaceTextSuffix;
@@ -295,7 +296,7 @@ class Tribute {
       this.menuEvents.bind(this.menu);
     }
 
-    this.isActive = true;
+    this.activationPending = true;
     this.menuSelected = 0;
 
     if (!this.current.mentionText) {
@@ -304,9 +305,10 @@ class Tribute {
 
     const processValues = values => {
       // Tribute may not be active any more by the time the value callback returns
-      if (!this.isActive) {
+      if (!this.activationPending) {
         return;
       }
+      this.isActive = true;
 
       let items = this.search.filter(this.current.mentionText, values, {
         pre: this.current.collection.searchOpts.pre || "<span>",
@@ -464,6 +466,7 @@ class Tribute {
       this.menu.style.cssText = "display: none;";
       this.isActive = false;
       this.current.element.focus();
+      this.activationPending = false;
     }
   }
 

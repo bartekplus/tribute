@@ -117,18 +117,20 @@ class TributeEvents {
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
-          instance.commandEvent = true;
           return;
         }
       });
     }
 
-    TributeEvents.keys().forEach(o => {
-      if (o.key === event.keyCode) {
-        instance.commandEvent = true;
-        instance.callbacks()[o.value.toLowerCase()](event, element);
-      }
-    });
+    if (instance.tribute.isActive)
+    {
+      TributeEvents.keys().forEach(o => {
+        if (o.key === event.keyCode) {
+          instance.commandEvent = true;
+          instance.callbacks()[o.value.toLowerCase()](event, element);
+        }
+      });
+    }
   }
 
   input(instance, isMenu, event) {
@@ -172,7 +174,6 @@ class TributeEvents {
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
-          instance.commandEvent = true;
           return;
         }
       });
@@ -1356,6 +1357,7 @@ class Tribute {
     this.current = {};
     this.inputEvent = false;
     this.isActive = false;
+    this.activationPending = false;
     this.menuContainer = menuContainer;
     this.allowSpaces = allowSpaces;
     this.replaceTextSuffix = replaceTextSuffix;
@@ -1615,7 +1617,7 @@ class Tribute {
       this.menuEvents.bind(this.menu);
     }
 
-    this.isActive = true;
+    this.activationPending = true;
     this.menuSelected = 0;
 
     if (!this.current.mentionText) {
@@ -1624,9 +1626,10 @@ class Tribute {
 
     const processValues = values => {
       // Tribute may not be active any more by the time the value callback returns
-      if (!this.isActive) {
+      if (!this.activationPending) {
         return;
       }
+      this.isActive = true;
 
       let items = this.search.filter(this.current.mentionText, values, {
         pre: this.current.collection.searchOpts.pre || "<span>",
@@ -1784,6 +1787,7 @@ class Tribute {
       this.menu.style.cssText = "display: none;";
       this.isActive = false;
       this.current.element.focus();
+      this.activationPending = false;
     }
   }
 

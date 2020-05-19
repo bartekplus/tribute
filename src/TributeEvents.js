@@ -75,18 +75,20 @@ class TributeEvents {
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
-          instance.commandEvent = true;
           return;
         }
       });
     }
 
-    TributeEvents.keys().forEach(o => {
-      if (o.key === event.keyCode) {
-        instance.commandEvent = true;
-        instance.callbacks()[o.value.toLowerCase()](event, element);
-      }
-    });
+    if (instance.tribute.isActive)
+    {
+      TributeEvents.keys().forEach(o => {
+        if (o.key === event.keyCode) {
+          instance.commandEvent = true;
+          instance.callbacks()[o.value.toLowerCase()](event, element);
+        }
+      });
+    }
   }
 
   input(instance, isMenu, event) {
@@ -130,7 +132,6 @@ class TributeEvents {
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
-          instance.commandEvent = true;
           return;
         }
       });

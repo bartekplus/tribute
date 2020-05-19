@@ -170,18 +170,19 @@
         if (event instanceof KeyboardEvent) {
           TributeEvents.modifiers().forEach(function (o) {
             if (event.getModifierState(o)) {
-              instance.commandEvent = true;
               return;
             }
           });
         }
 
-        TributeEvents.keys().forEach(function (o) {
-          if (o.key === event.keyCode) {
-            instance.commandEvent = true;
-            instance.callbacks()[o.value.toLowerCase()](event, element);
-          }
-        });
+        if (instance.tribute.isActive) {
+          TributeEvents.keys().forEach(function (o) {
+            if (o.key === event.keyCode) {
+              instance.commandEvent = true;
+              instance.callbacks()[o.value.toLowerCase()](event, element);
+            }
+          });
+        }
       }
     }, {
       key: "input",
@@ -231,7 +232,6 @@
         if (event instanceof KeyboardEvent) {
           TributeEvents.modifiers().forEach(function (o) {
             if (event.getModifierState(o)) {
-              instance.commandEvent = true;
               return;
             }
           });
@@ -1420,6 +1420,7 @@
       this.current = {};
       this.inputEvent = false;
       this.isActive = false;
+      this.activationPending = false;
       this.menuContainer = menuContainer;
       this.allowSpaces = allowSpaces;
       this.replaceTextSuffix = replaceTextSuffix;
@@ -1610,7 +1611,7 @@
           this.menuEvents.bind(this.menu);
         }
 
-        this.isActive = true;
+        this.activationPending = true;
         this.menuSelected = 0;
 
         if (!this.current.mentionText) {
@@ -1619,9 +1620,11 @@
 
         var processValues = function processValues(values) {
           // Tribute may not be active any more by the time the value callback returns
-          if (!_this2.isActive) {
+          if (!_this2.activationPending) {
             return;
           }
+
+          _this2.isActive = true;
 
           var items = _this2.search.filter(_this2.current.mentionText, values, {
             pre: _this2.current.collection.searchOpts.pre || "<span>",
@@ -1777,6 +1780,7 @@
           this.menu.style.cssText = "display: none;";
           this.isActive = false;
           this.current.element.focus();
+          this.activationPending = false;
         }
       }
     }, {
