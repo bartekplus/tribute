@@ -286,6 +286,9 @@
           setTimeout(function (element) {
             element.dispatchEvent(event);
           }, 0, this.tribute.current.element);
+        }
+
+        if (isMenu || this.tribute.isActive) {
           return true;
         }
 

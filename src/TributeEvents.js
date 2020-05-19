@@ -197,7 +197,11 @@ class TributeEvents {
         setTimeout( function(element) {         
           element.dispatchEvent(event);
         }, 0, this.tribute.current.element);
-        return true;
+    }
+    
+    if (isMenu || this.tribute.isActive)
+    {
+      return true;
     }
 
     return false;
