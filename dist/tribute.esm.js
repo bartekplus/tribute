@@ -107,7 +107,6 @@ class TributeEvents {
 
   keydown(instance, isMenu, event) {
     if (instance.shouldDeactivate(event, isMenu)) {
-      instance.tribute.isActive = false;
       instance.tribute.hideMenu();
     }
 
@@ -321,7 +320,6 @@ class TributeEvents {
         if (this.tribute.isActive) {
           e.preventDefault();
           e.stopPropagation();
-          this.tribute.isActive = false;
           this.tribute.hideMenu();
         }
       },
@@ -337,7 +335,6 @@ class TributeEvents {
             e.stopPropagation();
             setTimeout(() => {
               this.tribute.hideMenu();
-              this.tribute.isActive = false;
             }, 0);
           }
         }
@@ -1349,7 +1346,8 @@ class Tribute {
     spaceSelectsMatch = false,
     searchOpts = {},
     menuItemLimit = null,
-    menuShowMinLength = 0
+    menuShowMinLength = 0,
+    keys = null
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -1364,6 +1362,10 @@ class Tribute {
     this.positionMenu = positionMenu;
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
+    if (keys)
+    {
+      TributeEvents.keys = keys;
+    }
 
     if (this.autocompleteMode) {
       trigger = "";
