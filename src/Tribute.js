@@ -278,9 +278,7 @@ class Tribute {
     wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
     wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
     wrapper.addEventListener("input",  wrapper.boundInput, false);
-    let elementFontSize = parseInt(computed.fontSize);
-    let diff  = parseInt((elementFontSize + 9) / 10);
-    wrapper.style.fontSize = (parseInt(computed.fontSize) - diff) + 'px';
+    wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
 
     properties.forEach(prop => {
       wrapper.style[prop] = computed[prop]
