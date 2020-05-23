@@ -263,7 +263,10 @@ class Tribute {
     }
   }
 
-  createMenu(containerClass) {
+  createMenu(containerClass, element) {
+    let properties = ['fontStyle', 'fontVariant', 'fontWeight', 'fontStretch',
+    'fontSizeAdjust', 'fontFamily'];
+    let computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle
     let wrapper = this.range.getDocument().createElement("div"),
       ul = this.range.getDocument().createElement("ul");
     wrapper.className = containerClass;
@@ -275,6 +278,13 @@ class Tribute {
     wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
     wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
     wrapper.addEventListener("input",  wrapper.boundInput, false);
+    let elementFontSize = parseInt(computed.fontSize);
+    let diff  = parseInt((elementFontSize + 9) / 10);
+    wrapper.style.fontSize = (parseInt(computed.fontSize) - diff) + 'px';
+
+    properties.forEach(prop => {
+      wrapper.style[prop] = computed[prop]
+     })
 
     if (this.menuContainer) {
       return this.menuContainer.appendChild(wrapper);
@@ -296,7 +306,7 @@ class Tribute {
 
     // create the menu if it doesn't exist.
     if (!this.menu) {
-      this.menu = this.createMenu(this.current.collection.containerClass);
+      this.menu = this.createMenu(this.current.collection.containerClass, element);
       element.tributeMenu = this.menu;
       this.menuEvents.bind(this.menu);
     }
@@ -468,7 +478,7 @@ class Tribute {
 
   hideMenu() {
     if (this.menu && this.isActive) {
-      this.menu.style.cssText = "display: none;";
+      this.menu.style.display = "none";
       this.isActive = false;
       this.current.element.focus();
       this.activationPending = false;

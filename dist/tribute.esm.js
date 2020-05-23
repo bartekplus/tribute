@@ -544,7 +544,7 @@ class TributeRange {
         if (typeof info !== 'undefined') {
 
             if(!this.tribute.positionMenu){
-                this.tribute.menu.style.cssText = `display: block;`;
+                this.tribute.menu.style.display = `block`;
                 return
             }
 
@@ -556,12 +556,12 @@ class TributeRange {
                 coordinates = this.getContentEditableCaretPosition(info.mentionPosition);
             }
 
-            this.tribute.menu.style.cssText = `top: ${coordinates.top}px;
-                                     left: ${coordinates.left}px;
-                                     right: ${coordinates.right}px;
-                                     bottom: ${coordinates.bottom}px;
-                                     position: absolute;
-                                     display: block;`;
+            this.tribute.menu.style.top = `${coordinates.top}px`;
+            this.tribute.menu.style.left = `${coordinates.left}px`;
+            this.tribute.menu.style.right = `${coordinates.right}px`;
+            this.tribute.menu.style.bottom = `${coordinates.bottom}px`;
+            this.tribute.menu.style.position = `absolute`;
+            this.tribute.menu.style.display = `block`;
 
             if (coordinates.left === 'auto') {
                 this.tribute.menu.style.left = 'auto';
@@ -583,13 +583,13 @@ class TributeRange {
                 let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
                 let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
                 if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-                    this.tribute.menu.style.cssText = 'display: none';
+                    this.tribute.menu.style.display = 'none';
                     this.positionMenuAtCaret(scrollTo);
                 }
             }, 0);
 
         } else {
-            this.tribute.menu.style.cssText = 'display: none';
+            this.tribute.menu.style.display = 'none';
         }
     }
 
@@ -934,15 +934,16 @@ class TributeRange {
             height: null
         };
 
-        this.tribute.menu.style.cssText = `top: 0px;
-                                 left: 0px;
-                                 position: fixed;
-                                 display: block;
-                                 visibility; hidden;`;
+       this.tribute.menu.style.top = `0px`;
+       this.tribute.menu.style.left = `0px`;
+       this.tribute.menu.style.position = `fixed`;
+       this.tribute.menu.style.display = `block`;
+       // this.tribute.menu.style.visibility = `hidden`;
+
        dimensions.width = this.tribute.menu.offsetWidth;
        dimensions.height = this.tribute.menu.offsetHeight;
 
-       this.tribute.menu.style.cssText = `display: none;`;
+       this.tribute.menu.style.display = `none`;
 
        return dimensions
     }
@@ -1581,7 +1582,10 @@ class Tribute {
     }
   }
 
-  createMenu(containerClass) {
+  createMenu(containerClass, element) {
+    let properties = ['fontStyle', 'fontVariant', 'fontWeight', 'fontStretch',
+    'fontSizeAdjust', 'fontFamily'];
+    let computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle;
     let wrapper = this.range.getDocument().createElement("div"),
       ul = this.range.getDocument().createElement("ul");
     wrapper.className = containerClass;
@@ -1593,6 +1597,13 @@ class Tribute {
     wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
     wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
     wrapper.addEventListener("input",  wrapper.boundInput, false);
+    let elementFontSize = parseInt(computed.fontSize);
+    let diff  = parseInt((elementFontSize + 9) / 10);
+    wrapper.style.fontSize = (parseInt(computed.fontSize) - diff) + 'px';
+
+    properties.forEach(prop => {
+      wrapper.style[prop] = computed[prop];
+     });
 
     if (this.menuContainer) {
       return this.menuContainer.appendChild(wrapper);
@@ -1614,7 +1625,7 @@ class Tribute {
 
     // create the menu if it doesn't exist.
     if (!this.menu) {
-      this.menu = this.createMenu(this.current.collection.containerClass);
+      this.menu = this.createMenu(this.current.collection.containerClass, element);
       element.tributeMenu = this.menu;
       this.menuEvents.bind(this.menu);
     }
@@ -1786,7 +1797,7 @@ class Tribute {
 
   hideMenu() {
     if (this.menu && this.isActive) {
-      this.menu.style.cssText = "display: none;";
+      this.menu.style.display = "none";
       this.isActive = false;
       this.current.element.focus();
       this.activationPending = false;
