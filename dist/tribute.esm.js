@@ -1640,6 +1640,13 @@ class Tribute {
       if (!this.activationPending) {
         return;
       }
+      // Element is no longer in focus - don't show menu
+      if (document.activeElement !== this.current.element)
+      {
+        this.activationPending = false;
+        return;
+      }
+
       this.isActive = true;
 
       let items = this.search.filter(this.current.mentionText, values, {
@@ -1794,6 +1801,7 @@ class Tribute {
   }
 
   hideMenu() {
+    this.activationPending = false;
     if (this.menu && this.isActive) {
       this.menu.style.display = "none";
       this.isActive = false;
