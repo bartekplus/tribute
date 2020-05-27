@@ -47,20 +47,24 @@ class TributeEvents {
     element.boundKeydown = this.keydown.bind(element, this, false);
     element.boundKeyup = this.keyup.bind(element, this, false);
     element.boundInput = this.input.bind(element, this, false);
+    element.boundBlur = this.blur.bind(element, this, false);
 
     element.addEventListener("keydown", element.boundKeydown, false);
     element.addEventListener("keyup", element.boundKeyup, false);
     element.addEventListener("input", element.boundInput, false);
+    element.addEventListener("blur", element.boundBlur, false);
   }
 
   unbind(element) {
     element.removeEventListener("keydown", element.boundKeydown, false);
     element.removeEventListener("keyup", element.boundKeyup, false);
     element.removeEventListener("input", element.boundInput, false);
+    element.removeEventListener("blur", element.boundBlur, false);
 
     delete element.boundKeydown;
     delete element.boundKeyup;
     delete element.boundInput;
+    delete element.boundBlur;
   }
 
   keydown(instance, isMenu, event) {
@@ -178,6 +182,11 @@ class TributeEvents {
     ) {
       instance.tribute.showMenuFor(this, true);
     }
+  }
+
+  blur(instance, isMenu, event) {
+    // Hide menu on focus lost
+    instance.tribute.hideMenu();
   }
 
   shouldDeactivate(event, isMenu) {
