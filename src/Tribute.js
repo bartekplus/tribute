@@ -475,7 +475,6 @@ class Tribute {
   }
 
   hideMenu() {
-    this.activationPending = false;
     if (this.menu && this.isActive) {
       this.menu.style.display = "none";
       this.isActive = false;

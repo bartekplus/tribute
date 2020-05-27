@@ -142,11 +142,9 @@
         element.boundKeydown = this.keydown.bind(element, this, false);
         element.boundKeyup = this.keyup.bind(element, this, false);
         element.boundInput = this.input.bind(element, this, false);
-        element.boundBlur = this.blur.bind(element, this, false);
         element.addEventListener("keydown", element.boundKeydown, false);
         element.addEventListener("keyup", element.boundKeyup, false);
         element.addEventListener("input", element.boundInput, false);
-        element.addEventListener("blur", element.boundBlur, false);
       }
     }, {
       key: "unbind",
@@ -154,11 +152,9 @@
         element.removeEventListener("keydown", element.boundKeydown, false);
         element.removeEventListener("keyup", element.boundKeyup, false);
         element.removeEventListener("input", element.boundInput, false);
-        element.removeEventListener("blur", element.boundBlur, false);
         delete element.boundKeydown;
         delete element.boundKeyup;
         delete element.boundInput;
-        delete element.boundBlur;
       }
     }, {
       key: "keydown",
@@ -272,12 +268,6 @@
         if ((instance.tribute.current.trigger || instance.tribute.autocompleteMode) && instance.commandEvent === false || instance.tribute.isActive && event.keyCode === 8) {
           instance.tribute.showMenuFor(this, true);
         }
-      }
-    }, {
-      key: "blur",
-      value: function blur(instance, isMenu, event) {
-        // Hide menu on focus lost
-        instance.tribute.hideMenu();
       }
     }, {
       key: "shouldDeactivate",
@@ -1803,8 +1793,6 @@
     }, {
       key: "hideMenu",
       value: function hideMenu() {
-        this.activationPending = false;
-
         if (this.menu && this.isActive) {
           this.menu.style.display = "none";
           this.isActive = false;
