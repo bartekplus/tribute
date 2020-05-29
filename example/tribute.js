@@ -139,9 +139,9 @@
     _createClass(TributeEvents, [{
       key: "bind",
       value: function bind(element) {
-        element.boundKeydown = this.keydown.bind(element, this, false);
-        element.boundKeyup = this.keyup.bind(element, this, false);
-        element.boundInput = this.input.bind(element, this, false);
+        element.boundKeydown = this.keydown.bind(element, this);
+        element.boundKeyup = this.keyup.bind(element, this);
+        element.boundInput = this.input.bind(element, this);
         element.addEventListener("keydown", element.boundKeydown, false);
         element.addEventListener("keyup", element.boundKeyup, false);
         element.addEventListener("input", element.boundInput, false);
@@ -158,8 +158,8 @@
       }
     }, {
       key: "keydown",
-      value: function keydown(instance, isMenu, event) {
-        if (instance.shouldDeactivate(event, isMenu)) {
+      value: function keydown(instance, event) {
+        if (instance.shouldDeactivate(event)) {
           instance.tribute.hideMenu();
         }
 
@@ -185,10 +185,10 @@
       }
     }, {
       key: "input",
-      value: function input(instance, isMenu, event) {
+      value: function input(instance, event) {
         instance.inputEvent = event instanceof CustomEvent ? false : true;
         instance.commandEvent = !instance.inputEvent;
-        instance.keyup.call(this, instance, isMenu, event);
+        instance.keyup.call(this, instance, event);
       }
     }, {
       key: "click",
@@ -219,14 +219,12 @@
       }
     }, {
       key: "keyup",
-      value: function keyup(instance, isMenu, event) {
+      value: function keyup(instance, event) {
         if (instance.inputEvent) {
           instance.inputEvent = false;
         }
 
-        if (!isMenu) {
-          instance.updateSelection(this);
-        }
+        instance.updateSelection(this);
 
         if (event instanceof KeyboardEvent) {
           TributeEvents.modifiers().forEach(function (o) {
@@ -271,7 +269,7 @@
       }
     }, {
       key: "shouldDeactivate",
-      value: function shouldDeactivate(event, isMenu) {
+      value: function shouldDeactivate(event) {
         if (!this.tribute.isActive) return false; //if (this.tribute.current.mentionText.length === 0) {
 
         var eventKeyPressed = false;
@@ -279,15 +277,8 @@
           if (event.keyCode === o.key) eventKeyPressed = true;
         });
         if (eventKeyPressed) return false; //}
-        // If it's a menu we need to forward the event
 
-        if (isMenu) {
-          setTimeout(function (element) {
-            element.dispatchEvent(event);
-          }, 0, this.tribute.current.element);
-        }
-
-        if (isMenu || this.tribute.isActive) {
+        if (this.tribute.isActive) {
           return true;
         }
 
@@ -1593,12 +1584,6 @@
         wrapper.className = containerClass;
         wrapper.setAttribute("tabindex", "0");
         wrapper.appendChild(ul);
-        wrapper.boundKeydown = this.events.keydown.bind(this, this.events, true);
-        wrapper.boundKeyup = this.events.keyup.bind(this, this.events, true);
-        wrapper.boundInput = this.events.input.bind(this, this.events, true);
-        wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
-        wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
-        wrapper.addEventListener("input", wrapper.boundInput, false);
         wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
         properties.forEach(function (prop) {
           wrapper.style[prop] = computed[prop];

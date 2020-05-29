@@ -272,12 +272,6 @@ class Tribute {
     wrapper.className = containerClass;
     wrapper.setAttribute("tabindex", "0"); 
     wrapper.appendChild(ul);
-    wrapper.boundKeydown = this.events.keydown.bind(this, this.events, true);
-    wrapper.boundKeyup = this.events.keyup.bind(this, this.events, true);
-    wrapper.boundInput = this.events.input.bind(this, this.events, true);
-    wrapper.addEventListener("keydown", wrapper.boundKeydown, false);
-    wrapper.addEventListener("keyup", wrapper.boundKeyup, false);
-    wrapper.addEventListener("input",  wrapper.boundInput, false);
     wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
 
     properties.forEach(prop => {
