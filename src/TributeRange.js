@@ -397,10 +397,10 @@ class TributeRange {
         let windowLeft = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0)
         let windowTop = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0)
 
-        let menuTop = typeof coordinates.top === 'number' ? coordinates.top : windowTop + windowHeight - coordinates.bottom - menuDimensions.height
+        let menuTop = typeof coordinates.top === 'number' ? coordinates.top : coordinates.bottom - menuDimensions.height
         let menuRight = typeof coordinates.right === 'number' ? coordinates.right : coordinates.left + menuDimensions.width
         let menuBottom = typeof coordinates.bottom === 'number' ? coordinates.bottom : coordinates.top + menuDimensions.height
-        let menuLeft = typeof coordinates.left === 'number' ? coordinates.left : windowLeft + windowWidth - coordinates.right - menuDimensions.width
+        let menuLeft = typeof coordinates.left === 'number' ? coordinates.left : coordinates.right - menuDimensions.width
 
         return {
             top: menuTop < Math.floor(windowTop),
@@ -421,14 +421,17 @@ class TributeRange {
 
        this.tribute.menu.style.top = `0px`;
        this.tribute.menu.style.left = `0px`;
+       this.tribute.menu.style.right = null;
+       this.tribute.menu.style.bottom = null;
        this.tribute.menu.style.position = `fixed`;
+       this.tribute.menu.style.visibility = `hidden`;
        this.tribute.menu.style.display = `block`;
-       // this.tribute.menu.style.visibility = `hidden`;
 
        dimensions.width = this.tribute.menu.offsetWidth
        dimensions.height = this.tribute.menu.offsetHeight
 
        this.tribute.menu.style.display = `none`
+       this.tribute.menu.style.visibility = `visible`;
 
        return dimensions
     }
@@ -572,24 +575,18 @@ class TributeRange {
 
         let menuDimensions = this.getMenuDimensions()
         let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
+        const menuContainer = this.tribute.menuContainer ? this.tribute.menuContainer : document.body;
 
         if (menuIsOffScreen.right) {
             coordinates.left = 'auto'
             coordinates.right = windowWidth - rect.left - windowLeft
         }
 
-        let parentHeight = this.tribute.menuContainer
-            ? this.tribute.menuContainer.offsetHeight
-            : this.getDocument().body.offsetHeight
-
         if (menuIsOffScreen.bottom) {
-            let parentRect = this.tribute.menuContainer
-                ? this.tribute.menuContainer.getBoundingClientRect()
-                : this.getDocument().body.getBoundingClientRect()
-            let scrollStillAvailable = parentHeight - (windowHeight - parentRect.top)
-
-            coordinates.top = 'auto'
-            coordinates.bottom = scrollStillAvailable + (windowHeight - rect.top)
+            let windowHeight = window.innerHeight
+            let windowTop = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0)
+            let scrollHeight = window.innerHeight - document.documentElement.clientHeight;
+            coordinates.top = windowHeight + windowTop - scrollHeight - menuDimensions.height;
         }
 
         menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
@@ -607,8 +604,8 @@ class TributeRange {
         }
 
         if (!this.menuContainerIsBody) {
-            coordinates.left = coordinates.left ? coordinates.left - this.tribute.menuContainer.offsetLeft : coordinates.left
-            coordinates.top = coordinates.top ? coordinates.top - this.tribute.menuContainer.offsetTop : coordinates.top
+            coordinates.left = coordinates.left ? coordinates.left - menuContainer.offsetLeft : coordinates.left
+            coordinates.top = coordinates.top ? coordinates.top - menuContainer.offsetTop : coordinates.top
         }
 
         return coordinates
