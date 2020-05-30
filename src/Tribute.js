@@ -315,14 +315,12 @@ class Tribute {
       if (!this.activationPending) {
         return;
       }
+      this.activationPending = false;
       // Element is no longer in focus - don't show menu
       if (document.activeElement !== this.current.element)
       {
-        this.activationPending = false;
         return;
       }
-
-      this.isActive = true;
 
       let items = this.search.filter(this.current.mentionText, values, {
         pre: this.current.collection.searchOpts.pre || "<span>",
@@ -348,8 +346,7 @@ class Tribute {
       this.current.filteredItems = items;
 
       let ul = this.menu.querySelector("ul");
-
-      this.range.positionMenuAtCaret(scrollTo);
+      let showMenu = false;
 
       if (!items.length) {
         let noMatchEvent = new CustomEvent("tribute-no-match", {
@@ -361,36 +358,43 @@ class Tribute {
             !this.current.collection.noMatchTemplate()) ||
           !this.current.collection.noMatchTemplate
         ) {
-          this.hideMenu();
+          showMenu = false;
         } else {
           typeof this.current.collection.noMatchTemplate === "function"
             ? (ul.innerHTML = this.current.collection.noMatchTemplate())
             : (ul.innerHTML = this.current.collection.noMatchTemplate);
+            showMenu = true;
         }
-
-        return;
       }
+      else
+      {
+        ul.innerHTML = "";
+        let fragment = this.range.getDocument().createDocumentFragment();
 
-      ul.innerHTML = "";
-      let fragment = this.range.getDocument().createDocumentFragment();
-
-      items.forEach((item, index) => {
-        let li = this.range.getDocument().createElement("li");
-        li.setAttribute("data-index", index);
-        li.className = this.current.collection.itemClass;
-        li.addEventListener("mousemove", e => {
-          let [li, index] = this._findLiTarget(e.target);
-          if (e.movementY !== 0) {
-            this.events.setActiveLi(index);
+        items.forEach((item, index) => {
+          let li = this.range.getDocument().createElement("li");
+          li.setAttribute("data-index", index);
+          li.className = this.current.collection.itemClass;
+          li.addEventListener("mousemove", e => {
+            let [li, index] = this._findLiTarget(e.target);
+            if (e.movementY !== 0) {
+              this.events.setActiveLi(index);
+            }
+          });
+          if (this.menuSelected === index) {
+            li.classList.add(this.current.collection.selectClass);
           }
+          li.innerHTML = this.current.collection.menuItemTemplate(item);
+          fragment.appendChild(li);
         });
-        if (this.menuSelected === index) {
-          li.classList.add(this.current.collection.selectClass);
-        }
-        li.innerHTML = this.current.collection.menuItemTemplate(item);
-        fragment.appendChild(li);
-      });
-      ul.appendChild(fragment);
+        ul.appendChild(fragment);
+        showMenu = true;
+      }
+      if (showMenu)
+      {
+        this.isActive = true;
+        this.range.positionMenuAtCaret(scrollTo);
+      }
     };
 
     if (typeof this.current.collection.values === "function") {

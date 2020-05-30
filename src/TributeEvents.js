@@ -259,10 +259,8 @@ class TributeEvents {
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
           e.stopPropagation();
-          setTimeout(() => {
-            this.tribute.hideMenu();
-            this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
-          }, 0);
+          this.tribute.hideMenu();
+          this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
         }
       },
       escape: (e, el) => {
