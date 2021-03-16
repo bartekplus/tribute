@@ -1,27 +1,50 @@
 if (!Array.prototype.find) {
-    Array.prototype.find = function(predicate) {
-        if (this === null) {
-            throw new TypeError('Array.prototype.find called on null or undefined')
-        }
-        if (typeof predicate !== 'function') {
-            throw new TypeError('predicate must be a function')
-        }
-        var list = Object(this);
-        var length = list.length >>> 0;
-        var thisArg = arguments[1];
-        var value;
+  Object.defineProperty(Array.prototype, 'find', {
+    value: function(predicate) {
+      // 1. Let O be ? ToObject(this value).
+      if (this == null) {
+        throw TypeError('"this" is null or not defined');
+      }
 
-        for (var i = 0; i < length; i++) {
-            value = list[i];
-            if (predicate.call(thisArg, value, i, list)) {
-                return value
-            }
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length >>> 0;
+
+      // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+      if (typeof predicate !== 'function') {
+        throw TypeError('predicate must be a function');
+      }
+
+      // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+      var thisArg = arguments[1];
+
+      // 5. Let k be 0.
+      var k = 0;
+
+      // 6. Repeat, while k < len
+      while (k < len) {
+        // a. Let Pk be ! ToString(k).
+        // b. Let kValue be ? Get(O, Pk).
+        // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+        // d. If testResult is true, return kValue.
+        var kValue = o[k];
+        if (predicate.call(thisArg, kValue, k, o)) {
+          return kValue;
         }
-        return undefined
-    };
+        // e. Increase k by 1.
+        k++;
+      }
+
+      // 7. Return undefined.
+      return undefined;
+    },
+    configurable: true,
+    writable: true
+  });
 }
 
-if (window && typeof window.CustomEvent !== "function") {
+if (typeof window !== 'undefined' && typeof window.CustomEvent !== "function") {
   function CustomEvent$1(event, params) {
     params = params || {
       bubbles: false,
@@ -90,15 +113,15 @@ class TributeEvents {
     element.boundKeyup = this.keyup.bind(element, this);
     element.boundInput = this.input.bind(element, this);
 
-    element.addEventListener("keydown", element.boundKeydown, false);
-    element.addEventListener("keyup", element.boundKeyup, false);
-    element.addEventListener("input", element.boundInput, false);
+    element.addEventListener("keydown", element.boundKeydown, true);
+    element.addEventListener("keyup", element.boundKeyup, true);
+    element.addEventListener("input", element.boundInput, true);
   }
 
   unbind(element) {
-    element.removeEventListener("keydown", element.boundKeydown, false);
-    element.removeEventListener("keyup", element.boundKeyup, false);
-    element.removeEventListener("input", element.boundInput, false);
+    element.removeEventListener("keydown", element.boundKeydown, true);
+    element.removeEventListener("keyup", element.boundKeyup, true);
+    element.removeEventListener("input", element.boundInput, true);
 
     delete element.boundKeydown;
     delete element.boundKeyup;
@@ -763,15 +786,14 @@ class TributeRange {
     }
 
     getLastWordInText(text) {
-        text = text.replace(/\u00A0/g, ' '); // https://stackoverflow.com/questions/29850407/how-do-i-replace-unicode-character-u00a0-with-a-space-in-javascript
         var wordsArray;
         if (this.tribute.autocompleteSeparator) {
             wordsArray = text.split(this.tribute.autocompleteSeparator);
         } else {
             wordsArray = text.split(/\s+/);
         }
-        var worldsCount = wordsArray.length - 1;
-        return wordsArray[worldsCount].trim();
+        var wordsCount = wordsArray.length - 1;
+        return wordsArray[wordsCount];
     }
 
     getTriggerInfo(menuAlreadyActive, hasTrailingSpace, requireLeadingSpace, allowSpaces, isAutocomplete) {
@@ -825,7 +847,7 @@ class TributeRange {
                 (
                     mostRecentTriggerCharPos === 0 ||
                     !requireLeadingSpace ||
-                    /[\xA0\s]/g.test(
+                    /\s/.test(
                         effectiveRange.substring(
                             mostRecentTriggerCharPos - 1,
                             mostRecentTriggerCharPos)
@@ -1311,6 +1333,7 @@ class TributeSearch {
 class Tribute {
   constructor({
     values = null,
+    loadingItemTemplate = null,
     iframe = null,
     selectClass = "highlight",
     containerClass = "tribute-container",
@@ -1413,6 +1436,9 @@ class Tribute {
           // array of objects or a function returning an array of objects
           values: values,
 
+          // useful for when values is an async function
+          loadingItemTemplate: loadingItemTemplate,
+
           requireLeadingSpace: requireLeadingSpace,
 
           searchOpts: searchOpts,
@@ -1460,6 +1486,7 @@ class Tribute {
           lookup: item.lookup || lookup,
           fillAttr: item.fillAttr || fillAttr,
           values: item.values,
+          loadingItemTemplate: item.loadingItemTemplate,
           requireLeadingSpace: item.requireLeadingSpace,
           searchOpts: item.searchOpts || searchOpts,
           menuItemLimit: item.menuItemLimit || menuItemLimit,
@@ -1559,10 +1586,8 @@ class Tribute {
 
   ensureEditable(element) {
     if (Tribute.inputTypes().indexOf(element.nodeName) === -1) {
-      if (element.contentEditable) {
-        element.contentEditable = true;
-      } else {
-        throw new Error("[Tribute] Cannot bind to " + element.nodeName);
+      if (!element.contentEditable) {
+        throw new Error("[Tribute] Cannot bind to " + element.nodeName + ", not contentEditable");
       }
     }
   }
@@ -1702,6 +1727,11 @@ class Tribute {
     };
 
     if (typeof this.current.collection.values === "function") {
+      if (this.current.collection.loadingItemTemplate) {
+        this.menu.querySelector("ul").innerHTML = this.current.collection.loadingItemTemplate;
+        this.range.positionMenuAtCaret(scrollTo);
+      }
+
       this.current.collection.values(this.current.fullText, processValues);
     } else {
       processValues(this.current.collection.values);
