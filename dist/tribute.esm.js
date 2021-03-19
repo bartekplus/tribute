@@ -1815,12 +1815,11 @@ class Tribute {
 
   hideMenu() {
     this.activationPending = false;
-    if (this.menu && this.isActive) {
-      this.menu.style.display = "none";
-      this.isActive = false;
-      this.current.element.focus();
-      this.activationPending = false;
-    }
+    this.menu.remove();
+    this.menu = null;
+    this.isActive = false;
+    this.current.element.focus();
+    this.activationPending = false;
   }
 
   selectItemAtIndex(index, originalEvent) {
