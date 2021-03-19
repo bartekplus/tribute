@@ -1815,8 +1815,11 @@ class Tribute {
 
   hideMenu() {
     this.activationPending = false;
-    this.menu.remove();
-    this.menu = null;
+    if (this.menu)
+    {
+      this.menu.remove();
+      this.menu = null;
+    }
     this.isActive = false;
     this.current.element.focus();
     this.activationPending = false;

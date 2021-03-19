@@ -660,6 +660,11 @@
         }
       }
     }, {
+      key: "menuContainerIsBody",
+      get: function get() {
+        return this.tribute.menuContainer === document.body || !this.tribute.menuContainer;
+      }
+    }, {
       key: "selectElement",
       value: function selectElement(targetElement, path, offset) {
         var range;
@@ -1199,11 +1204,6 @@
           window.scrollTo(0, targetY);
         }
       }
-    }, {
-      key: "menuContainerIsBody",
-      get: function get() {
-        return this.tribute.menuContainer === document.body || !this.tribute.menuContainer;
-      }
     }]);
 
     return TributeRange;
@@ -1546,6 +1546,21 @@
     }
 
     _createClass(Tribute, [{
+      key: "isActive",
+      get: function get() {
+        return this._isActive;
+      },
+      set: function set(val) {
+        if (this._isActive != val) {
+          this._isActive = val;
+
+          if (this.current.element) {
+            var noMatchEvent = new CustomEvent("tribute-active-".concat(val));
+            this.current.element.dispatchEvent(noMatchEvent);
+          }
+        }
+      }
+    }, {
       key: "triggers",
       value: function triggers() {
         return this.collection.map(function (config) {
@@ -1815,8 +1830,12 @@
       key: "hideMenu",
       value: function hideMenu() {
         this.activationPending = false;
-        this.menu.remove();
-        this.menu = null;
+
+        if (this.menu) {
+          this.menu.remove();
+          this.menu = null;
+        }
+
         this.isActive = false;
         this.current.element.focus();
         this.activationPending = false;
@@ -1906,21 +1925,6 @@
             el.tributeMenu.remove();
           }
         });
-      }
-    }, {
-      key: "isActive",
-      get: function get() {
-        return this._isActive;
-      },
-      set: function set(val) {
-        if (this._isActive != val) {
-          this._isActive = val;
-
-          if (this.current.element) {
-            var noMatchEvent = new CustomEvent("tribute-active-".concat(val));
-            this.current.element.dispatchEvent(noMatchEvent);
-          }
-        }
       }
     }], [{
       key: "defaultSelectTemplate",
