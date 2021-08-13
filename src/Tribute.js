@@ -313,7 +313,7 @@ class Tribute {
       this.current.mentionText = "";
     }
 
-    const processValues = values => {
+    const processValues = (values, forceReplace) => {
       // Tribute may not be active any more by the time the value callback returns
       if (!this.activationPending) {
         return;
@@ -322,6 +322,15 @@ class Tribute {
       // Element is no longer in focus - don't show menu
       if (document.activeElement !== this.current.element)
       {
+        return;
+      }
+
+      if (forceReplace)
+      {
+        // Do force replace - don't show menu
+        this.current.info.mentionPosition -= forceReplace.length;
+        this.current.info.mentionText = " ".repeat(forceReplace.length) + this.current.info.mentionText
+        this.replaceText(forceReplace.text, null, null);
         return;
       }
 
