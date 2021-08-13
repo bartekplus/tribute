@@ -585,17 +585,19 @@ class TributeRange {
             if (scrollTo) this.scrollIntoView();
 
             window.setTimeout(() => {
-                let menuDimensions = {
-                   width: this.tribute.menu.offsetWidth,
-                   height: this.tribute.menu.offsetHeight
-                };
-                let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
+                if (this.tribute.menu) {
+                    let menuDimensions = {
+                    width: this.tribute.menu.offsetWidth,
+                    height: this.tribute.menu.offsetHeight
+                    };
+                    let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions);
 
-                let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
-                let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
-                if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-                    this.tribute.menu.style.display = 'none';
-                    this.positionMenuAtCaret(scrollTo);
+                    let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right);
+                    let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom);
+                    if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                        this.tribute.menu.style.display = 'none';
+                        this.positionMenuAtCaret(scrollTo);
+                    }
                 }
             }, 0);
 
@@ -1639,7 +1641,7 @@ class Tribute {
       this.current.mentionText = "";
     }
 
-    const processValues = values => {
+    const processValues = (values, forceReplace) => {
       // Tribute may not be active any more by the time the value callback returns
       if (!this.activationPending) {
         return;
@@ -1648,6 +1650,15 @@ class Tribute {
       // Element is no longer in focus - don't show menu
       if (document.activeElement !== this.current.element)
       {
+        return;
+      }
+
+      if (forceReplace)
+      {
+        // Do force replace - don't show menu
+        this.current.info.mentionPosition -= forceReplace.length;
+        this.current.info.mentionText = " ".repeat(forceReplace.length) + this.current.info.mentionText;
+        this.replaceText(forceReplace.text, null, null);
         return;
       }
 
