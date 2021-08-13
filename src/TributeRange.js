@@ -59,17 +59,19 @@ class TributeRange {
             if (scrollTo) this.scrollIntoView()
 
             window.setTimeout(() => {
-                let menuDimensions = {
-                   width: this.tribute.menu.offsetWidth,
-                   height: this.tribute.menu.offsetHeight
-                }
-                let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
+                if (this.tribute.menu) {
+                    let menuDimensions = {
+                    width: this.tribute.menu.offsetWidth,
+                    height: this.tribute.menu.offsetHeight
+                    }
+                    let menuIsOffScreen = this.isMenuOffScreen(coordinates, menuDimensions)
 
-                let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right)
-                let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom)
-                if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
-                    this.tribute.menu.style.display = 'none'
-                    this.positionMenuAtCaret(scrollTo)
+                    let menuIsOffScreenHorizontally = window.innerWidth > menuDimensions.width && (menuIsOffScreen.left || menuIsOffScreen.right)
+                    let menuIsOffScreenVertically = window.innerHeight > menuDimensions.height && (menuIsOffScreen.top || menuIsOffScreen.bottom)
+                    if (menuIsOffScreenHorizontally || menuIsOffScreenVertically) {
+                        this.tribute.menu.style.display = 'none'
+                        this.positionMenuAtCaret(scrollTo)
+                    }
                 }
             }, 0)
 
