@@ -974,7 +974,7 @@ class TributeRange {
             'textDecoration', 'letterSpacing', 'wordSpacing'
         ];
 
-        let isFirefox = (window.mozInnerScreenX !== null);
+        let isFirefox = (window.mozInnerScreenX !== null && window.mozInnerScreenX !== undefined);
 
         let div = this.getDocument().createElement('div');
         div.id = 'input-textarea-caret-position-mirror-div';
