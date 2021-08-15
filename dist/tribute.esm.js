@@ -1604,6 +1604,7 @@ class Tribute {
     wrapper.setAttribute("tabindex", "0"); 
     wrapper.appendChild(ul);
     wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
+    wrapper.style.display = "none";
 
     properties.forEach(prop => {
       wrapper.style[prop] = computed[prop];
