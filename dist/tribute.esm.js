@@ -743,6 +743,24 @@ class TributeRange {
         }
     }
 
+    getWholeWordsUpToCharIndex(str, minLen)
+    {
+        var pos = 0;
+        var arr = str.split(this.tribute.autocompleteSeparator).filter(function (e) {return e.trim();});
+        var text = str;
+        for( var i = 0, len = arr.length; i < len; i++ ) {
+            var idx = str.indexOf(arr[i]);
+            pos = (pos + idx);
+            str = str.slice( idx );
+            if (minLen >= pos && minLen <= pos + arr[i].length)
+            {
+                minLen = pos + arr[i].length;
+                break
+            }
+        }
+    
+        return text.substring(0, minLen);
+    } 
     getTextPrecedingCurrentSelection() {
         let context = this.tribute.current,
             text = '';
@@ -752,7 +770,8 @@ class TributeRange {
             if (textComponent) {
                 let startPos = textComponent.selectionStart;
                 if (textComponent.value && startPos >= 0) {
-                    text = textComponent.value.substring(0, startPos);
+                    text = textComponent.value.substring(0);
+                    text = this.getWholeWordsUpToCharIndex(text, startPos);
                 }
             }
 
@@ -765,6 +784,7 @@ class TributeRange {
 
                 if (workingNodeContent && selectStartOffset >= 0) {
                     text = workingNodeContent.substring(0, selectStartOffset);
+                    text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);
                 }
             }
         }
@@ -773,14 +793,11 @@ class TributeRange {
     }
 
     getLastWordInText(text) {
-        var wordsArray;
-        if (this.tribute.autocompleteSeparator) {
-            wordsArray = text.split(this.tribute.autocompleteSeparator);
-        } else {
-            wordsArray = text.split(/\s+/);
-        }
-        var wordsCount = wordsArray.length - 1;
-        return wordsArray[wordsCount];
+        var separator = this.tribute.autocompleteSeparator ? this.tribute.autocompleteSeparator: /\s+/;
+        var wordsArray = text.split(separator);
+
+        if (!wordsArray.length) return " ";
+        return wordsArray[wordsArray.length - 1];
     }
 
     getTriggerInfo(menuAlreadyActive, hasTrailingSpace, requireLeadingSpace, allowSpaces, isAutocomplete) {
