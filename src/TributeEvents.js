@@ -108,8 +108,9 @@ class TributeEvents {
           throw new Error("cannot find the <li> container for the click");
         }
       }
-      tribute.hideMenu();
+      
       tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
+      tribute.hideMenu();
 
       // TODO: should fire with externalTrigger and target is outside of menu
     } else if (tribute.current.element && !tribute.current.externalTrigger) {
@@ -259,8 +260,8 @@ class TributeEvents {
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
           e.stopPropagation();
-          this.tribute.hideMenu();
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
+          this.tribute.hideMenu();
         }
       },
       escape: (e, el) => {

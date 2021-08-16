@@ -260,8 +260,10 @@ class Tribute {
 
   ensureEditable(element) {
     if (Tribute.inputTypes().indexOf(element.nodeName) === -1) {
-      if (!element.contentEditable) {
-        throw new Error("[Tribute] Cannot bind to " + element.nodeName + ", not contentEditable");
+      if (element.contentEditable) {
+        element.contentEditable = true;
+      } else {
+        throw new Error("[Tribute] Cannot bind to " + element.nodeName);
       }
     }
   }
@@ -504,14 +506,14 @@ class Tribute {
       this.menu.remove();
       this.menu = null;
     }
+    this.current = {};
     this.isActive = false;
-    this.current.element.focus();
     this.activationPending = false;
   }
 
   selectItemAtIndex(index, originalEvent) {
     index = parseInt(index);
-    if (typeof index !== "number" || isNaN(index)) return;
+    if (typeof index !== "number" || isNaN(index) || !originalEvent.target) return;
     let item = this.current.filteredItems[index];
     let content = this.current.collection.selectTemplate(item);
     if (content !== null) this.replaceText(content, originalEvent, item);
