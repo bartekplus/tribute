@@ -646,13 +646,14 @@ class TributeRange {
             });
 
             if (!this.isContentEditable(context.element)) {
+                let textEndsWithSpace = text !== text.trimEnd();
                 let myField = this.tribute.current.element;
                 let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
                     ? this.tribute.replaceTextSuffix
                     : ' ';
                 text += textSuffix;
                 let startPos = info.mentionPosition;
-                let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length;
+                let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace;
                 if (!this.tribute.autocompleteMode) {
                     endPos += info.mentionTriggerChar.length - 1;
                 }
@@ -662,11 +663,12 @@ class TributeRange {
                 myField.selectionEnd = startPos + text.length;
             } else {
                 // add a space to the end of the pasted text
+                let textEndsWithSpace = text !== text.trimEnd();
                 let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
                     ? this.tribute.replaceTextSuffix
                     : '\xA0';
                 text += textSuffix;
-                let endPos = info.mentionPosition + info.mentionText.length;
+                let endPos = info.mentionPosition + info.mentionText.length + textEndsWithSpace;
                 if (!this.tribute.autocompleteMode) {
                     endPos += info.mentionTriggerChar.length;
                 }
