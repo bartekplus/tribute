@@ -36,7 +36,6 @@ class Tribute {
     this.autocompleteSeparator = autocompleteSeparator;
     this.menuSelected = 0;
     this.current = {};
-    this.inputEvent = false;
     this.isActive = false;
     this.activationPending = false;
     this.menuContainer = menuContainer;
