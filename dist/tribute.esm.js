@@ -1059,9 +1059,18 @@ class TributeRange {
         div.style.height = rect.height + 'px';
         div.scrollTop = element.scrollTop;
 
-        var spanRect = span.getBoundingClientRect();
+        let spanRect = span.getBoundingClientRect();
+        let divRect = div.getBoundingClientRect();
         this.getDocument().body.removeChild(div);
-        return this.getFixedCoordinatesRelativeToRect(spanRect);
+        let clamp =  function(number, min, max) {
+            return Math.max(min, Math.min(number, max));
+        };
+        let finalRect = {
+            height: Math.min(divRect.height, spanRect.height),
+            left: clamp(spanRect.left, divRect.left, divRect.left + divRect.width),
+            top: clamp( spanRect.top, divRect.top, divRect.top + divRect.height),
+        };
+        return this.getFixedCoordinatesRelativeToRect(finalRect);
     }
 
     getContentEditableCaretPosition(selectedNodePosition) {
