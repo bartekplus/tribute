@@ -334,7 +334,7 @@ class Tribute {
         // Do force replace - don't show menu
         this.current.info.mentionPosition -= forceReplace.length;
         this.current.info.mentionText = " ".repeat(forceReplace.length) + this.current.info.mentionText
-        this.replaceText(forceReplace.text, null, null, this.current);
+        this.replaceText(forceReplace.text, null, null);
         return;
       }
 
@@ -506,23 +506,21 @@ class Tribute {
       this.menu.remove();
       this.menu = null;
     }
-    this.current ={};
     this.isActive = false;
     this.activationPending = false;
   }
 
-  selectItemAtIndex(index, originalEvent, hideMenu=true) {
-    const current = this.current;
+  selectItemAtIndex(index, originalEvent) {
     this.hideMenu();
     index = parseInt(index);
     if (typeof index !== "number" || isNaN(index) || !originalEvent.target) return;
-    let item = current.filteredItems[index];
-    let content = current.collection.selectTemplate(item);
-    if (content !== null) this.replaceText(content, originalEvent, item, current);
+    let item = this.current.filteredItems[index];
+    let content = this.current.collection.selectTemplate(item);
+    if (content !== null) this.replaceText(content, originalEvent, item);
   }
 
-  replaceText(content, originalEvent, item, current) {
-    this.range.replaceTriggerText(content, true, true, originalEvent, item, current);
+  replaceText(content, originalEvent, item) {
+    this.range.replaceTriggerText(content, true, true, originalEvent, item);
   }
 
   _append(collection, newValues, replace) {
