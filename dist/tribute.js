@@ -210,9 +210,8 @@
         if (event instanceof CustomEvent) {
           var str = event.detail.text;
           event.keyCode = str.charCodeAt(str.length - 1);
-        }
-
-        instance.keyup.call(this, instance, event);
+          setTimeout(instance.keyup.bind(this, instance, event), 0);
+        } else instance.keyup.call(this, instance, event);
       }
     }, {
       key: "click",
@@ -772,9 +771,8 @@
     }, {
       key: "pasteText",
       value: function pasteText(html, startPos, endPos) {
-        var range, sel;
-        sel = this.getWindowSelection();
-        range = this.getDocument().createRange();
+        var range = this.getDocument().createRange();
+        var sel = this.getWindowSelection();
         sel.anchorNode.nodeValue = sel.anchorNode.nodeValue.substring(0, startPos) + html + sel.anchorNode.nodeValue.substring(endPos, sel.anchorNode.nodeValue.length);
         range.setStart(sel.anchorNode, startPos + html.length);
         range.collapse(true);
@@ -884,7 +882,7 @@
             var selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
 
             if (workingNodeContent && selectStartOffset >= 0) {
-              text = workingNodeContent.substring(0, selectStartOffset);
+              text = workingNodeContent.substring(0);
               text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);
             }
           }

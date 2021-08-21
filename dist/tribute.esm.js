@@ -157,8 +157,9 @@ class TributeEvents {
     if (event instanceof CustomEvent) {
       const str = event.detail.text;
       event.keyCode = str.charCodeAt(str.length - 1);
+      setTimeout(instance.keyup.bind(this, instance, event), 0);
     }
-    instance.keyup.call(this, instance, event);
+    else instance.keyup.call(this, instance, event);
   }
 
   click(instance, event) {
@@ -693,10 +694,8 @@ class TributeRange {
     }
 
     pasteText(html, startPos, endPos) {
-        let range, sel;
-        sel = this.getWindowSelection();
-        range = this.getDocument().createRange();
-
+        let range = this.getDocument().createRange();
+        let sel = this.getWindowSelection();
         sel.anchorNode.nodeValue = sel.anchorNode.nodeValue.substring(0, startPos)
             + html + sel.anchorNode.nodeValue.substring(endPos, sel.anchorNode.nodeValue.length);
         range.setStart(sel.anchorNode, startPos + html.length);
@@ -797,7 +796,7 @@ class TributeRange {
                 let selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
 
                 if (workingNodeContent && selectStartOffset >= 0) {
-                    text = workingNodeContent.substring(0, selectStartOffset);
+                    text = workingNodeContent.substring(0);
                     text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);
                 }
             }
