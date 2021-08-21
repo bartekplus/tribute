@@ -30,7 +30,7 @@ class Tribute {
     searchOpts = {},
     menuItemLimit = null,
     menuShowMinLength = 0,
-    keys = null
+    keys = null,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;

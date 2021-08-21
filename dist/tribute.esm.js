@@ -177,7 +177,7 @@ class TributeEvents {
       // TODO: should fire with externalTrigger and target is outside of menu
     } else if (tribute.current.element && !tribute.current.externalTrigger) {
       tribute.current.externalTrigger = false;
-      setTimeout(() => tribute.hideMenu());
+      tribute.hideMenu();
     }
   }
 
@@ -186,8 +186,7 @@ class TributeEvents {
   }
   
   keyup(instance, event) {    
-    instance.updateSelection(this);
-    
+    // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
@@ -195,6 +194,12 @@ class TributeEvents {
         }
       });
     }
+    // Check for control keys
+    TributeEvents.keys().forEach(o => {
+      if (o.key === event.keyCode) {
+        return;
+      }
+    });
 
     if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
       instance.tribute.hasTrailingSpace = false;
@@ -202,38 +207,39 @@ class TributeEvents {
       return;
     }
 
-    if (!instance.tribute.isActive) {
-      let keyCode = instance.getKeyCode(instance, this, event);
-      if (keyCode && !isNaN(keyCode)) {
-        if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
-          instance.tribute.current.trigger = "";
-        }
-        else { 
-          instance.tribute.current.trigger = instance.tribute.triggers().find(trigger => {
-            return trigger.charCodeAt(0) === keyCode;
-          });
-        }
-      } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
+    if (!instance.updateSelection(this)) return;
+
+    // Get and validate trigger char
+    const keyCode = instance.getKeyCode(instance, this, event);
+    if (keyCode && !isNaN(keyCode)) {
+      if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
         instance.tribute.current.trigger = "";
       }
-      instance.tribute.current.collection = instance.tribute.collection.find(item => {
-        return item.trigger === instance.tribute.current.trigger;
-      });
+      else {
+        instance.tribute.current.trigger = instance.tribute.triggers().find(trigger => {
+          return trigger.charCodeAt(0) === keyCode;
+        });
+      }
+    } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
+      instance.tribute.current.trigger = "";
     }
+    if (!(
+      instance.tribute.current.trigger ||
+      (instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode))
+    ) return;
 
-    if (
-      instance.tribute.current.mentionText.length <
-      instance.tribute.current.collection.menuShowMinLength
+    // Get and validate collection
+    instance.tribute.current.collection = instance.tribute.collection.find(item => {
+      return item.trigger === instance.tribute.current.trigger;
+    });
+    if (!instance.tribute.current.collection ||
+      instance.tribute.current.collection.menuShowMinLength >
+      instance.tribute.current.mentionText.length
     ) {
       return;
     }
 
-    if (
-      instance.tribute.current.trigger ||
-      (instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode)
-    ) {
-      instance.tribute.showMenuFor(this, true);
-    }
+    instance.tribute.showMenuFor(this, true);
   }
 
   shouldDeactivate(event) {
@@ -267,6 +273,7 @@ class TributeEvents {
   }
 
   updateSelection(el) {
+    let success = false;
     this.tribute.current.element = el;
     let info = this.tribute.range.getTriggerInfo(
       false,
@@ -282,7 +289,12 @@ class TributeEvents {
       this.tribute.current.fullText = info.fullText;
       this.tribute.current.selectedOffset = info.mentionSelectedOffset;
       this.tribute.current.info = info;
+      success = true;
     }
+    else {
+      this.tribute.current = {};
+    }
+    return success;
   }
 
   callbacks() {
@@ -1294,7 +1306,7 @@ class Tribute {
     searchOpts = {},
     menuItemLimit = null,
     menuShowMinLength = 0,
-    keys = null
+    keys = null,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;

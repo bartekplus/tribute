@@ -232,9 +232,7 @@
           tribute.hideMenu(); // TODO: should fire with externalTrigger and target is outside of menu
         } else if (tribute.current.element && !tribute.current.externalTrigger) {
           tribute.current.externalTrigger = false;
-          setTimeout(function () {
-            return tribute.hideMenu();
-          });
+          tribute.hideMenu();
         }
       }
     }, {
@@ -245,15 +243,21 @@
     }, {
       key: "keyup",
       value: function keyup(instance, event) {
-        instance.updateSelection(this);
-
+        // Check for modifiers keys
         if (event instanceof KeyboardEvent) {
           TributeEvents.modifiers().forEach(function (o) {
             if (event.getModifierState(o)) {
               return;
             }
           });
-        }
+        } // Check for control keys
+
+
+        TributeEvents.keys().forEach(function (o) {
+          if (o.key === event.keyCode) {
+            return;
+          }
+        });
 
         if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
           instance.tribute.hasTrailingSpace = false;
@@ -261,33 +265,33 @@
           return;
         }
 
-        if (!instance.tribute.isActive) {
-          var keyCode = instance.getKeyCode(instance, this, event);
+        if (!instance.updateSelection(this)) return; // Get and validate trigger char
 
-          if (keyCode && !isNaN(keyCode)) {
-            if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
-              instance.tribute.current.trigger = "";
-            } else {
-              instance.tribute.current.trigger = instance.tribute.triggers().find(function (trigger) {
-                return trigger.charCodeAt(0) === keyCode;
-              });
-            }
-          } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
+        var keyCode = instance.getKeyCode(instance, this, event);
+
+        if (keyCode && !isNaN(keyCode)) {
+          if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
             instance.tribute.current.trigger = "";
+          } else {
+            instance.tribute.current.trigger = instance.tribute.triggers().find(function (trigger) {
+              return trigger.charCodeAt(0) === keyCode;
+            });
           }
-
-          instance.tribute.current.collection = instance.tribute.collection.find(function (item) {
-            return item.trigger === instance.tribute.current.trigger;
-          });
+        } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
+          instance.tribute.current.trigger = "";
         }
 
-        if (instance.tribute.current.mentionText.length < instance.tribute.current.collection.menuShowMinLength) {
+        if (!(instance.tribute.current.trigger || instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode)) return; // Get and validate collection
+
+        instance.tribute.current.collection = instance.tribute.collection.find(function (item) {
+          return item.trigger === instance.tribute.current.trigger;
+        });
+
+        if (!instance.tribute.current.collection || instance.tribute.current.collection.menuShowMinLength > instance.tribute.current.mentionText.length) {
           return;
         }
 
-        if (instance.tribute.current.trigger || instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode) {
-          instance.tribute.showMenuFor(this, true);
-        }
+        instance.tribute.showMenuFor(this, true);
       }
     }, {
       key: "shouldDeactivate",
@@ -318,6 +322,7 @@
     }, {
       key: "updateSelection",
       value: function updateSelection(el) {
+        var success = false;
         this.tribute.current.element = el;
         var info = this.tribute.range.getTriggerInfo(false, this.tribute.hasTrailingSpace, true, this.tribute.allowSpaces, this.tribute.autocompleteMode);
 
@@ -327,7 +332,12 @@
           this.tribute.current.fullText = info.fullText;
           this.tribute.current.selectedOffset = info.mentionSelectedOffset;
           this.tribute.current.info = info;
+          success = true;
+        } else {
+          this.tribute.current = {};
         }
+
+        return success;
       }
     }, {
       key: "callbacks",
