@@ -31,6 +31,7 @@ class Tribute {
     menuItemLimit = null,
     menuShowMinLength = 0,
     keys = null,
+    useHTML = true
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -44,6 +45,7 @@ class Tribute {
     this.positionMenu = positionMenu;
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
+    this.useHTML = useHTML;
     if (keys)
     {
       TributeEvents.keys = keys;

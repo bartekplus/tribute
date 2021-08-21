@@ -729,7 +729,7 @@
               _endPos += info.mentionTriggerChar.length;
             }
 
-            this.pasteHtml(text, info.mentionPosition, _endPos);
+            this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, _endPos) : this.pasteText(text, info.mentionPosition, _endPos);
           }
 
           context.element.dispatchEvent(new CustomEvent('input', {
@@ -741,6 +741,35 @@
     }, {
       key: "pasteHtml",
       value: function pasteHtml(html, startPos, endPos) {
+        var range, sel;
+        sel = this.getWindowSelection();
+        range = this.getDocument().createRange();
+        range.setStart(sel.anchorNode, startPos);
+        range.setEnd(sel.anchorNode, endPos);
+        range.deleteContents();
+        var el = this.getDocument().createElement('div');
+        el.innerHTML = html;
+        var frag = this.getDocument().createDocumentFragment(),
+            node,
+            lastNode;
+
+        while (node = el.firstChild) {
+          lastNode = frag.appendChild(node);
+        }
+
+        range.insertNode(frag); // Preserve the selection
+
+        if (lastNode) {
+          range = range.cloneRange();
+          range.setStartAfter(lastNode);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+    }, {
+      key: "pasteText",
+      value: function pasteText(html, startPos, endPos) {
         var range, sel;
         sel = this.getWindowSelection();
         range = this.getDocument().createRange();
@@ -1398,7 +1427,9 @@
           _ref$menuShowMinLengt = _ref.menuShowMinLength,
           menuShowMinLength = _ref$menuShowMinLengt === void 0 ? 0 : _ref$menuShowMinLengt,
           _ref$keys = _ref.keys,
-          keys = _ref$keys === void 0 ? null : _ref$keys;
+          keys = _ref$keys === void 0 ? null : _ref$keys,
+          _ref$useHTML = _ref.useHTML,
+          useHTML = _ref$useHTML === void 0 ? true : _ref$useHTML;
 
       _classCallCheck(this, Tribute);
 
@@ -1414,6 +1445,7 @@
       this.positionMenu = positionMenu;
       this.hasTrailingSpace = false;
       this.spaceSelectsMatch = spaceSelectsMatch;
+      this.useHTML = useHTML;
 
       if (keys) {
         TributeEvents.keys = keys;

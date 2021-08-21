@@ -145,7 +145,8 @@ class TributeRange {
                 if (!this.tribute.autocompleteMode) {
                     endPos += info.mentionTriggerChar.length
                 }
-                this.pasteHtml(text, info.mentionPosition, endPos)
+                this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, endPos) :
+                this.pasteText(text, info.mentionPosition, endPos)
             }
 
             context.element.dispatchEvent(new CustomEvent('input', { bubbles: true }))
@@ -154,6 +155,33 @@ class TributeRange {
     }
 
     pasteHtml(html, startPos, endPos) {
+        let range, sel
+        sel = this.getWindowSelection()
+        range = this.getDocument().createRange()
+        range.setStart(sel.anchorNode, startPos)
+        range.setEnd(sel.anchorNode, endPos)
+        range.deleteContents()
+
+        let el = this.getDocument().createElement('div')
+        el.innerHTML = html
+        let frag = this.getDocument().createDocumentFragment(),
+            node, lastNode
+        while ((node = el.firstChild)) {
+            lastNode = frag.appendChild(node)
+        }
+        range.insertNode(frag)
+
+        // Preserve the selection
+        if (lastNode) {
+            range = range.cloneRange()
+            range.setStartAfter(lastNode)
+            range.collapse(true)
+            sel.removeAllRanges()
+            sel.addRange(range)
+        }
+    }
+
+    pasteText(html, startPos, endPos) {
         let range, sel
         sel = this.getWindowSelection()
         range = this.getDocument().createRange()
