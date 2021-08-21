@@ -104,54 +104,52 @@ class TributeRange {
         targetElement.focus()
     }
 
-    replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item) {
-        let info = this.tribute.current.info;//this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
-
-        if (info !== undefined) {
-            let context = this.tribute.current
-            let replaceEvent = new CustomEvent('tribute-replaced', {
-                detail: {
-                    item: item,
-                    instance: context,
-                    context: info,
-                    event: originalEvent,
-                }
-            })
-
-            if (!this.isContentEditable(context.element)) {
-                let textEndsWithSpace = text !== text.trimEnd();
-                let myField = this.tribute.current.element
-                let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
-                    ? this.tribute.replaceTextSuffix
-                    : ' '
-                text += textSuffix
-                let startPos = info.mentionPosition
-                let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace
-                if (!this.tribute.autocompleteMode) {
-                    endPos += info.mentionTriggerChar.length - 1
-                }
-                myField.value = myField.value.substring(0, startPos) + text +
-                    myField.value.substring(endPos, myField.value.length)
-                myField.selectionStart = startPos + text.length
-                myField.selectionEnd = startPos + text.length
-            } else {
-                // add a space to the end of the pasted text
-                let textEndsWithSpace = text !== text.trimEnd();
-                let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
-                    ? this.tribute.replaceTextSuffix
-                    : '\xA0'
-                text += textSuffix
-                let endPos = info.mentionPosition + info.mentionText.length + textEndsWithSpace
-                if (!this.tribute.autocompleteMode) {
-                    endPos += info.mentionTriggerChar.length
-                }
-                this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, endPos) :
-                this.pasteText(text, info.mentionPosition, endPos)
-            }
-
-            context.element.dispatchEvent(new CustomEvent('input', { bubbles: true }))
-            context.element.dispatchEvent(replaceEvent)
+    replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item, current) {
+        let info = current.info
+        let detail = {
+            item: item,
+            instance: current,
+            context: current.info,
+            event: originalEvent,
+            text: text
         }
+        let replaceEvent = new CustomEvent('tribute-replaced', {
+            detail: detail
+        })
+
+        if (!this.isContentEditable(current.element)) {
+            let textEndsWithSpace = text !== text.trimEnd();
+            let myField = current.element
+            let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
+                ? this.tribute.replaceTextSuffix
+                : ' '
+            text += textSuffix
+            let startPos = info.mentionPosition
+            let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace
+            if (!this.tribute.autocompleteMode) {
+                endPos += info.mentionTriggerChar.length - 1
+            }
+            myField.value = myField.value.substring(0, startPos) + text +
+                myField.value.substring(endPos, myField.value.length)
+            myField.selectionStart = startPos + text.length
+            myField.selectionEnd = startPos + text.length
+        } else {
+            // add a space to the end of the pasted text
+            let textEndsWithSpace = text !== text.trimEnd();
+            let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
+                ? this.tribute.replaceTextSuffix
+                : '\xA0'
+            text += textSuffix
+            let endPos = info.mentionPosition + info.mentionText.length + textEndsWithSpace
+            if (!this.tribute.autocompleteMode) {
+                endPos += info.mentionTriggerChar.length
+            }
+            this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, endPos) :
+            this.pasteText(text, info.mentionPosition, endPos)
+        }
+
+        current.element.dispatchEvent(new CustomEvent('input', { bubbles: true, detail: detail }))
+        current.element.dispatchEvent(replaceEvent)
     }
 
     pasteHtml(html, startPos, endPos) {

@@ -68,11 +68,14 @@ class TributeEvents {
       instance.tribute.hideMenu();
     }
     if (event instanceof KeyboardEvent) {
+      let controlKeyPressed = false;
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
+          controlKeyPressed = true;
           return;
         }
       });
+      if (controlKeyPressed) return;
     }
 
     if (instance.tribute.isActive)
@@ -86,7 +89,11 @@ class TributeEvents {
   }
 
   input(instance, event) {
-    if (event instanceof InputEvent) instance.keyup.call(this, instance, event);
+    if (event instanceof CustomEvent) {
+      const str = event.detail.text;
+      event.keyCode = str.charCodeAt(str.length - 1);
+    }
+    instance.keyup.call(this, instance, event);
   }
 
   click(instance, event) {
@@ -101,10 +108,8 @@ class TributeEvents {
           throw new Error("cannot find the <li> container for the click");
         }
       }
-      
-      tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
-      tribute.hideMenu();
 
+      tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
       // TODO: should fire with externalTrigger and target is outside of menu
     } else if (tribute.current.element && !tribute.current.externalTrigger) {
       tribute.current.externalTrigger = false;
@@ -113,20 +118,27 @@ class TributeEvents {
   }
 
   keyup(instance, event) {    
+    if (!instance.updateSelection(this)) return;
+    const keyCode = instance.getKeyCode(instance, this, event);
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
+      let controlKeyPressed = false;
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
+          controlKeyPressed = true;
           return;
         }
       });
-    }
-    // Check for control keys
-    TributeEvents.keys().forEach(o => {
-      if (o.key === event.keyCode) {
+      // Check for control keys
+      TributeEvents.keys().forEach(o => {
+      if (o.key === keyCode) {
+        controlKeyPressed = true;
         return;
       }
-    });
+      });
+      if (controlKeyPressed) return;
+    }
+    
 
     if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
       instance.tribute.hasTrailingSpace = false;
@@ -134,10 +146,7 @@ class TributeEvents {
       return;
     }
 
-    if (!instance.updateSelection(this)) return;
-
     // Get and validate trigger char
-    const keyCode = instance.getKeyCode(instance, this, event);
     if (keyCode && !isNaN(keyCode)) {
       if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
         instance.tribute.current.trigger = ""
@@ -172,7 +181,10 @@ class TributeEvents {
   shouldDeactivate(event) {
     let controlKeyPressed = false;
     TributeEvents.keys().forEach(o => {
-      if (event.keyCode === o.key) controlKeyPressed = true;
+      if (event.keyCode === o.key) {
+        controlKeyPressed = true;
+        return;
+      }
     });
 
     if (controlKeyPressed) return false;
@@ -194,10 +206,9 @@ class TributeEvents {
 
     if (info && info.mentionTriggerChar) {
       return info.mentionTriggerChar.charCodeAt(0);
-    } else if (event instanceof KeyboardEvent){
-      return event.keyCode || event.which || event.code;
+    } else {
+      return event.keyCode || event.which || event.code || false;
     }
-    return false;
   }
 
   updateSelection(el) {
@@ -233,7 +244,6 @@ class TributeEvents {
           e.preventDefault();
           e.stopPropagation();
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
-          this.tribute.hideMenu();
         }
       },
       escape: (e, el) => {

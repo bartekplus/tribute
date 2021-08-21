@@ -133,11 +133,14 @@ class TributeEvents {
       instance.tribute.hideMenu();
     }
     if (event instanceof KeyboardEvent) {
+      let controlKeyPressed = false;
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
+          controlKeyPressed = true;
           return;
         }
       });
+      if (controlKeyPressed) return;
     }
 
     if (instance.tribute.isActive)
@@ -151,7 +154,11 @@ class TributeEvents {
   }
 
   input(instance, event) {
-    if (event instanceof InputEvent) instance.keyup.call(this, instance, event);
+    if (event instanceof CustomEvent) {
+      const str = event.detail.text;
+      event.keyCode = str.charCodeAt(str.length - 1);
+    }
+    instance.keyup.call(this, instance, event);
   }
 
   click(instance, event) {
@@ -166,10 +173,8 @@ class TributeEvents {
           throw new Error("cannot find the <li> container for the click");
         }
       }
-      
-      tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
-      tribute.hideMenu();
 
+      tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
       // TODO: should fire with externalTrigger and target is outside of menu
     } else if (tribute.current.element && !tribute.current.externalTrigger) {
       tribute.current.externalTrigger = false;
@@ -178,20 +183,27 @@ class TributeEvents {
   }
 
   keyup(instance, event) {    
+    if (!instance.updateSelection(this)) return;
+    const keyCode = instance.getKeyCode(instance, this, event);
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
+      let controlKeyPressed = false;
       TributeEvents.modifiers().forEach(o => {
         if (event.getModifierState(o)) {
+          controlKeyPressed = true;
           return;
         }
       });
-    }
-    // Check for control keys
-    TributeEvents.keys().forEach(o => {
-      if (o.key === event.keyCode) {
+      // Check for control keys
+      TributeEvents.keys().forEach(o => {
+      if (o.key === keyCode) {
+        controlKeyPressed = true;
         return;
       }
-    });
+      });
+      if (controlKeyPressed) return;
+    }
+    
 
     if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
       instance.tribute.hasTrailingSpace = false;
@@ -199,10 +211,7 @@ class TributeEvents {
       return;
     }
 
-    if (!instance.updateSelection(this)) return;
-
     // Get and validate trigger char
-    const keyCode = instance.getKeyCode(instance, this, event);
     if (keyCode && !isNaN(keyCode)) {
       if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
         instance.tribute.current.trigger = "";
@@ -237,7 +246,10 @@ class TributeEvents {
   shouldDeactivate(event) {
     let controlKeyPressed = false;
     TributeEvents.keys().forEach(o => {
-      if (event.keyCode === o.key) controlKeyPressed = true;
+      if (event.keyCode === o.key) {
+        controlKeyPressed = true;
+        return;
+      }
     });
 
     if (controlKeyPressed) return false;
@@ -258,10 +270,9 @@ class TributeEvents {
 
     if (info && info.mentionTriggerChar) {
       return info.mentionTriggerChar.charCodeAt(0);
-    } else if (event instanceof KeyboardEvent){
-      return event.keyCode || event.which || event.code;
+    } else {
+      return event.keyCode || event.which || event.code || false;
     }
-    return false;
   }
 
   updateSelection(el) {
@@ -297,7 +308,6 @@ class TributeEvents {
           e.preventDefault();
           e.stopPropagation();
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
-          this.tribute.hideMenu();
         }
       },
       escape: (e, el) => {
@@ -603,54 +613,52 @@ class TributeRange {
         targetElement.focus();
     }
 
-    replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item) {
-        let info = this.tribute.current.info;//this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
+    replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item, current) {
+        let info = current.info;
+        let detail = {
+            item: item,
+            instance: current,
+            context: current.info,
+            event: originalEvent,
+            text: text
+        };
+        let replaceEvent = new CustomEvent('tribute-replaced', {
+            detail: detail
+        });
 
-        if (info !== undefined) {
-            let context = this.tribute.current;
-            let replaceEvent = new CustomEvent('tribute-replaced', {
-                detail: {
-                    item: item,
-                    instance: context,
-                    context: info,
-                    event: originalEvent,
-                }
-            });
-
-            if (!this.isContentEditable(context.element)) {
-                let textEndsWithSpace = text !== text.trimEnd();
-                let myField = this.tribute.current.element;
-                let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
-                    ? this.tribute.replaceTextSuffix
-                    : ' ';
-                text += textSuffix;
-                let startPos = info.mentionPosition;
-                let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace;
-                if (!this.tribute.autocompleteMode) {
-                    endPos += info.mentionTriggerChar.length - 1;
-                }
-                myField.value = myField.value.substring(0, startPos) + text +
-                    myField.value.substring(endPos, myField.value.length);
-                myField.selectionStart = startPos + text.length;
-                myField.selectionEnd = startPos + text.length;
-            } else {
-                // add a space to the end of the pasted text
-                let textEndsWithSpace = text !== text.trimEnd();
-                let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
-                    ? this.tribute.replaceTextSuffix
-                    : '\xA0';
-                text += textSuffix;
-                let endPos = info.mentionPosition + info.mentionText.length + textEndsWithSpace;
-                if (!this.tribute.autocompleteMode) {
-                    endPos += info.mentionTriggerChar.length;
-                }
-                this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, endPos) :
-                this.pasteText(text, info.mentionPosition, endPos);
+        if (!this.isContentEditable(current.element)) {
+            let textEndsWithSpace = text !== text.trimEnd();
+            let myField = current.element;
+            let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
+                ? this.tribute.replaceTextSuffix
+                : ' ';
+            text += textSuffix;
+            let startPos = info.mentionPosition;
+            let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace;
+            if (!this.tribute.autocompleteMode) {
+                endPos += info.mentionTriggerChar.length - 1;
             }
-
-            context.element.dispatchEvent(new CustomEvent('input', { bubbles: true }));
-            context.element.dispatchEvent(replaceEvent);
+            myField.value = myField.value.substring(0, startPos) + text +
+                myField.value.substring(endPos, myField.value.length);
+            myField.selectionStart = startPos + text.length;
+            myField.selectionEnd = startPos + text.length;
+        } else {
+            // add a space to the end of the pasted text
+            let textEndsWithSpace = text !== text.trimEnd();
+            let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
+                ? this.tribute.replaceTextSuffix
+                : '\xA0';
+            text += textSuffix;
+            let endPos = info.mentionPosition + info.mentionText.length + textEndsWithSpace;
+            if (!this.tribute.autocompleteMode) {
+                endPos += info.mentionTriggerChar.length;
+            }
+            this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, endPos) :
+            this.pasteText(text, info.mentionPosition, endPos);
         }
+
+        current.element.dispatchEvent(new CustomEvent('input', { bubbles: true, detail: detail }));
+        current.element.dispatchEvent(replaceEvent);
     }
 
     pasteHtml(html, startPos, endPos) {
@@ -1630,7 +1638,7 @@ class Tribute {
         // Do force replace - don't show menu
         this.current.info.mentionPosition -= forceReplace.length;
         this.current.info.mentionText = " ".repeat(forceReplace.length) + this.current.info.mentionText;
-        this.replaceText(forceReplace.text, null, null);
+        this.replaceText(forceReplace.text, null, null, this.current);
         return;
       }
 
@@ -1797,27 +1805,28 @@ class Tribute {
   }
 
   hideMenu() {
-    this.activationPending = false;
     if (this.menu)
     {
       this.menu.remove();
       this.menu = null;
     }
-    this.current = {};
+    this.current ={};
     this.isActive = false;
     this.activationPending = false;
   }
 
-  selectItemAtIndex(index, originalEvent) {
+  selectItemAtIndex(index, originalEvent, hideMenu=true) {
+    const current = this.current;
+    this.hideMenu();
     index = parseInt(index);
     if (typeof index !== "number" || isNaN(index) || !originalEvent.target) return;
-    let item = this.current.filteredItems[index];
-    let content = this.current.collection.selectTemplate(item);
-    if (content !== null) this.replaceText(content, originalEvent, item);
+    let item = current.filteredItems[index];
+    let content = current.collection.selectTemplate(item);
+    if (content !== null) this.replaceText(content, originalEvent, item, current);
   }
 
-  replaceText(content, originalEvent, item) {
-    this.range.replaceTriggerText(content, true, true, originalEvent, item);
+  replaceText(content, originalEvent, item, current) {
+    this.range.replaceTriggerText(content, true, true, originalEvent, item, current);
   }
 
   _append(collection, newValues, replace) {
