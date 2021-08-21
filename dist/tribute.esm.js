@@ -1190,7 +1190,7 @@ class TributeSearch {
 
         let c = pattern[patternIndex];
         let index = string.indexOf(c, stringIndex);
-        let best = { score : 0, cache : []};
+        let best;
         let temp;
 
         while (index > -1) {

@@ -1256,10 +1256,7 @@
 
         var c = pattern[patternIndex];
         var index = string.indexOf(c, stringIndex);
-        var best = {
-          score: 0,
-          cache: []
-        };
+        var best;
         var temp;
 
         while (index > -1) {
