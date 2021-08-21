@@ -126,6 +126,7 @@ class TributeRange {
                 let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
                     ? this.tribute.replaceTextSuffix
                     : ' '
+                text = this.stripHtml(text)
                 text += textSuffix
                 let startPos = info.mentionPosition
                 let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace
@@ -161,7 +162,7 @@ class TributeRange {
         sel = this.getWindowSelection()
         range = this.getDocument().createRange()
         range.setStart(sel.anchorNode, startPos)
-        range.setEnd(sel.anchorNode, Math.min(endPos,sel.anchorNode.length))
+        range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length))
         range.deleteContents()
 
         let el = this.getDocument().createElement('div')
@@ -175,23 +176,32 @@ class TributeRange {
 
         // Preserve the selection
         if (lastNode) {
-            range = range.cloneRange()
-            range.setStartAfter(lastNode)
+            range = this.getDocument().createRange()
+            range.setStart(lastNode, lastNode.length)
             range.collapse(true)
             sel.removeAllRanges()
             sel.addRange(range)
+            sel.collapseToEnd()
         }
     }
 
+    stripHtml(html) {
+        let tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+    }
+
     pasteText(html, startPos, endPos) {
+        text = this.stripHtml(html)
         let range = this.getDocument().createRange()
         let sel = this.getWindowSelection()
         sel.anchorNode.nodeValue = sel.anchorNode.nodeValue.substring(0, startPos)
-            + html + sel.anchorNode.nodeValue.substring(endPos, sel.anchorNode.nodeValue.length)
-        range.setStart(sel.anchorNode, startPos + html.length)
+            + text + sel.anchorNode.nodeValue.substring(endPos, sel.anchorNode.nodeValue.length)
+        range.setStart(sel.anchorNode, startPos + text.length)
         range.collapse(true)
         sel.removeAllRanges()
         sel.addRange(range)
+        sel.collapseToEnd()
     }
 
     getWindowSelection() {
