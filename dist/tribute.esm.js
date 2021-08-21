@@ -111,24 +111,20 @@ class TributeEvents {
   bind(element) {
     element.boundKeyDown = this.keydown.bind(element, this);
     element.boundKeyUp = this.keyup.bind(element, this);
-    element.boundKeyPress = this.keypress.bind(element, this);
     element.boundInput = this.input.bind(element, this);
 
     element.addEventListener("keydown", element.boundKeyDown, true);
     element.addEventListener("keyup", element.boundKeyUp, true);
-    element.addEventListener("keypress", element.boundKeyPress, true);
     element.addEventListener("input", element.boundInput, true);
   }
 
   unbind(element) {
     element.removeEventListener("keydown", element.boundKeyDown, true);
     element.removeEventListener("keyup", element.boundKeyUp, true);
-    element.removeEventListener("keypress", element.boundKeyPress, true);
     element.removeEventListener("input", element.boundInput, true);
 
     delete element.boundKeyDown;
     delete element.boundKeyUp;
-    delete element.boundKeyPress;
     delete element.boundInput;
   }
 
@@ -181,10 +177,6 @@ class TributeEvents {
     }
   }
 
-  keypress(  instance, event) {
-    instance.keyup.call(this, instance, event);
-  }
-  
   keyup(instance, event) {    
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {

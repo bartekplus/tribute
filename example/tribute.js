@@ -161,11 +161,9 @@
       value: function bind(element) {
         element.boundKeyDown = this.keydown.bind(element, this);
         element.boundKeyUp = this.keyup.bind(element, this);
-        element.boundKeyPress = this.keypress.bind(element, this);
         element.boundInput = this.input.bind(element, this);
         element.addEventListener("keydown", element.boundKeyDown, true);
         element.addEventListener("keyup", element.boundKeyUp, true);
-        element.addEventListener("keypress", element.boundKeyPress, true);
         element.addEventListener("input", element.boundInput, true);
       }
     }, {
@@ -173,11 +171,9 @@
       value: function unbind(element) {
         element.removeEventListener("keydown", element.boundKeyDown, true);
         element.removeEventListener("keyup", element.boundKeyUp, true);
-        element.removeEventListener("keypress", element.boundKeyPress, true);
         element.removeEventListener("input", element.boundInput, true);
         delete element.boundKeyDown;
         delete element.boundKeyUp;
-        delete element.boundKeyPress;
         delete element.boundInput;
       }
     }, {
@@ -234,11 +230,6 @@
           tribute.current.externalTrigger = false;
           tribute.hideMenu();
         }
-      }
-    }, {
-      key: "keypress",
-      value: function keypress(instance, event) {
-        instance.keyup.call(this, instance, event);
       }
     }, {
       key: "keyup",
