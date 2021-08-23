@@ -9,22 +9,22 @@ class TributeMenuEvents {
     this.menuClickEvent = this.tribute.events.click.bind(null, this);
     this.menuContainerScrollEvent = this.debounce(
       () => {
-        if (this.tribute.isActive) {
           this.tribute.hideMenu();
-        }
       },
       10,
       false
     );
     this.windowResizeEvent = this.debounce(
       () => {
-        if (this.tribute.isActive) {
           this.tribute.hideMenu();
-        }
       },
       10,
       false
     );
+
+    this.windowBlurEvent = () => {
+        this.tribute.hideMenu();
+    };
 
     // fixes IE11 issues with mousedown
     this.tribute.range
@@ -34,6 +34,7 @@ class TributeMenuEvents {
       .getDocument()
       .addEventListener("mousedown", this.menuClickEvent, false);
     window.addEventListener("resize", this.windowResizeEvent);
+    window.addEventListener("blur", this.windowBlurEvent);
 
     if (this.menuContainer) {
       this.menuContainer.addEventListener(
