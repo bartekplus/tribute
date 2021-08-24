@@ -703,7 +703,7 @@ class TributeRange {
     }
 
     pasteText(html, startPos, endPos) {
-        text = this.stripHtml(html);
+        let text = this.stripHtml(html);
         let range = this.getDocument().createRange();
         let sel = this.getWindowSelection();
         sel.anchorNode.nodeValue = sel.anchorNode.nodeValue.substring(0, startPos)
