@@ -661,8 +661,12 @@ class TributeRange {
   getContentEditableCaretPosition(selectedNodePosition) {
     const sel = this.getWindowSelection();
     const range = this.getDocument().createRange();
-    range.setStart(sel.anchorNode, selectedNodePosition);
-    range.setEnd(sel.anchorNode, selectedNodePosition);
+    const textNode =
+      sel.anchorNode.nodeType === Node.TEXT_NODE
+        ? sel.anchorNode
+        : sel.anchorNode.childNodes[0];
+    range.setStart(textNode, selectedNodePosition);
+    range.setEnd(textNode, selectedNodePosition);
 
     range.collapse(false);
 

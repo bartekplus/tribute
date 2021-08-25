@@ -216,8 +216,9 @@ class TributeEvents {
       tribute.autocompleteMode
     );
 
-    if (info && info.mentionTriggerChar) {
-      return info.mentionTriggerChar.charCodeAt(0);
+    if (info) {
+      if (info.mentionTriggerChar) return info.mentionTriggerChar.charCodeAt(0);
+      else return info.mentionText.charCodeAt(info.mentionText.length - 1);
     } else {
       return event.keyCode || event.which || event.code || false;
     }
