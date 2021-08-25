@@ -1,189 +1,272 @@
-// Cross-broswer implementation of text ranges and selections
-// documentation: http://bililite.com/blog/2011/01/17/cross-browser-text-ranges-and-selections/
-// Version: 2.6
-// Copyright (c) 2013 Daniel Wachsstock
-// MIT license:
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
+'use strict';
 
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
+let bililiteRange; // create one global variable
 
 (function(){
+	
+const datakey = Symbol(); // use as the key to modify elements.
 
-// a bit of weirdness with IE11: using 'focus' is flaky, even if I'm not bubbling, as far as I can tell.
-var focusEvent = 'onfocusin' in document.createElement('input') ? 'focusin' : 'focus';
-
-// IE11 normalize is buggy (http://connect.microsoft.com/IE/feedback/details/809424/node-normalize-removes-text-if-dashes-are-present)
-var n = document.createElement('div');
-n.appendChild(document.createTextNode('x-'));
-n.appendChild(document.createTextNode('x'));
-n.normalize();
-var canNormalize = n.firstChild.length == 3;
-
-
-bililiteRange = function(el, debug){
+bililiteRange = function(el){
 	var ret;
-	if (debug){
-		ret = new NothingRange(); // Easier to force it to use the no-selection type than to try to find an old browser
-	}else if (window.getSelection && el.setSelectionRange){
-		// Standards. Element is an input or textarea 
+	if (el.setSelectionRange){
+		// Element is an input or textarea 
 		// note that some input elements do not allow selections
 		try{
-			el.selectionStart; // even getting the selection in such an element will throw
+			el.selectionStart = el.selectionStart;
 			ret = new InputRange();
 		}catch(e){
 			ret = new NothingRange();
 		}
-	}else if (window.getSelection){
+	}else{
 		// Standards, with any other kind of element
 		ret = new W3CRange();
-	}else if (document.selection){
-		// Internet Explorer
-		ret = new IERange();
-	}else{
-		// doesn't support selection
-		ret = new NothingRange();
 	}
 	ret._el = el;
 	// determine parent document, as implemented by John McLear <john@mclear.co.uk>
 	ret._doc = el.ownerDocument;
-	ret._win = 'defaultView' in ret._doc ? ret._doc.defaultView : ret._doc.parentWindow;
-	ret._textProp = textProp(el);
-	ret._bounds = [0, ret.length()];
-	//  There's no way to detect whether a focus event happened as a result of a click (which should change the selection)
-	// or as a result of a keyboard event (a tab in) or a script  action (el.focus()). So we track it globally, which is a hack, and is likely to fail
-	// in edge cases (right-clicks, drag-n-drop), and is vulnerable to a lower-down handler preventing bubbling.
-	// I just don't know a better way.
-	// I'll hack my event-listening code below, rather than create an entire new bilililiteRange, potentially before the DOM has loaded
-	if (!('bililiteRangeMouseDown' in ret._doc)){
-		var _doc = {_el: ret._doc};
-		ret._doc.bililiteRangeMouseDown = false;
-		bililiteRange.fn.listen.call(_doc, 'mousedown', function() {
-			ret._doc.bililiteRangeMouseDown = true;
-		});
-		bililiteRange.fn.listen.call(_doc, 'mouseup', function() {
-			ret._doc.bililiteRangeMouseDown = false;
-		});
-	}
-	// note that bililiteRangeSelection is an array, which means that copying it only copies the address, which points to the original.
-	// make sure that we never let it (always do return [bililiteRangeSelection[0], bililiteRangeSelection[1]]), which means never returning
-	// this._bounds directly
-	if (!('bililiteRangeSelection' in el)){
-		// start tracking the selection
-		function trackSelection(evt){
-			if (evt && evt.which == 9){
-				// do tabs my way, by restoring the selection
-				// there's a flash of the browser's selection, but I don't see a way of avoiding that
-				ret._nativeSelect(ret._nativeRange(el.bililiteRangeSelection));
-			}else{
-				el.bililiteRangeSelection = ret._nativeSelection();
-			}
-		}
-		trackSelection();
-		// only IE does this right and allows us to grab the selection before blurring
-		if ('onbeforedeactivate' in el){
-			ret.listen('beforedeactivate', trackSelection);
-		}else{
-			// with standards-based browsers, have to listen for every user interaction
-			ret.listen('mouseup', trackSelection).listen('keyup', trackSelection);
-		}
-		ret.listen(focusEvent, function(){
-			// restore the correct selection when the element comes into focus (mouse clicks change the position of the selection)
-			// Note that Firefox will not fire the focus event until the window/tab is active even if el.focus() is called
-			// https://bugzilla.mozilla.org/show_bug.cgi?id=566671
-			if (!ret._doc.bililiteRangeMouseDown){
-				ret._nativeSelect(ret._nativeRange(el.bililiteRangeSelection));
-			}
-		});
-	}
-	if (!('oninput' in el)){
-		// give IE8 a chance. Note that this still fails in IE11, which has has oninput on contenteditable elements but does not 
-		// dispatch input events. See http://connect.microsoft.com/IE/feedback/details/794285/ie10-11-input-event-does-not-fire-on-div-with-contenteditable-set
-		// TODO: revisit this when I have IE11 running on my development machine
-		// TODO: FIXED
-		
-		var inputhack = function() {ret.dispatch({type: 'input', bubbles: true}) };
-		
-		if(typeof window.setTimeout == 'object'){ /* IE 8 sees `setTimeout` as an `object` and not a `function` */
-			
-			ret.listen('keyup', inputhack);
-			ret.listen('cut', inputhack);
-			ret.listen('paste', inputhack);
-			ret.listen('drop', inputhack);
-			el.oninput = 'patched';
-			
-		}
-	}else{
-		
-		/* 
-			IE9/IE11 supports the `textinput` event (even on contenteditable elements)
-
-			See http://help.dottoro.com/ljhiwalm.php 
-		*/
-		
-		/* Detect IE 9/11, See: https://stackoverflow.com/questions/21825157/internet-explorer-11-detection  */
-		
-		if((!(window.FileReader) || !!window.MSInputMethodContext) && !!document.documentMode){ 
-			
-			ret.listen('textinput', function(){ ret.dispatch({type: 'input', bubbles: true}); });
-			
-		}
-	}
+	ret._win = ret._doc.defaultView;
+	ret._bounds = [0, ret.length];
+	
+	// selection tracking. We want clicks to set the selection to the clicked location but tabbing in or element.focus() should restore
+	// the selection to what it was.
+	// There's no good way to do this. I just assume that a mousedown (or a drag and drop
+	// into the element) within 100 ms of the focus event must have caused the focus, and
+	// therefore we should not restore the selection.
+	if (!(el[datakey])){ // we haven't processed this element yet	
+		const data = createDataObject (el);
+		startupHooks.forEach ( hook => hook (el, ret, data) );
+	}	
 	return ret;
 }
 
-function textProp(el){
-	// returns the property that contains the text of the element
-	// note that for <body> elements the text attribute represents the obsolete text color, not the textContent.
-	// we document that these routines do not work for <body> elements so that should not be relevant
+bililiteRange.version = 3.2;
 
-	// Bugfix for https://github.com/dwachss/bililiteRange/issues/18 
-	// Adding typeof check of string for el.value in case for li elements
-	if (typeof el.value === 'string') return 'value';
-	if (typeof el.text != 'undefined') return 'text';
-	if (typeof el.textContent != 'undefined') return 'textContent';
-	return 'innerText';
+const startupHooks = new Set();
+bililiteRange.addStartupHook = fn => startupHooks.add(fn);
+startupHooks.add (trackSelection);
+startupHooks.add (fixInputEvents);
+startupHooks.add (correctNewlines);
+
+function trackSelection (element, range, data){
+	data.selection = [0,0];
+	range.listen('focusout', evt => data.selection = range._nativeSelection() );	
+	range.listen('mousedown', evt => data.mousetime = evt.timeStamp );
+	range.listen('drop', evt => data.mousetime = evt.timeStamp );
+	range.listen('focus', evt => {
+		if ('mousetime' in data && evt.timeStamp - data.mousetime < 100) return;
+		range._nativeSelect(range._nativeRange(data.selection))
+	})
+}
+
+function fixInputEvents (element, range, data){
+	// DOM 3 input events, https://www.w3.org/TR/input-events-1/
+	// have a data field with the text inserted, but thatisn't enough to fully describe the change;
+	// we need to know the old text (or at least its length)
+	// and *where* the new text was inserted.
+	// So we enhance input events with that information. 
+	// the "newText" should always be the same as the 'data' field, if it is defined
+	data.oldText = range.all();
+	data.liveRanges = new Set();
+	range.listen('input', evt => {
+		const newText = range.all();
+		if (!evt.bililiteRange){
+			evt.bililiteRange = diff (data.oldText, newText);
+			if (evt.bililiteRange.unchanged){
+				// no change. Assume that whatever happened, happened at the selection point (and use whatever data the browser gives us).
+				evt.bililiteRange.start = range.clone().bounds('selection')[1] - (evt.data || '').length;
+			}
+		}
+		data.oldText = newText;
+		
+		// Also update live ranges on this element
+		data.liveRanges.forEach( rng => {
+			const start = evt.bililiteRange.start;
+			const oldend = start + evt.bililiteRange.oldText.length;
+			const newend = start + evt.bililiteRange.newText.length;
+			// adjust bounds; this tries to emulate the algorithm that Microsoft Word uses for bookmarks
+			let [b0, b1] = rng.bounds();
+			if (b0 <= start){
+				// no change
+			}else if (b0 > oldend){
+				b0  += newend - oldend;
+			}else{
+				b0  = newend;
+			}
+			if (b1 < start){
+				// no change
+			}else if (b1 >= oldend){
+				b1 += newend - oldend;
+			}else{
+				b1 = start;
+			}
+			rng.bounds([b0, b1]);				
+		})
+	});
+}
+
+function diff (oldText, newText){
+	// Try to find the changed text, assuming it was a continuous change
+	if (oldText == newText){
+		return {
+			unchanged: true,
+			start: 0,
+			oldText,
+			newText
+		}
+	}
+
+	const oldlen = oldText.length;
+	const	newlen = newText.length;
+	for (var i = 0; i < newlen && i < oldlen; ++i){
+		if (newText.charAt(i) != oldText.charAt(i)) break;
+	}
+	const start = i;
+	for (i = 0; i < newlen && i < oldlen; ++i){
+		let newpos = newlen-i-1, oldpos = oldlen-i-1;
+		if (newpos < start || oldpos < start) break;
+		if (newText.charAt(newpos) != oldText.charAt(oldpos)) break;
+	}
+	const oldend = oldlen-i;
+	const newend = newlen-i;
+	return {
+		start,
+		oldText: oldText.slice(start, oldend),
+		newText: newText.slice(start, newend)
+	}
+};
+bililiteRange.diff = diff; // expose
+
+function correctNewlines (element, range, data){
+	// we need to insert newlines rather than create new elements, so character-based calculations work
+	range.listen('paste', evt => {
+		if (evt.defaultPrevented) return;
+		// windows adds \r's to clipboard!
+		range.clone().bounds('selection').
+			text(evt.clipboardData.getData("text/plain").replace(/\r/g,''), {inputType: 'insertFromPaste'}).
+			bounds('endbounds').
+			select().
+			scrollIntoView();
+		evt.preventDefault();
+	});
+	range.listen('keydown', function(evt){
+		if (evt.ctrlKey || evt.altKey || evt.shiftKey || evt.metaKey) return;
+		if (evt.defaultPrevented) return;
+		if (evt.key == 'Enter'){
+			range.clone().bounds('selection').
+				text('\n', {inputType: 'insertLineBreak'}).
+				bounds('endbounds').
+				select().
+				scrollIntoView();
+			evt.preventDefault();
+		}
+	});
+}
+
+// convenience function for defining input events
+function inputEventInit(type, oldText, newText, start, inputType){
+	return {
+		type,
+		inputType,
+		data: newText,
+		bubbles: true,
+		bililiteRange: {
+			unchanged: (oldText == newText),
+			start,
+			oldText,
+			newText
+		}
+	};
 }
 
 // base class
 function Range(){}
 Range.prototype = {
-	length: function() {
-		return this._el[this._textProp].replace(/\r/g, '').length; // need to correct for IE's CrLf weirdness
+	 // allow use of range[0] and range[1] for start and end of bounds 
+	get 0(){
+		return this.bounds()[0];
+	},
+	set 0(x){
+		this.bounds([x, this[1]]);
+		return x;
+	},
+	get 1(){
+		return this.bounds()[1];
+	},
+	set 1(x){
+		this.bounds([this[0], x]);
+		return x;
+	},
+	all: function(text){
+		if (arguments.length){
+			return this.bounds('all').text(text, {inputType: 'insertReplacementText'});
+		}else{
+			return this._el[this._textProp];
+		}
 	},
 	bounds: function(s){
-		if (bililiteRange.bounds[s]){
-			this._bounds = bililiteRange.bounds[s].apply(this);
+		if (typeof s === 'number'){
+			this._bounds = [s,s];
+		}else if (bililiteRange.bounds[s]){
+			this.bounds(bililiteRange.bounds[s].apply(this, arguments));
+		}else if (s && s.bounds){
+			this._bounds = s.bounds(); // copy bounds from an existing range
 		}else if (s){
 			this._bounds = s; // don't do error checking now; things may change at a moment's notice
 		}else{
+			// constrain bounds now
 			var b = [
-				Math.max(0, Math.min (this.length(), this._bounds[0])),
-				Math.max(0, Math.min (this.length(), this._bounds[1]))
+				Math.max(0, Math.min (this.length, this._bounds[0])),
+				Math.max(0, Math.min (this.length, this._bounds[1]))
 			];
 			b[1] = Math.max(b[0], b[1]);
-			return b; // need to constrain it to fit
+			return b;
 		}
 		return this; // allow for chaining
 	},
+	clone: function(){
+		return bililiteRange(this._el).bounds(this.bounds());
+	},
+	get data(){
+		return this._el[datakey];
+	},
+	dispatch: function(opts = {}){
+		var event = new Event (opts.type, opts);
+		event.view = this._win;
+		for (let prop in opts) try { event[prop] = opts[prop] } catch(e){}; // ignore read-only errors for properties that were copied in the previous line
+		this._el.dispatchEvent(event); // note that the event handlers will be called synchronously, before the "return this;"
+		return this;
+	},
+	get document() {
+		return this._doc;
+	},
+	dontlisten: function (type, func = console.log){
+		this._el.removeEventListener(type, func);
+		return this;
+	},
+	get element() {
+		return this._el
+	},
+	get length() {
+		return this._el[this._textProp].length;
+	},
+	live (on = true){
+		this.data.liveRanges[on ? 'add' : 'delete'](this);
+		return this;
+	},
+	listen: function (type, func = console.log){
+		this._el.addEventListener(type, func);
+		return this;
+	},
+	scrollIntoView: function(scroller = (top => this._el.scrollTop = top) ){
+		var top = this.top();
+		// scroll into position if necessary
+		if (this._el.scrollTop > top || this._el.scrollTop+this._el.clientHeight < top){
+			scroller.call(this._el, top);
+		}
+		return this;
+	},
 	select: function(){
-		var b = this._el.bililiteRangeSelection = this.bounds();
+		var b = this.data.selection = this.bounds();
 		if (this._el === this._doc.activeElement){
 			// only actually select if this element is active!
 			this._nativeSelect(this._nativeRange(b));
@@ -191,184 +274,108 @@ Range.prototype = {
 		this.dispatch({type: 'select', bubbles: true});
 		return this; // allow for chaining
 	},
-	text: function(text, select){
+	selection: function(text){
 		if (arguments.length){
-			var bounds = this.bounds(), el = this._el;
-			// signal the input per DOM 3 input events, http://www.w3.org/TR/DOM-Level-3-Events/#h4_events-inputevents
-			// we add another field, bounds, which are the bounds of the original text before being changed.
-			this.dispatch({type: 'beforeinput', bubbles: true,
-			               data: text, bounds: bounds});
-			this._nativeSetText(text, this._nativeRange(bounds));
-			if (select == 'start'){
-				this.bounds ([bounds[0], bounds[0]]);
-			}else if (select == 'end'){
-				this.bounds ([bounds[0]+text.length, bounds[0]+text.length]);
-			}else if (select == 'all'){
-				this.bounds ([bounds[0], bounds[0]+text.length]);
-			}
-			this.dispatch({type: 'input', bubbles: true,
-			               data: text, bounds: bounds});
-			return this; // allow for chaining
+			return this.bounds('selection').text(text).bounds('endbounds').select();
 		}else{
-			return this._nativeGetText(this._nativeRange(this.bounds())).replace(/\r/g, ''); // need to correct for IE's CrLf weirdness
+			return this.bounds('selection').text();
 		}
-	},
-	insertEOL: function (){
-		this._nativeEOL();
-		this._bounds = [this._bounds[0]+1, this._bounds[0]+1]; // move past the EOL marker
-		return this;
 	},
 	sendkeys: function (text){
-		var self = this;
-		this.data().sendkeysOriginalText = this.text();
-		this.data().sendkeysBounds = undefined;
+		this.data.sendkeysOriginalText = this.text();
+		this.data.sendkeysBounds = undefined;
 		function simplechar (rng, c){
 			if (/^{[^}]*}$/.test(c)) c = c.slice(1,-1);	// deal with unknown {key}s
-			for (var i =0; i < c.length; ++i){
-				var x = c.charCodeAt(i);
-				rng.dispatch({type: 'keypress', bubbles: true, keyCode: x, which: x, charCode: x});
-			}
-			rng.text(c, 'end');
+			rng.text(c).bounds('endbounds');
 		}
-		text.replace(/{[^}]*}|[^{]+|{/g, function(part){
-			(bililiteRange.sendkeys[part] || simplechar)(self, part, simplechar);
-		});
-		this.bounds(this.data().sendkeysBounds);
-		this.dispatch({type: 'sendkeys', which: text});
+		text.replace(/{[^}]*}|[^{]+|{/g, part => (bililiteRange.sendkeys[part] || simplechar)(this, part, simplechar) );
+		this.bounds(this.data.sendkeysBounds);
+		this.dispatch({type: 'sendkeys', detail: text});
 		return this;
+	},
+	text: function(text, {inputType = 'insertText'} = {}){
+		if ( text !== undefined ){
+			let eventparams = [this.text(), text, this[0], inputType];
+			this.dispatch (inputEventInit('beforeinput',...eventparams));
+			this._nativeSetText(text, this._nativeRange(this.bounds()));
+			this[1] = this[0]+text.length;
+			this.dispatch (inputEventInit('input',...eventparams));
+			return this; // allow for chaining
+		}else{
+			return this._nativeGetText(this._nativeRange(this.bounds()));
+		}
 	},
 	top: function(){
 		return this._nativeTop(this._nativeRange(this.bounds()));
 	},
-	scrollIntoView: function(scroller){
-		var top = this.top();
-		// scroll into position if necessary
-		if (this._el.scrollTop > top || this._el.scrollTop+this._el.clientHeight < top){
-			if (scroller){
-				scroller.call(this._el, top);
-			}else{
-				this._el.scrollTop = top;
-			}
-		}
-		return this;
+	get window() {
+		return this._win;
 	},
 	wrap: function (n){
 		this._nativeWrap(n, this._nativeRange(this.bounds()));
 		return this;
 	},
-	selection: function(text){
-		if (arguments.length){
-			return this.bounds('selection').text(text, 'end').select();
-		}else{
-			return this.bounds('selection').text();
-		}
-	},
-	clone: function(){
-		return bililiteRange(this._el).bounds(this.bounds());
-	},
-	all: function(text){
-		if (arguments.length){
-			this.dispatch ({type: 'beforeinput', bubbles: true, data: text});
-			this._el[this._textProp] = text;
-			this.dispatch ({type: 'input', bubbles: true, data: text});
-			return this;
-		}else{
-			return this._el[this._textProp].replace(/\r/g, ''); // need to correct for IE's CrLf weirdness
-		}
-	},
-	element: function() { return this._el },
-	// includes a quickie polyfill for CustomEvent for IE that isn't perfect but works for me
-	// IE10 allows custom events but not "new CustomEvent"; have to do it the old-fashioned way
-	dispatch: function(opts){
-		opts = opts || {};
-		var event = document.createEvent ? document.createEvent('CustomEvent') : this._doc.createEventObject();
-		event.initCustomEvent && event.initCustomEvent(opts.type, !!opts.bubbles, !!opts.cancelable, opts.detail);
-		for (var key in opts) event[key] = opts[key];
-		// dispatch event asynchronously (in the sense of on the next turn of the event loop; still should be fired in order of dispatch
-		var el = this._el;
-		setTimeout(function(){
-			try {
-				el.dispatchEvent ? el.dispatchEvent(event) : el.fireEvent("on" + opts.type, document.createEventObject());
-				}catch(e){
-				// IE8 will not let me fire custom events at all. Call them directly
-					var listeners = el['listen'+opts.type];
-					if (listeners) for (var i = 0; i < listeners.length; ++i){
-						listeners[i].call(el, event);
-					}
-				}
-		}, 0);
-		return this;
-	},
-	listen: function (type, func){
-		var el = this._el;
-		if (el.addEventListener){
-			el.addEventListener(type, func);
-		}else{
-			el.attachEvent("on" + type, func);
-			// IE8 can't even handle custom events created with createEventObject  (though it permits attachEvent), so we have to make our own
-			var listeners = el['listen'+type] = el['listen'+type] || [];
-			listeners.push(func);
-		}
-		return this;
-	},
-	dontlisten: function (type, func){
-		var el = this._el;
-		if (el.removeEventListener){
-			el.removeEventListener(type, func);
-		}else try{
-			el.detachEvent("on" + type, func);
-		}catch(e){
-			var listeners = el['listen'+type];
-			if (listeners) for (var i = 0; i < listeners.length; ++i){
-				if (listeners[i] === func) listeners[i] = function(){}; // replace with a noop
-			}
-		}
-		return this;
-	}
 };
 
 // allow extensions ala jQuery
-bililiteRange.fn = Range.prototype; // to allow monkey patching
+bililiteRange.prototype = Range.prototype;
 bililiteRange.extend = function(fns){
-	for (fn in fns) Range.prototype[fn] = fns[fn];
+	Object.assign(bililiteRange.prototype, fns);
 };
+
+bililiteRange.override = (name, fn) => {
+	const oldfn = bililiteRange.prototype[name];
+	bililiteRange.prototype[name] = function(){
+		const oldsuper = this.super;
+		this.super = oldfn;
+		const ret = fn.apply(this, arguments);
+		this.super = oldsuper;
+		return ret;
+	};
+}
 
 //bounds functions
 bililiteRange.bounds = {
-	all: function() { return [0, this.length()] },
-	start: function () { return [0,0] },
-	end: function () { return [this.length(), this.length()] },
-	selection: function(){
+	all: function() { return [0, this.length] },
+	start: function() { return 0 },
+	end: function() { return this.length },
+	selection: function() {
 		if (this._el === this._doc.activeElement){
 			this.bounds ('all'); // first select the whole thing for constraining
 			return this._nativeSelection();
 		}else{
-			return this._el.bililiteRangeSelection;
+			return this.data.selection;
 		}
+	},
+	startbounds: function() { return  this[0] },
+	endbounds: function() { return  this[1] },
+	union: function (name,...rest) {
+		const b = this.clone().bounds(...rest);
+		return [ Math.min(this[0], b[0]), Math.max(this[1], b[1]) ];
+	},
+	intersection: function (name,...rest) {
+		const b = this.clone().bounds(...rest);
+		return [ Math.max(this[0], b[0]), Math.min(this[1], b[1]) ];
 	}
 };
 
 // sendkeys functions
 bililiteRange.sendkeys = {
-	'{enter}': function (rng){
-		rng.dispatch({type: 'keypress', bubbles: true, keyCode: '\n', which: '\n', charCode: '\n'});
-		rng.insertEOL();
-	},
 	'{tab}': function (rng, c, simplechar){
 		simplechar(rng, '\t'); // useful for inserting what would be whitespace
 	},
-	'{newline}': function (rng, c, simplechar){
-		simplechar(rng, '\n'); // useful for inserting what would be whitespace (and if I don't want to use insertEOL, which does some fancy things)
+	'{newline}': function (rng){
+		rng.text('\n', {inputType: 'insertLineBreak'}).bounds('endbounds');
 	},
 	'{backspace}': function (rng){
 		var b = rng.bounds();
 		if (b[0] == b[1]) rng.bounds([b[0]-1, b[0]]); // no characters selected; it's just an insertion point. Remove the previous character
-		rng.text('', 'end'); // delete the characters and update the selection
+		rng.text('', {inputType: 'deleteContentBackward'}); // delete the characters and update the selection
 	},
 	'{del}': function (rng){
 		var b = rng.bounds();
 		if (b[0] == b[1]) rng.bounds([b[0], b[0]+1]); // no characters selected; it's just an insertion point. Remove the next character
-		rng.text('', 'end'); // delete the characters and update the selection
+		rng.text('', {inputType: 'deleteContentForward'}).bounds('endbounds'); // delete the characters and update the selection
 	},
 	'{rightarrow}':  function (rng){
 		var b = rng.bounds();
@@ -380,120 +387,30 @@ bililiteRange.sendkeys = {
 		if (b[0] == b[1]) --b[0]; // no characters selected; it's just an insertion point. Move to the left
 		rng.bounds([b[0], b[0]]);
 	},
-	'{selectall}' : function (rng){
+	'{selectall}': function (rng){
 		rng.bounds('all');
 	},
 	'{selection}': function (rng){
 		// insert the characters without the sendkeys processing
-		var s = rng.data().sendkeysOriginalText;
-		for (var i =0; i < s.length; ++i){
-			var x = s.charCodeAt(i);
-			rng.dispatch({type: 'keypress', bubbles: true, keyCode: x, which: x, charCode: x});
-		}
-		rng.text(s, 'end');
+		rng.text(rng.data.sendkeysOriginalText).bounds('endbounds');
 	},
-	'{mark}' : function (rng){
-		rng.data().sendkeysBounds = rng.bounds();
+	'{mark}': function (rng){
+		rng.data.sendkeysBounds = rng.bounds();
 	}
 };
-// Synonyms from the proposed DOM standard (http://www.w3.org/TR/DOM-Level-3-Events-key/)
-bililiteRange.sendkeys['{Enter}'] = bililiteRange.sendkeys['{enter}'];
+// Synonyms from the DOM standard (http://www.w3.org/TR/DOM-Level-3-Events-key/)
+bililiteRange.sendkeys['{Enter}'] = bililiteRange.sendkeys['{enter}'] = bililiteRange.sendkeys['{newline}'];
 bililiteRange.sendkeys['{Backspace}'] = bililiteRange.sendkeys['{backspace}'];
 bililiteRange.sendkeys['{Delete}'] = bililiteRange.sendkeys['{del}'];
 bililiteRange.sendkeys['{ArrowRight}'] = bililiteRange.sendkeys['{rightarrow}'];
 bililiteRange.sendkeys['{ArrowLeft}'] = bililiteRange.sendkeys['{leftarrow}'];
 
-function IERange(){}
-IERange.prototype = new Range();
-IERange.prototype._nativeRange = function (bounds){
-	var rng;
-	if (this._el.tagName == 'INPUT'){
-		// IE 8 is very inconsistent; textareas have createTextRange but it doesn't work
-		rng = this._el.createTextRange();
-	}else{
-		rng = this._doc.body.createTextRange ();
-		rng.moveToElementText(this._el);
-	}
-	if (bounds){
-		if (bounds[1] < 0) bounds[1] = 0; // IE tends to run elements out of bounds
-		if (bounds[0] > this.length()) bounds[0] = this.length();
-		if (bounds[1] < rng.text.replace(/\r/g, '').length){ // correct for IE's CrLf weirdness
-			// block-display elements have an invisible, uncounted end of element marker, so we move an extra one and use the current length of the range
-			rng.moveEnd ('character', -1);
-			rng.moveEnd ('character', bounds[1]-rng.text.replace(/\r/g, '').length);
-		}
-		if (bounds[0] > 0) rng.moveStart('character', bounds[0]);
-	}
-	return rng;					
-};
-IERange.prototype._nativeSelect = function (rng){
-	rng.select();
-};
-IERange.prototype._nativeSelection = function (){
-	// returns [start, end] for the selection constrained to be in element
-	var rng = this._nativeRange(); // range of the element to constrain to
-	var len = this.length();
-	var sel = this._doc.selection.createRange();
-	try{
-		return [
-			iestart(sel, rng),
-			ieend (sel, rng)
-		];
-	}catch (e){
-		// TODO: determine if this is still necessary, since we only call _nativeSelection if _el is active
-		// IE gets upset sometimes about comparing text to input elements, but the selections cannot overlap, so make a best guess
-		return (sel.parentElement().sourceIndex < this._el.sourceIndex) ? [0,0] : [len, len];
-	}
-};
-IERange.prototype._nativeGetText = function (rng){
-	return rng.text;
-};
-IERange.prototype._nativeSetText = function (text, rng){
-	rng.text = text;
-};
-IERange.prototype._nativeEOL = function(){
-	if ('value' in this._el){
-		this.text('\n'); // for input and textarea, insert it straight
-	}else{
-		this._nativeRange(this.bounds()).pasteHTML('\n<br/>');
-	}
-};
-IERange.prototype._nativeTop = function(rng){
-	var startrng = this._nativeRange([0,0]);
-	return rng.boundingTop - startrng.boundingTop;
-}
-IERange.prototype._nativeWrap = function(n, rng) {
-	// hacky to use string manipulation but I don't see another way to do it.
-	var div = document.createElement('div');
-	div.appendChild(n);
-	// insert the existing range HTML after the first tag
-	var html = div.innerHTML.replace('><', '>'+rng.htmlText+'<');
-	rng.pasteHTML(html);
-};
-
-// IE internals
-function iestart(rng, constraint){
-	// returns the position (in character) of the start of rng within constraint. If it's not in constraint, returns 0 if it's before, length if it's after
-	var len = constraint.text.replace(/\r/g, '').length; // correct for IE's CrLf weirdness
-	if (rng.compareEndPoints ('StartToStart', constraint) <= 0) return 0; // at or before the beginning
-	if (rng.compareEndPoints ('StartToEnd', constraint) >= 0) return len;
-	for (var i = 0; rng.compareEndPoints ('StartToStart', constraint) > 0; ++i, rng.moveStart('character', -1));
-	return i;
-}
-function ieend (rng, constraint){
-	// returns the position (in character) of the end of rng within constraint. If it's not in constraint, returns 0 if it's before, length if it's after
-	var len = constraint.text.replace(/\r/g, '').length; // correct for IE's CrLf weirdness
-	if (rng.compareEndPoints ('EndToEnd', constraint) >= 0) return len; // at or after the end
-	if (rng.compareEndPoints ('EndToStart', constraint) <= 0) return 0;
-	for (var i = 0; rng.compareEndPoints ('EndToStart', constraint) > 0; ++i, rng.moveEnd('character', -1));
-	return i;
-}
-
 // an input element in a standards document. "Native Range" is just the bounds array
 function InputRange(){}
 InputRange.prototype = new Range();
+InputRange.prototype._textProp = 'value';
 InputRange.prototype._nativeRange = function(bounds) {
-	return bounds || [0, this.length()];
+	return bounds || [0, this.length];
 };
 InputRange.prototype._nativeSelect = function (rng){
 	this._el.setSelectionRange(rng[0], rng[1]);
@@ -512,6 +429,7 @@ InputRange.prototype._nativeEOL = function(){
 	this.text('\n');
 };
 InputRange.prototype._nativeTop = function(rng){
+	if (rng[0] == 0) return 0; // the range starts at the top
 	// I can't remember where I found this clever hack to find the location of text in a text area
 	var clone = this._el.cloneNode(true);
 	clone.style.visibility = 'hidden';
@@ -530,6 +448,7 @@ InputRange.prototype._nativeWrap = function() {throw new Error("Cannot wrap in a
 
 function W3CRange(){}
 W3CRange.prototype = new Range();
+W3CRange.prototype._textProp = 'textContent';
 W3CRange.prototype._nativeRange = function (bounds){
 	var rng = this._doc.createRange();
 	rng.selectNodeContents(this._el);
@@ -547,21 +466,20 @@ W3CRange.prototype._nativeSelect = function (rng){
 W3CRange.prototype._nativeSelection = function (){
 	// returns [start, end] for the selection constrained to be in element
 	var rng = this._nativeRange(); // range of the element to constrain to
-	if (this._win.getSelection().rangeCount == 0) return [this.length(), this.length()]; // append to the end
+	if (this._win.getSelection().rangeCount == 0) return [this.length, this.length]; // append to the end
 	var sel = this._win.getSelection().getRangeAt(0);
 	return [
 		w3cstart(sel, rng),
 		w3cend (sel, rng)
 	];
-	}
+};
 W3CRange.prototype._nativeGetText = function (rng){
-	return String.prototype.slice.apply(this._el.textContent, this.bounds());
-	// return rng.toString(); // this fails in IE11 since it insists on inserting \r's before \n's in Ranges. node.textContent works as expected
+	return rng.toString();
 };
 W3CRange.prototype._nativeSetText = function (text, rng){
 	rng.deleteContents();
 	rng.insertNode (this._doc.createTextNode(text));
-	if (canNormalize) this._el.normalize(); // merge the text with the surrounding text
+	this._el.normalize(); // merge the text with the surrounding text
 };
 W3CRange.prototype._nativeEOL = function(){
 	var rng = this._nativeRange(this.bounds());
@@ -648,20 +566,21 @@ function w3cstart(rng, constraint){
 	if (rng.compareBoundaryPoints (END_TO_START, constraint) >= 0) return constraint.toString().length;
 	rng = rng.cloneRange(); // don't change the original
 	rng.setEnd (constraint.endContainer, constraint.endOffset); // they now end at the same place
-	return constraint.toString().replace(/\r/g, '').length - rng.toString().replace(/\r/g, '').length;
+	return constraint.toString().length - rng.toString().length;
 }
 function w3cend (rng, constraint){
 	if (rng.compareBoundaryPoints (END_TO_END, constraint) >= 0) return constraint.toString().length; // at or after the end
 	if (rng.compareBoundaryPoints (START_TO_END, constraint) <= 0) return 0;
 	rng = rng.cloneRange(); // don't change the original
 	rng.setStart (constraint.startContainer, constraint.startOffset); // they now start at the same place
-	return rng.toString().replace(/\r/g, '').length;
+	return rng.toString().length;
 }
 
 function NothingRange(){}
 NothingRange.prototype = new Range();
+NothingRange.prototype._textProp = 'value';
 NothingRange.prototype._nativeRange = function(bounds) {
-	return bounds || [0,this.length()];
+	return bounds || [0,this.length];
 };
 NothingRange.prototype._nativeSelect = function (rng){ // do nothing
 };
@@ -685,103 +604,65 @@ NothingRange.prototype._nativeWrap = function() {throw new Error("Wrapping not i
 
 
 // data for elements, similar to jQuery data, but allows for monitoring with custom events
-var data = []; // to avoid attaching javascript objects to DOM elements, to avoid memory leaks
-bililiteRange.fn.data = function(){
-	var index = this.element().bililiteRangeData;
-	if (index == undefined){
-		index = this.element().bililiteRangeData = data.length;
-		data[index] = new Data(this);
-	}
-	return data[index];
-}
-try {
-	Object.defineProperty({},'foo',{}); // IE8 will throw an error
-	var Data = function(rng) {
-		// we use JSON.stringify to display the data values. To make some of those non-enumerable, we have to use properties
-		Object.defineProperty(this, 'values', {
-			value: {}
-		});
-		Object.defineProperty(this, 'sourceRange', {
-			value: rng
-		});
-		Object.defineProperty(this, 'toJSON', {
-			value: function(){
-				var ret = {};
-				for (var i in Data.prototype) if (i in this.values) ret[i] = this.values[i];
-				return ret;
-			}
-		});
-		// to display all the properties (not just those changed), use JSON.stringify(state.all)
-		Object.defineProperty(this, 'all', {
-			get: function(){
-				var ret = {};
-				for (var i in Data.prototype) ret[i] = this[i];
-				return ret;
-			}
-		});
-	}
+const monitored = new Set();
 
-	Data.prototype = {};
-	Object.defineProperty(Data.prototype, 'values', {
-		value: {}
-	});
-	Object.defineProperty(Data.prototype, 'monitored', {
-		value: {}
-	});
-	
-	bililiteRange.data = function (name, newdesc){
-		newdesc = newdesc || {};
-		var desc = Object.getOwnPropertyDescriptor(Data.prototype, name) || {};
-		if ('enumerable' in newdesc) desc.enumerable = !!newdesc.enumerable;
-		if (!('enumerable' in desc)) desc.enumerable = true; // default
-		if ('value' in newdesc) Data.prototype.values[name] = newdesc.value;
-		if ('monitored' in newdesc) Data.prototype.monitored[name] = newdesc.monitored;
-		desc.configurable = true;
-		desc.get = function (){
-			if (name in this.values) return this.values[name];
-			return Data.prototype.values[name];
-		};
-		desc.set = function (value){
-			this.values[name] = value;
-			if (Data.prototype.monitored[name]) this.sourceRange.dispatch({
-				type: 'bililiteRangeData',
-				bubbles: true,
-				detail: {name: name, value: value}
-			});
+function signalMonitor(prop, value, element){
+	const attr = `data-${prop}`;
+	element.dispatchEvent(new CustomEvent(attr, {bubbles: true, detail: value}));
+	try{
+		element.setAttribute (attr, value); // illegal attribute names will throw. Ignore it			
+	} finally { /* ignore */ }
+}
+
+function createDataObject (el){
+	return el[datakey] = new Proxy(new Data(el), {
+		set(obj, prop, value) {
+			obj[prop] = value;
+			if (monitored.has(prop)) signalMonitor(prop, value, obj.sourceElement);
+			return true; // in strict mode, 'set' returns a success flag 
 		}
-		Object.defineProperty(Data.prototype, name, desc);
+	});
+}
+
+var Data = function(el) {
+	Object.defineProperty(this, 'sourceElement', {
+		value: el
+	});
+}
+
+Data.prototype = {};
+// for use with ex options. JSON.stringify(range.data) should return only the options that were
+// both defined with bililiteRange.option() *and* actually had a value set on this particular data object.
+// JSON.stringify (range.data.all) should return all the options that were defined.
+Object.defineProperty(Data.prototype, 'toJSON', {
+	value: function(){
+		let ret = {};
+		for (let key in Data.prototype) if (this.hasOwnProperty(key)) ret[key] = this[key];
+		return ret;
 	}
-}catch(err){
-	// if we can't set object property properties, just use old-fashioned properties
-  Data = function(rng){ this.sourceRange = rng };
-	Data.prototype = {};
-	bililiteRange.data = function(name, newdesc){
-		if ('value' in newdesc) Data.prototype[name] = newdesc.value;
+});
+Object.defineProperty(Data.prototype, 'all', {
+	get: function(){
+		let ret = {};
+		for (let key in Data.prototype) ret[key] = this[key];
+		return ret;
 	}
+});
+Object.defineProperty(Data.prototype, 'trigger', {
+	value: function(){
+		monitored.forEach(prop => signalMonitor (prop, this[prop], this.sourceElement));
+	}
+});
+
+bililiteRange.createOption = function (name, desc = {}){
+	desc = Object.assign({
+		enumerable: true, // use these as the defaults
+		writable: true,
+		configurable: true
+	}, Object.getOwnPropertyDescriptor(Data.prototype, name), desc);
+	if ('monitored' in desc) monitored[desc.monitored ? 'add' : 'delete'](name);
+	Object.defineProperty(Data.prototype, name, desc);
+	return Data.prototype[name]; // return the default value
 }
 
 })();
-
-// Polyfill for forEach, per Mozilla documentation. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach#Polyfill
-if (!Array.prototype.forEach)
-{
-  Array.prototype.forEach = function(fun /*, thisArg */)
-  {
-    "use strict";
-
-    if (this === void 0 || this === null)
-      throw new TypeError();
-
-    var t = Object(this);
-    var len = t.length >>> 0;
-    if (typeof fun !== "function")
-      throw new TypeError();
-
-    var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-    for (var i = 0; i < len; i++)
-    {
-      if (i in t)
-        fun.call(thisArg, t[i], i, t);
-    }
-  };
-}
