@@ -242,10 +242,12 @@
       const tribute = instance.tribute;
       const info = tribute.range.getTriggerInfo(false, tribute.hasTrailingSpace, true, tribute.allowSpaces, tribute.autocompleteMode);
 
-      if (info) {
+      if (event.keyCode || event.which || event.code) {
+        return event.keyCode || event.which || event.code;
+      } else if (info) {
         if (info.mentionTriggerChar) return info.mentionTriggerChar.charCodeAt(0);else return info.mentionText.charCodeAt(info.mentionText.length - 1);
       } else {
-        return event.keyCode || event.which || event.code || false;
+        return NaN;
       }
     }
 
