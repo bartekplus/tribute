@@ -45,5 +45,9 @@
   },
   "author": "Jordan Humphreys <jordan@zurb.com>",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "prettier": "^2.3.2"
+  }
 }
