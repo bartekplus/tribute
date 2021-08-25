@@ -8,6 +8,7 @@ import livereload from "rollup-plugin-livereload";
 import pkg from "./package.json";
 import { writeFileSync } from "fs";
 
+/* global process */
 const production = !process.env.ROLLUP_WATCH;
 
 export default [
@@ -18,39 +19,39 @@ export default [
       {
         name: "Tribute",
         file: pkg.main,
-        format: "umd"
+        format: "umd",
       },
       {
         name: "Tribute",
         file: pkg.browser,
         format: "umd",
         sourcemap: true,
-        plugins: [terser()]
+        plugins: [terser()],
       },
       {
         name: "Tribute",
         file: "example/tribute.js",
-        format: "umd"
-      }
+        format: "umd",
+      },
     ],
     plugins: [
       sass({
         output(styles) {
           writeFileSync("dist/tribute.css", styles);
           writeFileSync("example/tribute.css", styles);
-        }
+        },
       }),
       resolve(),
       commonjs(),
       babel({
-        exclude: ["node_modules/**"]
+        exclude: ["node_modules/**"],
       }),
       !production && serve({ openPage: "/", contentBase: ["example"] }),
       !production &&
         livereload({
-          watch: ["dist", "example/*.html"]
-        })
-    ]
+          watch: ["dist", "example/*.html"],
+        }),
+    ],
   },
 
   // CommonJS (for Node) and ES module (for bundlers) build.
@@ -62,6 +63,6 @@ export default [
   {
     input: "src/index.js",
     output: [{ file: pkg.module, format: "es" }],
-    plugins: [sass({ output: "tribute.css" })]
-  }
+    plugins: [sass({ output: "tribute.css" })],
+  },
 ];

@@ -86,10 +86,10 @@
   }
 
   if (!Array.prototype.find) {
-    Object.defineProperty(Array.prototype, 'find', {
+    Object.defineProperty(Array.prototype, "find", {
       value: function value(predicate) {
         // 1. Let O be ? ToObject(this value).
-        if (this == null) {
+        if (this === null) {
           throw TypeError('"this" is null or not defined');
         }
 
@@ -97,8 +97,8 @@
 
         var len = o.length >>> 0; // 3. If IsCallable(predicate) is false, throw a TypeError exception.
 
-        if (typeof predicate !== 'function') {
-          throw TypeError('predicate must be a function');
+        if (typeof predicate !== "function") {
+          throw TypeError("predicate must be a function");
         } // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
 
 
@@ -129,25 +129,26 @@
     });
   }
 
-  if (typeof window !== 'undefined' && typeof window.CustomEvent !== "function") {
-    var CustomEvent$1 = function CustomEvent(event, params) {
-      params = params || {
-        bubbles: false,
-        cancelable: false,
-        detail: undefined
-      };
-      var evt = document.createEvent('CustomEvent');
-      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-      return evt;
+  function CustomEvent$1(event, params) {
+    params = params || {
+      bubbles: false,
+      cancelable: false,
+      detail: undefined
     };
+    var evt = document.createEvent("CustomEvent");
+    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+    return evt;
+  }
 
-    if (typeof window.Event !== 'undefined') {
+  if (typeof window !== "undefined" && typeof window.CustomEvent !== "function") {
+    if (typeof window.Event !== "undefined") {
       CustomEvent$1.prototype = window.Event.prototype;
     }
 
     window.CustomEvent = CustomEvent$1;
   }
 
+  /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
   var TributeEvents = /*#__PURE__*/function () {
     function TributeEvents(tribute) {
       _classCallCheck(this, TributeEvents);
@@ -309,7 +310,6 @@
     }, {
       key: "getKeyCode",
       value: function getKeyCode(instance, el, event) {
-
         var tribute = instance.tribute;
         var info = tribute.range.getTriggerInfo(false, tribute.hasTrailingSpace, true, tribute.allowSpaces, tribute.autocompleteMode);
 
@@ -345,7 +345,7 @@
         var _this2 = this;
 
         return {
-          enter: function enter(e, el) {
+          enter: function enter(e, _el) {
             // choose selection
             if (_this2.tribute.isActive && _this2.tribute.current.filteredItems) {
               e.preventDefault();
@@ -354,7 +354,7 @@
               _this2.tribute.selectItemAtIndex(_this2.tribute.menuSelected, e);
             }
           },
-          escape: function escape(e, el) {
+          escape: function escape(e, _el) {
             if (_this2.tribute.isActive) {
               e.preventDefault();
               e.stopPropagation();
@@ -378,7 +378,7 @@
               }
             }
           },
-          up: function up(e, el) {
+          up: function up(e, _el) {
             // navigate up ul
             if (_this2.tribute.isActive && _this2.tribute.current.filteredItems) {
               e.preventDefault();
@@ -399,7 +399,7 @@
               }
             }
           },
-          down: function down(e, el) {
+          down: function down(e, _el) {
             // navigate down ul
             if (_this2.tribute.isActive && _this2.tribute.current.filteredItems) {
               e.preventDefault();
@@ -499,6 +499,7 @@
     return TributeEvents;
   }();
 
+  /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
   var TributeMenuEvents = /*#__PURE__*/function () {
     function TributeMenuEvents(tribute) {
       _classCallCheck(this, TributeMenuEvents);
@@ -510,7 +511,7 @@
 
     _createClass(TributeMenuEvents, [{
       key: "bind",
-      value: function bind(menu) {
+      value: function bind(_menu) {
         var _this = this;
 
         this.menuClickEvent = this.tribute.events.click.bind(null, this);
@@ -539,7 +540,7 @@
       }
     }, {
       key: "unbind",
-      value: function unbind(menu) {
+      value: function unbind(_menu) {
         this.tribute.range.getDocument().removeEventListener("mousedown", this.menuClickEvent, false);
         this.tribute.range.getDocument().removeEventListener("MSPointerDown", this.menuClickEvent, false);
         window.removeEventListener("resize", this.windowResizeEvent);
@@ -603,11 +604,11 @@
     }, {
       key: "positionMenuAtCaret",
       value: function positionMenuAtCaret(scrollTo) {
-        var context = this.tribute.current,
-            coordinates;
+        var context = this.tribute.current;
+        var coordinates;
         var info = this.getTriggerInfo(false, this.tribute.hasTrailingSpace, true, this.tribute.allowSpaces, this.tribute.autocompleteMode);
 
-        if (typeof info !== 'undefined') {
+        if (typeof info !== "undefined") {
           if (!this.tribute.positionMenu) {
             this.tribute.menu.style.display = "block";
             return;
@@ -625,20 +626,20 @@
           this.tribute.menu.style.bottom = "".concat(coordinates.bottom, "px");
           this.tribute.menu.style["max-heigh"] = "".concat(coordinates.maxHeight || 500, "px");
           this.tribute.menu.style["max-width"] = "".concat(coordinates.maxWidth || 300, "px");
-          this.tribute.menu.style.position = "".concat(coordinates.position || 'absolute');
+          this.tribute.menu.style.position = "".concat(coordinates.position || "absolute");
           this.tribute.menu.style.display = "block";
 
-          if (coordinates.left === 'auto') {
-            this.tribute.menu.style.left = 'auto';
+          if (coordinates.left === "auto") {
+            this.tribute.menu.style.left = "auto";
           }
 
-          if (coordinates.top === 'auto') {
-            this.tribute.menu.style.top = 'auto';
+          if (coordinates.top === "auto") {
+            this.tribute.menu.style.top = "auto";
           }
 
           if (scrollTo) this.scrollIntoView();
         } else {
-          this.tribute.menu.style.display = 'none';
+          this.tribute.menu.style.display = "none";
         }
       }
     }, {
@@ -649,7 +650,6 @@
     }, {
       key: "selectElement",
       value: function selectElement(targetElement, path, offset) {
-        var range;
         var elem = targetElement;
 
         if (path) {
@@ -672,14 +672,16 @@
         }
 
         var sel = this.getWindowSelection();
-        range = this.getDocument().createRange();
+        var range = this.getDocument().createRange();
         range.setStart(elem, offset);
         range.setEnd(elem, offset);
         range.collapse(true);
 
         try {
           sel.removeAllRanges();
-        } catch (error) {}
+        } catch (error) {
+          console.error(error);
+        }
 
         sel.addRange(range);
         targetElement.focus();
@@ -698,14 +700,14 @@
             event: originalEvent,
             text: text
           };
-          var replaceEvent = new CustomEvent('tribute-replaced', {
+          var replaceEvent = new CustomEvent("tribute-replaced", {
             detail: detail
           });
 
           if (!this.isContentEditable(context.element)) {
             var textEndsWithSpace = text !== text.trimEnd();
             var myField = this.tribute.current.element;
-            var textSuffix = typeof this.tribute.replaceTextSuffix == 'string' ? this.tribute.replaceTextSuffix : ' ';
+            var textSuffix = typeof this.tribute.replaceTextSuffix === "string" ? this.tribute.replaceTextSuffix : " ";
             text = this.stripHtml(text);
             text += textSuffix;
             var startPos = info.mentionPosition;
@@ -722,7 +724,7 @@
             // add a space to the end of the pasted text
             var _textEndsWithSpace = text !== text.trimEnd();
 
-            var _textSuffix = typeof this.tribute.replaceTextSuffix == 'string' ? this.tribute.replaceTextSuffix : '\xA0';
+            var _textSuffix = typeof this.tribute.replaceTextSuffix === "string" ? this.tribute.replaceTextSuffix : "\xA0";
 
             text += _textSuffix;
 
@@ -735,7 +737,7 @@
             this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, _endPos) : this.pasteText(text, info.mentionPosition, _endPos);
           }
 
-          context.element.dispatchEvent(new CustomEvent('input', {
+          context.element.dispatchEvent(new CustomEvent("input", {
             bubbles: true,
             detail: detail
           }));
@@ -745,17 +747,15 @@
     }, {
       key: "pasteHtml",
       value: function pasteHtml(html, startPos, endPos) {
-        var range, sel;
-        sel = this.getWindowSelection();
-        range = this.getDocument().createRange();
+        var sel = this.getWindowSelection();
+        var range = this.getDocument().createRange();
         range.setStart(sel.anchorNode, startPos);
         range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
         range.deleteContents();
-        var el = this.getDocument().createElement('div');
+        var el = this.getDocument().createElement("div");
         el.innerHTML = html;
-        var frag = this.getDocument().createDocumentFragment(),
-            node,
-            lastNode;
+        var frag = this.getDocument().createDocumentFragment();
+        var node, lastNode;
 
         while (node = el.firstChild) {
           lastNode = frag.appendChild(node);
@@ -764,11 +764,11 @@
         range.insertNode(frag); // Preserve the selection
 
         if (lastNode) {
-          range = this.getDocument().createRange();
-          range.setStart(lastNode, lastNode.length);
-          range.collapse(true);
+          var newRange = this.getDocument().createRange();
+          newRange.setStart(lastNode, lastNode.length);
+          newRange.collapse(true);
           sel.removeAllRanges();
-          sel.addRange(range);
+          sel.addRange(newRange);
           sel.collapseToEnd();
         }
       }
@@ -818,17 +818,17 @@
       }
     }, {
       key: "getContentEditableSelectedPath",
-      value: function getContentEditableSelectedPath(ctx) {
+      value: function getContentEditableSelectedPath(_ctx) {
         var sel = this.getWindowSelection();
         var selected = sel.anchorNode;
         var path = [];
         var offset;
 
-        if (selected != null) {
+        if (selected !== null) {
           var i;
           var ce = selected.contentEditable;
 
-          while (selected !== null && ce !== 'true') {
+          while (selected !== null && ce !== "true") {
             i = this.getNodePositionInParent(selected);
             path.push(i);
             selected = selected.parentNode;
@@ -873,8 +873,8 @@
     }, {
       key: "getTextPrecedingCurrentSelection",
       value: function getTextPrecedingCurrentSelection() {
-        var context = this.tribute.current,
-            text = '';
+        var context = this.tribute.current;
+        var text = "";
 
         if (!this.isContentEditable(context.element)) {
           var textComponent = this.tribute.current.element;
@@ -890,7 +890,7 @@
         } else {
           var selectedElem = this.getWindowSelection().anchorNode;
 
-          if (selectedElem != null) {
+          if (selectedElem !== null) {
             var workingNodeContent = selectedElem.textContent;
             var selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
 
@@ -963,7 +963,7 @@
             var currentTriggerSnippet = effectiveRange.substring(mostRecentTriggerCharPos + triggerChar.length, effectiveRange.length);
             triggerChar = effectiveRange.substring(mostRecentTriggerCharPos, mostRecentTriggerCharPos + triggerChar.length);
             var firstSnippetChar = currentTriggerSnippet.substring(0, 1);
-            var leadingSpace = currentTriggerSnippet.length > 0 && (firstSnippetChar === ' ' || firstSnippetChar === '\xA0');
+            var leadingSpace = currentTriggerSnippet.length > 0 && (firstSnippetChar === " " || firstSnippetChar === "\xA0");
 
             if (hasTrailingSpace) {
               currentTriggerSnippet = currentTriggerSnippet.trim();
@@ -988,7 +988,7 @@
     }, {
       key: "lastIndexWithLeadingSpace",
       value: function lastIndexWithLeadingSpace(str, trigger) {
-        var reversedStr = str.split('').reverse().join('');
+        var reversedStr = str.split("").reverse().join("");
         var index = -1;
 
         for (var cidx = 0, len = str.length; cidx < len; cidx++) {
@@ -1014,7 +1014,7 @@
     }, {
       key: "isContentEditable",
       value: function isContentEditable(element) {
-        return element.nodeName !== 'INPUT' && element.nodeName !== 'TEXTAREA';
+        return element.nodeName !== "INPUT" && element.nodeName !== "TEXTAREA";
       }
     }, {
       key: "isMenuOffScreen",
@@ -1024,10 +1024,10 @@
         var doc = document.documentElement;
         var windowLeft = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
         var windowTop = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-        var menuTop = typeof coordinates.top === 'number' ? coordinates.top : coordinates.bottom - menuDimensions.height;
-        var menuRight = typeof coordinates.right === 'number' ? coordinates.right : coordinates.left + menuDimensions.width;
-        var menuBottom = typeof coordinates.bottom === 'number' ? coordinates.bottom : coordinates.top + menuDimensions.height;
-        var menuLeft = typeof coordinates.left === 'number' ? coordinates.left : coordinates.right - menuDimensions.width;
+        var menuTop = typeof coordinates.top === "number" ? coordinates.top : coordinates.bottom - menuDimensions.height;
+        var menuRight = typeof coordinates.right === "number" ? coordinates.right : coordinates.left + menuDimensions.width;
+        var menuBottom = typeof coordinates.bottom === "number" ? coordinates.bottom : coordinates.top + menuDimensions.height;
+        var menuLeft = typeof coordinates.left === "number" ? coordinates.left : coordinates.right - menuDimensions.width;
         return {
           top: menuTop < Math.floor(windowTop),
           right: menuRight > Math.ceil(windowLeft + windowWidth),
@@ -1060,22 +1060,22 @@
       }
     }, {
       key: "getTextAreaOrInputUnderlinePosition",
-      value: function getTextAreaOrInputUnderlinePosition(element, position, flipped) {
-        var properties = ['direction', 'boxSizing', 'width', 'height', 'overflowX', 'overflowY', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderStyle', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'fontSizeAdjust', 'lineHeight', 'fontFamily', 'textAlign', 'textTransform', 'textIndent', 'textDecoration', 'letterSpacing', 'wordSpacing'];
-        var div = this.getDocument().createElement('div');
-        div.id = 'input-textarea-caret-position-mirror-div';
+      value: function getTextAreaOrInputUnderlinePosition(element, position, _flipped) {
+        var properties = ["direction", "boxSizing", "width", "height", "overflowX", "overflowY", "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth", "borderStyle", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSize", "fontSizeAdjust", "lineHeight", "fontFamily", "textAlign", "textTransform", "textIndent", "textDecoration", "letterSpacing", "wordSpacing"];
+        var div = this.getDocument().createElement("div");
+        div.id = "input-textarea-caret-position-mirror-div";
         this.getDocument().body.appendChild(div);
         var style = div.style;
         var computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle;
-        style.whiteSpace = 'pre-wrap';
+        style.whiteSpace = "pre-wrap";
 
-        if (element.nodeName !== 'INPUT') {
-          style.wordWrap = 'break-word';
+        if (element.nodeName !== "INPUT") {
+          style.wordWrap = "break-word";
         } // position off-screen
 
 
-        style.position = 'absolute';
-        style.visibility = 'hidden'; // transfer the element's properties to the div
+        style.position = "absolute";
+        style.visibility = "hidden"; // transfer the element's properties to the div
 
         properties.forEach(function (prop) {
           style[prop] = computed[prop];
@@ -1088,31 +1088,31 @@
         //     style.overflow = 'hidden'
         // }
 
-        var span0 = document.createElement('span');
+        var span0 = document.createElement("span");
         span0.textContent = element.value.substring(0, position);
         div.appendChild(span0);
 
-        if (element.nodeName === 'INPUT') {
-          div.textContent = div.textContent.replace(/\s/g, ' ');
+        if (element.nodeName === "INPUT") {
+          div.textContent = div.textContent.replace(/\s/g, " ");
         } //Create a span in the div that represents where the cursor
         //should be
 
 
-        var span = this.getDocument().createElement('span'); //we give it no content as this represents the cursor
+        var span = this.getDocument().createElement("span"); //we give it no content as this represents the cursor
 
         div.appendChild(span);
-        var span2 = this.getDocument().createElement('span');
+        var span2 = this.getDocument().createElement("span");
         span2.textContent = element.value.substring(position, position + 1);
         div.appendChild(span2);
         var rect = element.getBoundingClientRect(); //position the div exactly over the element
         //so we can get the bounding client rect for the span and
         //it should represent exactly where the cursor is
 
-        div.style.position = 'fixed';
-        div.style.left = rect.left + 'px';
-        div.style.top = rect.top + 'px';
-        div.style.width = rect.width + 'px';
-        div.style.height = rect.height + 'px';
+        div.style.position = "fixed";
+        div.style.left = rect.left + "px";
+        div.style.top = rect.top + "px";
+        div.style.width = rect.width + "px";
+        div.style.height = rect.height + "px";
         div.scrollTop = element.scrollTop;
         var spanRect = span.getBoundingClientRect();
         var divRect = div.getBoundingClientRect();
@@ -1132,9 +1132,8 @@
     }, {
       key: "getContentEditableCaretPosition",
       value: function getContentEditableCaretPosition(selectedNodePosition) {
-        var range;
         var sel = this.getWindowSelection();
-        range = this.getDocument().createRange();
+        var range = this.getDocument().createRange();
         range.setStart(sel.anchorNode, selectedNodePosition);
         range.setEnd(sel.anchorNode, selectedNodePosition);
         range.collapse(false);
@@ -1145,7 +1144,7 @@
       key: "getFixedCoordinatesRelativeToRect",
       value: function getFixedCoordinatesRelativeToRect(rect) {
         var coordinates = {
-          position: 'fixed',
+          position: "fixed",
           left: rect.left,
           top: rect.top + rect.height
         };
@@ -1155,7 +1154,7 @@
 
         if (availableSpaceOnBottom < menuDimensions.height) {
           if (availableSpaceOnTop >= menuDimensions.height || availableSpaceOnTop > availableSpaceOnBottom) {
-            coordinates.top = 'auto';
+            coordinates.top = "auto";
             coordinates.bottom = window.innerHeight - rect.top;
 
             if (availableSpaceOnBottom < menuDimensions.height) {
@@ -1173,7 +1172,7 @@
 
         if (availableSpaceOnRight < menuDimensions.width) {
           if (availableSpaceOnLeft >= menuDimensions.width || availableSpaceOnLeft > availableSpaceOnRight) {
-            coordinates.left = 'auto';
+            coordinates.left = "auto";
             coordinates.right = window.innerWidth - rect.left;
 
             if (availableSpaceOnRight < menuDimensions.width) {
@@ -1190,12 +1189,12 @@
       }
     }, {
       key: "scrollIntoView",
-      value: function scrollIntoView(elem) {
-        var reasonableBuffer = 20,
-            clientRect;
+      value: function scrollIntoView(_elem) {
+        var reasonableBuffer = 20;
         var maxScrollDisplacement = 100;
+        var clientRect;
         var e = this.menu;
-        if (typeof e === 'undefined') return;
+        if (typeof e === "undefined") return;
 
         while (clientRect === undefined || clientRect.height === 0) {
           clientRect = e.getBoundingClientRect();
@@ -1235,6 +1234,7 @@
     return TributeRange;
   }();
 
+  /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
   // Thanks to https://github.com/mattyork/fuzzy
   var TributeSearch = /*#__PURE__*/function () {
     function TributeSearch(tribute) {
@@ -1262,9 +1262,8 @@
       key: "match",
       value: function match(pattern, string, opts) {
         opts = opts || {};
-        string.length;
-            var pre = opts.pre || '',
-            post = opts.post || '',
+        var pre = opts.pre || "",
+            post = opts.post || "",
             compareString = opts.caseSensitive && string || string.toLowerCase();
 
         if (opts.skip) {
@@ -1363,7 +1362,7 @@
         var _this2 = this;
 
         opts = opts || {};
-        return arr.reduce(function (prev, element, idx, arr) {
+        return arr.reduce(function (prev, element, idx, _arr) {
           var str = element;
 
           if (opts.extract) {
@@ -1371,13 +1370,13 @@
 
             if (!str) {
               // take care of undefineds / nulls / etc.
-              str = '';
+              str = "";
             }
           }
 
           var rendered = _this2.match(pattern, str, opts);
 
-          if (rendered != null) {
+          if (rendered !== null) {
             prev[prev.length] = {
               string: rendered.rendered,
               score: rendered.score,
@@ -1509,7 +1508,7 @@
 
             return noMatchTemplate || function () {
               return "<li>No Match Found!</li>";
-            }.bind(_this);
+            };
           }(noMatchTemplate),
           // column to search against in the object
           lookup: lookup,
@@ -1548,7 +1547,7 @@
 
               return noMatchTemplate || function () {
                 return "<li>No Match Found!</li>";
-              }.bind(_this);
+              };
             }(noMatchTemplate),
             lookup: item.lookup || lookup,
             fillAttr: item.fillAttr || fillAttr,
@@ -1576,7 +1575,7 @@
         return this._isActive;
       },
       set: function set(val) {
-        if (this._isActive != val) {
+        if (this._isActive !== val) {
           this._isActive = val;
 
           if (this.current.element) {
@@ -1597,7 +1596,9 @@
       value: function attach(el) {
         if (!el) {
           throw new Error("[Tribute] Must pass in a DOM node or NodeList.");
-        } // Check if it is a jQuery collection
+        }
+        /* global jQuery */
+        // Check if it is a jQuery collection
 
 
         if (typeof jQuery !== "undefined" && el instanceof jQuery) {
@@ -1640,14 +1641,14 @@
     }, {
       key: "createMenu",
       value: function createMenu(containerClass, element) {
-        var properties = ['fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSizeAdjust', 'fontFamily'];
+        var properties = ["fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSizeAdjust", "fontFamily"];
         var computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle;
         var wrapper = this.range.getDocument().createElement("div"),
             ul = this.range.getDocument().createElement("ul");
         wrapper.className = containerClass;
         wrapper.setAttribute("tabindex", "0");
         wrapper.appendChild(ul);
-        wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
+        wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + "px";
         wrapper.style.display = "none";
         properties.forEach(function (prop) {
           wrapper.style[prop] = computed[prop];
@@ -1756,9 +1757,8 @@
               li.className = _this2.current.collection.itemClass;
               li.addEventListener("mousemove", function (e) {
                 var _this2$_findLiTarget = _this2._findLiTarget(e.target),
-                    _this2$_findLiTarget2 = _slicedToArray(_this2$_findLiTarget, 2);
-                    _this2$_findLiTarget2[0];
-                    var index = _this2$_findLiTarget2[1];
+                    _this2$_findLiTarget2 = _slicedToArray(_this2$_findLiTarget, 2),
+                    index = _this2$_findLiTarget2[1];
 
                 if (e.movementY !== 0) {
                   _this2.events.setActiveLi(index);
@@ -1820,14 +1820,14 @@
       value: function placeCaretAtEnd(el) {
         el.focus();
 
-        if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+        if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
           var range = document.createRange();
           range.selectNodeContents(el);
           range.collapse(false);
           var sel = window.getSelection();
           sel.removeAllRanges();
           sel.addRange(range);
-        } else if (typeof document.body.createTextRange != "undefined") {
+        } else if (typeof document.body.createTextRange !== "undefined") {
           var textRange = document.body.createTextRange();
           textRange.moveToElementText(el);
           textRange.collapse(false);
@@ -1838,9 +1838,8 @@
     }, {
       key: "insertTextAtCursor",
       value: function insertTextAtCursor(text) {
-        var sel, range;
-        sel = window.getSelection();
-        range = sel.getRangeAt(0);
+        var sel = window.getSelection();
+        var range = sel.getRangeAt(0);
         range.deleteContents();
         var textNode = document.createTextNode(text);
         range.insertNode(textNode);

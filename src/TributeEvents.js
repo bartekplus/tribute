@@ -1,3 +1,4 @@
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 class TributeEvents {
   constructor(tribute) {
     this.tribute = tribute;
@@ -8,24 +9,24 @@ class TributeEvents {
     return [
       {
         key: 9,
-        value: "TAB"
+        value: "TAB",
       },
       {
         key: 13,
-        value: "ENTER"
+        value: "ENTER",
       },
       {
         key: 27,
-        value: "ESCAPE"
+        value: "ESCAPE",
       },
       {
         key: 38,
-        value: "UP"
+        value: "UP",
       },
       {
         key: 40,
-        value: "DOWN"
-      }
+        value: "DOWN",
+      },
     ];
   }
 
@@ -39,7 +40,7 @@ class TributeEvents {
       "OS",
       "Super",
       "Symbol",
-      "Win"
+      "Win",
     ];
   }
 
@@ -69,7 +70,7 @@ class TributeEvents {
     }
     if (event instanceof KeyboardEvent) {
       let controlKeyPressed = false;
-      TributeEvents.modifiers().forEach(o => {
+      TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
           controlKeyPressed = true;
           return;
@@ -78,9 +79,8 @@ class TributeEvents {
       if (controlKeyPressed) return;
     }
 
-    if (instance.tribute.isActive)
-    {
-      TributeEvents.keys().forEach(o => {
+    if (instance.tribute.isActive) {
+      TributeEvents.keys().forEach((o) => {
         if (o.key === event.keyCode) {
           instance.callbacks()[o.value.toLowerCase()](event, this);
         }
@@ -93,12 +93,11 @@ class TributeEvents {
       const str = event.detail.text;
       event.keyCode = str.charCodeAt(str.length - 1);
       setTimeout(instance.keyup.bind(this, instance, event), 0);
-    }
-    else instance.keyup.call(this, instance, event);
+    } else instance.keyup.call(this, instance, event);
   }
 
   click(instance, event) {
-    let tribute = instance.tribute;
+    const tribute = instance.tribute;
     if (tribute.menu && tribute.menu.contains(event.target)) {
       let li = event.target;
       event.preventDefault();
@@ -118,28 +117,27 @@ class TributeEvents {
     }
   }
 
-  keyup(instance, event) {    
+  keyup(instance, event) {
     if (!instance.updateSelection(this)) return;
     const keyCode = instance.getKeyCode(instance, this, event);
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
       let controlKeyPressed = false;
-      TributeEvents.modifiers().forEach(o => {
+      TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
           controlKeyPressed = true;
           return;
         }
       });
       // Check for control keys
-      TributeEvents.keys().forEach(o => {
-      if (o.key === keyCode) {
-        controlKeyPressed = true;
-        return;
-      }
+      TributeEvents.keys().forEach((o) => {
+        if (o.key === keyCode) {
+          controlKeyPressed = true;
+          return;
+        }
       });
       if (controlKeyPressed) return;
     }
-    
 
     if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
       instance.tribute.hasTrailingSpace = false;
@@ -149,29 +147,43 @@ class TributeEvents {
 
     // Get and validate trigger char
     if (keyCode && !isNaN(keyCode)) {
-      if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
-        instance.tribute.current.trigger = ""
+      if (
+        instance.tribute.autocompleteMode &&
+        String.fromCharCode(keyCode).match(/(\w|\s)/g)
+      ) {
+        instance.tribute.current.trigger = "";
+      } else {
+        instance.tribute.current.trigger = instance.tribute
+          .triggers()
+          .find((trigger) => {
+            return trigger.charCodeAt(0) === keyCode;
+          });
       }
-      else {
-        instance.tribute.current.trigger = instance.tribute.triggers().find(trigger => {
-          return trigger.charCodeAt(0) === keyCode;
-        });
-      }
-    } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
+    } else if (
+      instance.tribute.autocompleteMode &&
+      event instanceof InputEvent
+    ) {
       instance.tribute.current.trigger = "";
     }
-    if (!(
-      instance.tribute.current.trigger ||
-      (instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode))
-    ) return;
+    if (
+      !(
+        instance.tribute.current.trigger ||
+        (instance.tribute.current.trigger === "" &&
+          instance.tribute.autocompleteMode)
+      )
+    )
+      return;
 
     // Get and validate collection
-    instance.tribute.current.collection = instance.tribute.collection.find(item => {
-      return item.trigger === instance.tribute.current.trigger;
-    });
-    if (!instance.tribute.current.collection ||
+    instance.tribute.current.collection = instance.tribute.collection.find(
+      (item) => {
+        return item.trigger === instance.tribute.current.trigger;
+      }
+    );
+    if (
+      !instance.tribute.current.collection ||
       instance.tribute.current.collection.menuShowMinLength >
-      instance.tribute.current.mentionText.length
+        instance.tribute.current.mentionText.length
     ) {
       return;
     }
@@ -181,7 +193,7 @@ class TributeEvents {
 
   shouldDeactivate(event) {
     let controlKeyPressed = false;
-    TributeEvents.keys().forEach(o => {
+    TributeEvents.keys().forEach((o) => {
       if (event.keyCode === o.key) {
         controlKeyPressed = true;
         return;
@@ -195,9 +207,8 @@ class TributeEvents {
   }
 
   getKeyCode(instance, el, event) {
-    let char;
-    let tribute = instance.tribute;
-    let info = tribute.range.getTriggerInfo(
+    const tribute = instance.tribute;
+    const info = tribute.range.getTriggerInfo(
       false,
       tribute.hasTrailingSpace,
       true,
@@ -215,7 +226,7 @@ class TributeEvents {
   updateSelection(el) {
     let success = false;
     this.tribute.current.element = el;
-    let info = this.tribute.range.getTriggerInfo(
+    const info = this.tribute.range.getTriggerInfo(
       false,
       this.tribute.hasTrailingSpace,
       true,
@@ -230,16 +241,15 @@ class TributeEvents {
       this.tribute.current.selectedOffset = info.mentionSelectedOffset;
       this.tribute.current.info = info;
       success = true;
-    }
-    else {
-      this.tribute.current = {}
+    } else {
+      this.tribute.current = {};
     }
     return success;
   }
 
   callbacks() {
     return {
-      enter: (e, el) => {
+      enter: (e, _el) => {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
@@ -247,7 +257,7 @@ class TributeEvents {
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
         }
       },
-      escape: (e, el) => {
+      escape: (e, _el) => {
         if (this.tribute.isActive) {
           e.preventDefault();
           e.stopPropagation();
@@ -270,12 +280,12 @@ class TributeEvents {
           }
         }
       },
-      up: (e, el) => {
+      up: (e, _el) => {
         // navigate up ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
           e.stopPropagation();
-          let count = this.tribute.current.filteredItems.length,
+          const count = this.tribute.current.filteredItems.length,
             selected = this.tribute.menuSelected;
 
           if (count > selected && selected > 0) {
@@ -288,12 +298,12 @@ class TributeEvents {
           }
         }
       },
-      down: (e, el) => {
+      down: (e, _el) => {
         // navigate down ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
           e.stopPropagation();
-          let count = this.tribute.current.filteredItems.length - 1,
+          const count = this.tribute.current.filteredItems.length - 1,
             selected = this.tribute.menuSelected;
 
           if (count > selected) {
@@ -315,29 +325,29 @@ class TributeEvents {
         } else if (this.tribute.isActive) {
           this.tribute.showMenuFor(el);
         }
-      }
+      },
     };
   }
 
   setActiveLi(index) {
-    let lis = this.tribute.menu.querySelectorAll("li"),
+    const lis = this.tribute.menu.querySelectorAll("li"),
       length = lis.length >>> 0;
 
     if (index) this.tribute.menuSelected = parseInt(index);
 
     for (let i = 0; i < length; i++) {
-      let li = lis[i];
+      const li = lis[i];
       if (i === this.tribute.menuSelected) {
         li.classList.add(this.tribute.current.collection.selectClass);
 
-        let liClientRect = li.getBoundingClientRect();
-        let menuClientRect = this.tribute.menu.getBoundingClientRect();
+        const liClientRect = li.getBoundingClientRect();
+        const menuClientRect = this.tribute.menu.getBoundingClientRect();
 
         if (liClientRect.bottom > menuClientRect.bottom) {
-          let scrollDistance = liClientRect.bottom - menuClientRect.bottom;
+          const scrollDistance = liClientRect.bottom - menuClientRect.bottom;
           this.tribute.menu.scrollTop += scrollDistance;
         } else if (liClientRect.top < menuClientRect.top) {
-          let scrollDistance = menuClientRect.top - liClientRect.top;
+          const scrollDistance = menuClientRect.top - liClientRect.top;
           this.tribute.menu.scrollTop -= scrollDistance;
         }
       } else {
@@ -347,10 +357,10 @@ class TributeEvents {
   }
 
   getFullHeight(elem, includeMargin) {
-    let height = elem.getBoundingClientRect().height;
+    const height = elem.getBoundingClientRect().height;
 
     if (includeMargin) {
-      let style = elem.currentStyle || window.getComputedStyle(elem);
+      const style = elem.currentStyle || window.getComputedStyle(elem);
       return (
         height + parseFloat(style.marginTop) + parseFloat(style.marginBottom)
       );

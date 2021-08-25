@@ -31,7 +31,7 @@ class Tribute {
     menuItemLimit = null,
     menuShowMinLength = 0,
     keys = null,
-    useHTML = true
+    useHTML = true,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -46,8 +46,7 @@ class Tribute {
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.useHTML = useHTML;
-    if (keys)
-    {
+    if (keys) {
       TributeEvents.keys = keys;
     }
 
@@ -85,7 +84,7 @@ class Tribute {
           ).bind(this),
 
           // function called when menu is empty, disables hiding of menu.
-          noMatchTemplate: (t => {
+          noMatchTemplate: ((t) => {
             if (typeof t === "string") {
               if (t.trim() === "") return null;
               return t;
@@ -96,9 +95,9 @@ class Tribute {
 
             return (
               noMatchTemplate ||
-              function() {
+              function () {
                 return "<li>No Match Found!</li>";
-              }.bind(this)
+              }
             );
           })(noMatchTemplate),
 
@@ -120,15 +119,15 @@ class Tribute {
 
           menuItemLimit: menuItemLimit,
 
-          menuShowMinLength: menuShowMinLength
-        }
+          menuShowMinLength: menuShowMinLength,
+        },
       ];
     } else if (collection) {
       if (this.autocompleteMode)
         console.warn(
           "Tribute in autocomplete mode does not work for collections"
         );
-      this.collection = collection.map(item => {
+      this.collection = collection.map((item) => {
         return {
           trigger: item.trigger || trigger,
           iframe: item.iframe || iframe,
@@ -142,7 +141,7 @@ class Tribute {
             item.menuItemTemplate || Tribute.defaultMenuItemTemplate
           ).bind(this),
           // function called when menu is empty, disables hiding of menu.
-          noMatchTemplate: (t => {
+          noMatchTemplate: ((t) => {
             if (typeof t === "string") {
               if (t.trim() === "") return null;
               return t;
@@ -153,9 +152,9 @@ class Tribute {
 
             return (
               noMatchTemplate ||
-              function() {
+              function () {
                 return "<li>No Match Found!</li>";
-              }.bind(this)
+              }
             );
           })(noMatchTemplate),
           lookup: item.lookup || lookup,
@@ -165,7 +164,7 @@ class Tribute {
           requireLeadingSpace: item.requireLeadingSpace,
           searchOpts: item.searchOpts || searchOpts,
           menuItemLimit: item.menuItemLimit || menuItemLimit,
-          menuShowMinLength: item.menuShowMinLength || menuShowMinLength
+          menuShowMinLength: item.menuShowMinLength || menuShowMinLength,
         };
       });
     } else {
@@ -183,10 +182,10 @@ class Tribute {
   }
 
   set isActive(val) {
-    if (this._isActive != val) {
+    if (this._isActive !== val) {
       this._isActive = val;
       if (this.current.element) {
-        let noMatchEvent = new CustomEvent(`tribute-active-${val}`);
+        const noMatchEvent = new CustomEvent(`tribute-active-${val}`);
         this.current.element.dispatchEvent(noMatchEvent);
       }
     }
@@ -219,7 +218,7 @@ class Tribute {
   }
 
   triggers() {
-    return this.collection.map(config => {
+    return this.collection.map((config) => {
       return config.trigger;
     });
   }
@@ -229,6 +228,7 @@ class Tribute {
       throw new Error("[Tribute] Must pass in a DOM node or NodeList.");
     }
 
+    /* global jQuery */
     // Check if it is a jQuery collection
     if (typeof jQuery !== "undefined" && el instanceof jQuery) {
       el = el.get();
@@ -240,8 +240,8 @@ class Tribute {
       el.constructor === HTMLCollection ||
       el.constructor === Array
     ) {
-      let length = el.length;
-      for (var i = 0; i < length; ++i) {
+      const length = el.length;
+      for (let i = 0; i < length; ++i) {
         this._attach(el[i]);
       }
     } else {
@@ -270,20 +270,29 @@ class Tribute {
   }
 
   createMenu(containerClass, element) {
-    let properties = ['fontStyle', 'fontVariant', 'fontWeight', 'fontStretch',
-    'fontSizeAdjust', 'fontFamily'];
-    let computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle
-    let wrapper = this.range.getDocument().createElement("div"),
+    const properties = [
+      "fontStyle",
+      "fontVariant",
+      "fontWeight",
+      "fontStretch",
+      "fontSizeAdjust",
+      "fontFamily",
+    ];
+    const computed = window.getComputedStyle
+      ? getComputedStyle(element)
+      : element.currentStyle;
+    const wrapper = this.range.getDocument().createElement("div"),
       ul = this.range.getDocument().createElement("ul");
     wrapper.className = containerClass;
-    wrapper.setAttribute("tabindex", "0"); 
+    wrapper.setAttribute("tabindex", "0");
     wrapper.appendChild(ul);
-    wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
+    wrapper.style.fontSize =
+      Math.round(parseInt(computed.fontSize) * 0.9) + "px";
     wrapper.style.display = "none";
 
-    properties.forEach(prop => {
-      wrapper.style[prop] = computed[prop]
-     })
+    properties.forEach((prop) => {
+      wrapper.style[prop] = computed[prop];
+    });
 
     if (this.menuContainer) {
       return this.menuContainer.appendChild(wrapper);
@@ -305,7 +314,10 @@ class Tribute {
 
     // create the menu if it doesn't exist.
     if (!this.menu) {
-      this.menu = this.createMenu(this.current.collection.containerClass, element);
+      this.menu = this.createMenu(
+        this.current.collection.containerClass,
+        element
+      );
       element.tributeMenu = this.menu;
       this.menuEvents.bind(this.menu);
     }
@@ -324,16 +336,15 @@ class Tribute {
       }
       this.activationPending = false;
       // Element is no longer in focus - don't show menu
-      if (document.activeElement !== this.current.element)
-      {
+      if (document.activeElement !== this.current.element) {
         return;
       }
 
-      if (forceReplace)
-      {
+      if (forceReplace) {
         // Do force replace - don't show menu
         this.current.info.mentionPosition -= forceReplace.length;
-        this.current.info.mentionText = " ".repeat(forceReplace.length) + this.current.info.mentionText
+        this.current.info.mentionText =
+          " ".repeat(forceReplace.length) + this.current.info.mentionText;
         this.replaceText(forceReplace.text, null, null);
         return;
       }
@@ -342,7 +353,7 @@ class Tribute {
         pre: this.current.collection.searchOpts.pre || "<span>",
         post: this.current.collection.searchOpts.post || "</span>",
         skip: this.current.collection.searchOpts.skip,
-        extract: el => {
+        extract: (el) => {
           if (typeof this.current.collection.lookup === "string") {
             return el[this.current.collection.lookup];
           } else if (typeof this.current.collection.lookup === "function") {
@@ -352,7 +363,7 @@ class Tribute {
               "Invalid lookup attribute, lookup must be string or function."
             );
           }
-        }
+        },
       });
 
       if (this.current.collection.menuItemLimit) {
@@ -361,12 +372,12 @@ class Tribute {
 
       this.current.filteredItems = items;
 
-      let ul = this.menu.querySelector("ul");
+      const ul = this.menu.querySelector("ul");
       let showMenu = false;
 
       if (!items.length) {
-        let noMatchEvent = new CustomEvent("tribute-no-match", {
-          detail: this.menu
+        const noMatchEvent = new CustomEvent("tribute-no-match", {
+          detail: this.menu,
         });
         this.current.element.dispatchEvent(noMatchEvent);
         if (
@@ -379,20 +390,18 @@ class Tribute {
           typeof this.current.collection.noMatchTemplate === "function"
             ? (ul.innerHTML = this.current.collection.noMatchTemplate())
             : (ul.innerHTML = this.current.collection.noMatchTemplate);
-            showMenu = true;
+          showMenu = true;
         }
-      }
-      else
-      {
+      } else {
         ul.innerHTML = "";
-        let fragment = this.range.getDocument().createDocumentFragment();
+        const fragment = this.range.getDocument().createDocumentFragment();
 
         items.forEach((item, index) => {
-          let li = this.range.getDocument().createElement("li");
+          const li = this.range.getDocument().createElement("li");
           li.setAttribute("data-index", index);
           li.className = this.current.collection.itemClass;
-          li.addEventListener("mousemove", e => {
-            let [li, index] = this._findLiTarget(e.target);
+          li.addEventListener("mousemove", (e) => {
+            const [, index] = this._findLiTarget(e.target);
             if (e.movementY !== 0) {
               this.events.setActiveLi(index);
             }
@@ -406,8 +415,7 @@ class Tribute {
         ul.appendChild(fragment);
         showMenu = true;
       }
-      if (showMenu)
-      {
+      if (showMenu) {
         this.isActive = true;
         this.range.positionMenuAtCaret(scrollTo);
       }
@@ -415,7 +423,8 @@ class Tribute {
 
     if (typeof this.current.collection.values === "function") {
       if (this.current.collection.loadingItemTemplate) {
-        this.menu.querySelector("ul").innerHTML = this.current.collection.loadingItemTemplate;
+        this.menu.querySelector("ul").innerHTML =
+          this.current.collection.loadingItemTemplate;
         this.range.positionMenuAtCaret(scrollTo);
       }
 
@@ -451,17 +460,17 @@ class Tribute {
   placeCaretAtEnd(el) {
     el.focus();
     if (
-      typeof window.getSelection != "undefined" &&
-      typeof document.createRange != "undefined"
+      typeof window.getSelection !== "undefined" &&
+      typeof document.createRange !== "undefined"
     ) {
-      var range = document.createRange();
+      const range = document.createRange();
       range.selectNodeContents(el);
       range.collapse(false);
-      var sel = window.getSelection();
+      const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-    } else if (typeof document.body.createTextRange != "undefined") {
-      var textRange = document.body.createTextRange();
+    } else if (typeof document.body.createTextRange !== "undefined") {
+      const textRange = document.body.createTextRange();
       textRange.moveToElementText(el);
       textRange.collapse(false);
       textRange.select();
@@ -470,11 +479,10 @@ class Tribute {
 
   // for contenteditable
   insertTextAtCursor(text) {
-    var sel, range, html;
-    sel = window.getSelection();
-    range = sel.getRangeAt(0);
+    const sel = window.getSelection();
+    const range = sel.getRangeAt(0);
     range.deleteContents();
-    var textNode = document.createTextNode(text);
+    const textNode = document.createTextNode(text);
     range.insertNode(textNode);
     range.selectNodeContents(textNode);
     range.collapse(false);
@@ -484,11 +492,11 @@ class Tribute {
 
   // for regular inputs
   insertAtCaret(textarea, text) {
-    var scrollPos = textarea.scrollTop;
-    var caretPos = textarea.selectionStart;
+    const scrollPos = textarea.scrollTop;
+    let caretPos = textarea.selectionStart;
 
-    var front = textarea.value.substring(0, caretPos);
-    var back = textarea.value.substring(
+    const front = textarea.value.substring(0, caretPos);
+    const back = textarea.value.substring(
       textarea.selectionEnd,
       textarea.value.length
     );
@@ -501,8 +509,7 @@ class Tribute {
   }
 
   hideMenu() {
-    if (this.menu)
-    {
+    if (this.menu) {
       this.menu.remove();
       this.menu = null;
     }
@@ -513,9 +520,10 @@ class Tribute {
   selectItemAtIndex(index, originalEvent) {
     this.hideMenu();
     index = parseInt(index);
-    if (typeof index !== "number" || isNaN(index) || !originalEvent.target) return;
-    let item = this.current.filteredItems[index];
-    let content = this.current.collection.selectTemplate(item);
+    if (typeof index !== "number" || isNaN(index) || !originalEvent.target)
+      return;
+    const item = this.current.filteredItems[index];
+    const content = this.current.collection.selectTemplate(item);
     if (content !== null) this.replaceText(content, originalEvent, item);
   }
 
@@ -534,11 +542,11 @@ class Tribute {
   }
 
   append(collectionIndex, newValues, replace) {
-    let index = parseInt(collectionIndex);
+    const index = parseInt(collectionIndex);
     if (typeof index !== "number")
       throw new Error("please provide an index for the collection to update.");
 
-    let collection = this.collection[index];
+    const collection = this.collection[index];
 
     this._append(collection, newValues, replace);
   }
@@ -569,8 +577,8 @@ class Tribute {
       el.constructor === HTMLCollection ||
       el.constructor === Array
     ) {
-      let length = el.length;
-      for (var i = 0; i < length; ++i) {
+      const length = el.length;
+      for (let i = 0; i < length; ++i) {
         this._detach(el[i]);
       }
     } else {

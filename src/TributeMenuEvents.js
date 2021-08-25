@@ -1,3 +1,5 @@
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+
 class TributeMenuEvents {
   constructor(tribute) {
     this.tribute = tribute;
@@ -5,25 +7,25 @@ class TributeMenuEvents {
     this.menu = this.tribute.menu;
   }
 
-  bind(menu) {
+  bind(_menu) {
     this.menuClickEvent = this.tribute.events.click.bind(null, this);
     this.menuContainerScrollEvent = this.debounce(
       () => {
-          this.tribute.hideMenu();
+        this.tribute.hideMenu();
       },
       10,
       false
     );
     this.windowResizeEvent = this.debounce(
       () => {
-          this.tribute.hideMenu();
+        this.tribute.hideMenu();
       },
       10,
       false
     );
 
     this.windowBlurEvent = () => {
-        this.tribute.hideMenu();
+      this.tribute.hideMenu();
     };
 
     // fixes IE11 issues with mousedown
@@ -47,7 +49,7 @@ class TributeMenuEvents {
     }
   }
 
-  unbind(menu) {
+  unbind(_menu) {
     this.tribute.range
       .getDocument()
       .removeEventListener("mousedown", this.menuClickEvent, false);
@@ -68,15 +70,15 @@ class TributeMenuEvents {
   }
 
   debounce(func, wait, immediate) {
-    var timeout;
+    let timeout;
     return () => {
-      var context = this,
+      const context = this,
         args = arguments;
-      var later = () => {
+      const later = () => {
         timeout = null;
         if (!immediate) func.apply(context, args);
       };
-      var callNow = immediate && !timeout;
+      const callNow = immediate && !timeout;
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
       if (callNow) func.apply(context, args);

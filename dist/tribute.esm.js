@@ -1,26 +1,26 @@
 if (!Array.prototype.find) {
-  Object.defineProperty(Array.prototype, 'find', {
-    value: function(predicate) {
+  Object.defineProperty(Array.prototype, "find", {
+    value: function (predicate) {
       // 1. Let O be ? ToObject(this value).
-      if (this == null) {
+      if (this === null) {
         throw TypeError('"this" is null or not defined');
       }
 
-      var o = Object(this);
+      const o = Object(this);
 
       // 2. Let len be ? ToLength(? Get(O, "length")).
-      var len = o.length >>> 0;
+      const len = o.length >>> 0;
 
       // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-      if (typeof predicate !== 'function') {
-        throw TypeError('predicate must be a function');
+      if (typeof predicate !== "function") {
+        throw TypeError("predicate must be a function");
       }
 
       // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
-      var thisArg = arguments[1];
+      const thisArg = arguments[1];
 
       // 5. Let k be 0.
-      var k = 0;
+      let k = 0;
 
       // 6. Repeat, while k < len
       while (k < len) {
@@ -28,7 +28,7 @@ if (!Array.prototype.find) {
         // b. Let kValue be ? Get(O, Pk).
         // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
         // d. If testResult is true, return kValue.
-        var kValue = o[k];
+        const kValue = o[k];
         if (predicate.call(thisArg, kValue, k, o)) {
           return kValue;
         }
@@ -40,29 +40,30 @@ if (!Array.prototype.find) {
       return undefined;
     },
     configurable: true,
-    writable: true
+    writable: true,
   });
 }
 
-if (typeof window !== 'undefined' && typeof window.CustomEvent !== "function") {
-  function CustomEvent(event, params) {
-    params = params || {
-      bubbles: false,
-      cancelable: false,
-      detail: undefined
-    };
-    var evt = document.createEvent('CustomEvent');
-    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-    return evt
-  }
-
- if (typeof window.Event !== 'undefined') {
-   CustomEvent.prototype = window.Event.prototype;
- }
-
-  window.CustomEvent = CustomEvent;
+function CustomEvent$1(event, params) {
+  params = params || {
+    bubbles: false,
+    cancelable: false,
+    detail: undefined,
+  };
+  const evt = document.createEvent("CustomEvent");
+  evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+  return evt;
 }
 
+if (typeof window !== "undefined" && typeof window.CustomEvent !== "function") {
+  if (typeof window.Event !== "undefined") {
+    CustomEvent$1.prototype = window.Event.prototype;
+  }
+
+  window.CustomEvent = CustomEvent$1;
+}
+
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 class TributeEvents {
   constructor(tribute) {
     this.tribute = tribute;
@@ -73,24 +74,24 @@ class TributeEvents {
     return [
       {
         key: 9,
-        value: "TAB"
+        value: "TAB",
       },
       {
         key: 13,
-        value: "ENTER"
+        value: "ENTER",
       },
       {
         key: 27,
-        value: "ESCAPE"
+        value: "ESCAPE",
       },
       {
         key: 38,
-        value: "UP"
+        value: "UP",
       },
       {
         key: 40,
-        value: "DOWN"
-      }
+        value: "DOWN",
+      },
     ];
   }
 
@@ -104,7 +105,7 @@ class TributeEvents {
       "OS",
       "Super",
       "Symbol",
-      "Win"
+      "Win",
     ];
   }
 
@@ -134,7 +135,7 @@ class TributeEvents {
     }
     if (event instanceof KeyboardEvent) {
       let controlKeyPressed = false;
-      TributeEvents.modifiers().forEach(o => {
+      TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
           controlKeyPressed = true;
           return;
@@ -143,9 +144,8 @@ class TributeEvents {
       if (controlKeyPressed) return;
     }
 
-    if (instance.tribute.isActive)
-    {
-      TributeEvents.keys().forEach(o => {
+    if (instance.tribute.isActive) {
+      TributeEvents.keys().forEach((o) => {
         if (o.key === event.keyCode) {
           instance.callbacks()[o.value.toLowerCase()](event, this);
         }
@@ -158,12 +158,11 @@ class TributeEvents {
       const str = event.detail.text;
       event.keyCode = str.charCodeAt(str.length - 1);
       setTimeout(instance.keyup.bind(this, instance, event), 0);
-    }
-    else instance.keyup.call(this, instance, event);
+    } else instance.keyup.call(this, instance, event);
   }
 
   click(instance, event) {
-    let tribute = instance.tribute;
+    const tribute = instance.tribute;
     if (tribute.menu && tribute.menu.contains(event.target)) {
       let li = event.target;
       event.preventDefault();
@@ -183,28 +182,27 @@ class TributeEvents {
     }
   }
 
-  keyup(instance, event) {    
+  keyup(instance, event) {
     if (!instance.updateSelection(this)) return;
     const keyCode = instance.getKeyCode(instance, this, event);
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
       let controlKeyPressed = false;
-      TributeEvents.modifiers().forEach(o => {
+      TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
           controlKeyPressed = true;
           return;
         }
       });
       // Check for control keys
-      TributeEvents.keys().forEach(o => {
-      if (o.key === keyCode) {
-        controlKeyPressed = true;
-        return;
-      }
+      TributeEvents.keys().forEach((o) => {
+        if (o.key === keyCode) {
+          controlKeyPressed = true;
+          return;
+        }
       });
       if (controlKeyPressed) return;
     }
-    
 
     if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
       instance.tribute.hasTrailingSpace = false;
@@ -214,29 +212,43 @@ class TributeEvents {
 
     // Get and validate trigger char
     if (keyCode && !isNaN(keyCode)) {
-      if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
+      if (
+        instance.tribute.autocompleteMode &&
+        String.fromCharCode(keyCode).match(/(\w|\s)/g)
+      ) {
         instance.tribute.current.trigger = "";
+      } else {
+        instance.tribute.current.trigger = instance.tribute
+          .triggers()
+          .find((trigger) => {
+            return trigger.charCodeAt(0) === keyCode;
+          });
       }
-      else {
-        instance.tribute.current.trigger = instance.tribute.triggers().find(trigger => {
-          return trigger.charCodeAt(0) === keyCode;
-        });
-      }
-    } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
+    } else if (
+      instance.tribute.autocompleteMode &&
+      event instanceof InputEvent
+    ) {
       instance.tribute.current.trigger = "";
     }
-    if (!(
-      instance.tribute.current.trigger ||
-      (instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode))
-    ) return;
+    if (
+      !(
+        instance.tribute.current.trigger ||
+        (instance.tribute.current.trigger === "" &&
+          instance.tribute.autocompleteMode)
+      )
+    )
+      return;
 
     // Get and validate collection
-    instance.tribute.current.collection = instance.tribute.collection.find(item => {
-      return item.trigger === instance.tribute.current.trigger;
-    });
-    if (!instance.tribute.current.collection ||
+    instance.tribute.current.collection = instance.tribute.collection.find(
+      (item) => {
+        return item.trigger === instance.tribute.current.trigger;
+      }
+    );
+    if (
+      !instance.tribute.current.collection ||
       instance.tribute.current.collection.menuShowMinLength >
-      instance.tribute.current.mentionText.length
+        instance.tribute.current.mentionText.length
     ) {
       return;
     }
@@ -246,7 +258,7 @@ class TributeEvents {
 
   shouldDeactivate(event) {
     let controlKeyPressed = false;
-    TributeEvents.keys().forEach(o => {
+    TributeEvents.keys().forEach((o) => {
       if (event.keyCode === o.key) {
         controlKeyPressed = true;
         return;
@@ -260,8 +272,8 @@ class TributeEvents {
   }
 
   getKeyCode(instance, el, event) {
-    let tribute = instance.tribute;
-    let info = tribute.range.getTriggerInfo(
+    const tribute = instance.tribute;
+    const info = tribute.range.getTriggerInfo(
       false,
       tribute.hasTrailingSpace,
       true,
@@ -279,7 +291,7 @@ class TributeEvents {
   updateSelection(el) {
     let success = false;
     this.tribute.current.element = el;
-    let info = this.tribute.range.getTriggerInfo(
+    const info = this.tribute.range.getTriggerInfo(
       false,
       this.tribute.hasTrailingSpace,
       true,
@@ -294,8 +306,7 @@ class TributeEvents {
       this.tribute.current.selectedOffset = info.mentionSelectedOffset;
       this.tribute.current.info = info;
       success = true;
-    }
-    else {
+    } else {
       this.tribute.current = {};
     }
     return success;
@@ -303,7 +314,7 @@ class TributeEvents {
 
   callbacks() {
     return {
-      enter: (e, el) => {
+      enter: (e, _el) => {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
@@ -311,7 +322,7 @@ class TributeEvents {
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
         }
       },
-      escape: (e, el) => {
+      escape: (e, _el) => {
         if (this.tribute.isActive) {
           e.preventDefault();
           e.stopPropagation();
@@ -334,12 +345,12 @@ class TributeEvents {
           }
         }
       },
-      up: (e, el) => {
+      up: (e, _el) => {
         // navigate up ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
           e.stopPropagation();
-          let count = this.tribute.current.filteredItems.length,
+          const count = this.tribute.current.filteredItems.length,
             selected = this.tribute.menuSelected;
 
           if (count > selected && selected > 0) {
@@ -352,12 +363,12 @@ class TributeEvents {
           }
         }
       },
-      down: (e, el) => {
+      down: (e, _el) => {
         // navigate down ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
           e.stopPropagation();
-          let count = this.tribute.current.filteredItems.length - 1,
+          const count = this.tribute.current.filteredItems.length - 1,
             selected = this.tribute.menuSelected;
 
           if (count > selected) {
@@ -379,29 +390,29 @@ class TributeEvents {
         } else if (this.tribute.isActive) {
           this.tribute.showMenuFor(el);
         }
-      }
+      },
     };
   }
 
   setActiveLi(index) {
-    let lis = this.tribute.menu.querySelectorAll("li"),
+    const lis = this.tribute.menu.querySelectorAll("li"),
       length = lis.length >>> 0;
 
     if (index) this.tribute.menuSelected = parseInt(index);
 
     for (let i = 0; i < length; i++) {
-      let li = lis[i];
+      const li = lis[i];
       if (i === this.tribute.menuSelected) {
         li.classList.add(this.tribute.current.collection.selectClass);
 
-        let liClientRect = li.getBoundingClientRect();
-        let menuClientRect = this.tribute.menu.getBoundingClientRect();
+        const liClientRect = li.getBoundingClientRect();
+        const menuClientRect = this.tribute.menu.getBoundingClientRect();
 
         if (liClientRect.bottom > menuClientRect.bottom) {
-          let scrollDistance = liClientRect.bottom - menuClientRect.bottom;
+          const scrollDistance = liClientRect.bottom - menuClientRect.bottom;
           this.tribute.menu.scrollTop += scrollDistance;
         } else if (liClientRect.top < menuClientRect.top) {
-          let scrollDistance = menuClientRect.top - liClientRect.top;
+          const scrollDistance = menuClientRect.top - liClientRect.top;
           this.tribute.menu.scrollTop -= scrollDistance;
         }
       } else {
@@ -411,10 +422,10 @@ class TributeEvents {
   }
 
   getFullHeight(elem, includeMargin) {
-    let height = elem.getBoundingClientRect().height;
+    const height = elem.getBoundingClientRect().height;
 
     if (includeMargin) {
-      let style = elem.currentStyle || window.getComputedStyle(elem);
+      const style = elem.currentStyle || window.getComputedStyle(elem);
       return (
         height + parseFloat(style.marginTop) + parseFloat(style.marginBottom)
       );
@@ -424,6 +435,8 @@ class TributeEvents {
   }
 }
 
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+
 class TributeMenuEvents {
   constructor(tribute) {
     this.tribute = tribute;
@@ -431,25 +444,25 @@ class TributeMenuEvents {
     this.menu = this.tribute.menu;
   }
 
-  bind(menu) {
+  bind(_menu) {
     this.menuClickEvent = this.tribute.events.click.bind(null, this);
     this.menuContainerScrollEvent = this.debounce(
       () => {
-          this.tribute.hideMenu();
+        this.tribute.hideMenu();
       },
       10,
       false
     );
     this.windowResizeEvent = this.debounce(
       () => {
-          this.tribute.hideMenu();
+        this.tribute.hideMenu();
       },
       10,
       false
     );
 
     this.windowBlurEvent = () => {
-        this.tribute.hideMenu();
+      this.tribute.hideMenu();
     };
 
     // fixes IE11 issues with mousedown
@@ -473,7 +486,7 @@ class TributeMenuEvents {
     }
   }
 
-  unbind(menu) {
+  unbind(_menu) {
     this.tribute.range
       .getDocument()
       .removeEventListener("mousedown", this.menuClickEvent, false);
@@ -494,15 +507,15 @@ class TributeMenuEvents {
   }
 
   debounce(func, wait, immediate) {
-    var timeout;
+    let timeout;
     return () => {
-      var context = this,
+      const context = this,
         args = arguments;
-      var later = () => {
+      const later = () => {
         timeout = null;
         if (!immediate) func.apply(context, args);
       };
-      var callNow = immediate && !timeout;
+      const callNow = immediate && !timeout;
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
       if (callNow) func.apply(context, args);
@@ -510,825 +523,939 @@ class TributeMenuEvents {
   }
 }
 
-// Thanks to https://github.com/jeff-collins/ment.io
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 class TributeRange {
-    constructor(tribute) {
-        this.tribute = tribute;
-        this.tribute.range = this;
+  constructor(tribute) {
+    this.tribute = tribute;
+    this.tribute.range = this;
+  }
+
+  getDocument() {
+    let iframe;
+    if (this.tribute.current.collection) {
+      iframe = this.tribute.current.collection.iframe;
     }
 
-    getDocument() {
-        let iframe;
-        if (this.tribute.current.collection) {
-            iframe = this.tribute.current.collection.iframe;
+    if (!iframe) {
+      return document;
+    }
+
+    return iframe.contentWindow.document;
+  }
+
+  positionMenuAtCaret(scrollTo) {
+    const context = this.tribute.current;
+    let coordinates;
+
+    const info = this.getTriggerInfo(
+      false,
+      this.tribute.hasTrailingSpace,
+      true,
+      this.tribute.allowSpaces,
+      this.tribute.autocompleteMode
+    );
+
+    if (typeof info !== "undefined") {
+      if (!this.tribute.positionMenu) {
+        this.tribute.menu.style.display = `block`;
+        return;
+      }
+
+      if (!this.isContentEditable(context.element)) {
+        coordinates = this.getTextAreaOrInputUnderlinePosition(
+          this.tribute.current.element,
+          info.mentionPosition + info.mentionText.length
+        );
+      } else {
+        coordinates = this.getContentEditableCaretPosition(
+          info.mentionPosition + info.mentionText.length
+        );
+      }
+
+      this.tribute.menu.style.top = `${coordinates.top}px`;
+      this.tribute.menu.style.left = `${coordinates.left}px`;
+      this.tribute.menu.style.right = `${coordinates.right}px`;
+      this.tribute.menu.style.bottom = `${coordinates.bottom}px`;
+      this.tribute.menu.style["max-heigh"] = `${
+        coordinates.maxHeight || 500
+      }px`;
+      this.tribute.menu.style["max-width"] = `${coordinates.maxWidth || 300}px`;
+      this.tribute.menu.style.position = `${
+        coordinates.position || "absolute"
+      }`;
+      this.tribute.menu.style.display = `block`;
+
+      if (coordinates.left === "auto") {
+        this.tribute.menu.style.left = "auto";
+      }
+
+      if (coordinates.top === "auto") {
+        this.tribute.menu.style.top = "auto";
+      }
+
+      if (scrollTo) this.scrollIntoView();
+    } else {
+      this.tribute.menu.style.display = "none";
+    }
+  }
+
+  get menuContainerIsBody() {
+    return (
+      this.tribute.menuContainer === document.body ||
+      !this.tribute.menuContainer
+    );
+  }
+
+  selectElement(targetElement, path, offset) {
+    let elem = targetElement;
+
+    if (path) {
+      for (let i = 0; i < path.length; i++) {
+        elem = elem.childNodes[path[i]];
+        if (elem === undefined) {
+          return;
+        }
+        while (elem.length < offset) {
+          offset -= elem.length;
+          elem = elem.nextSibling;
+        }
+        if (elem.childNodes.length === 0 && !elem.length) {
+          elem = elem.previousSibling;
+        }
+      }
+    }
+    const sel = this.getWindowSelection();
+    const range = this.getDocument().createRange();
+    range.setStart(elem, offset);
+    range.setEnd(elem, offset);
+    range.collapse(true);
+
+    try {
+      sel.removeAllRanges();
+    } catch (error) {
+      console.error(error);
+    }
+
+    sel.addRange(range);
+    targetElement.focus();
+  }
+
+  replaceTriggerText(
+    text,
+    requireLeadingSpace,
+    hasTrailingSpace,
+    originalEvent,
+    item
+  ) {
+    const info = this.tribute.current.info; //this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
+
+    if (info !== undefined) {
+      const context = this.tribute.current;
+      const detail = {
+        item: item,
+        instance: context,
+        context: info,
+        event: originalEvent,
+        text: text,
+      };
+      const replaceEvent = new CustomEvent("tribute-replaced", {
+        detail: detail,
+      });
+
+      if (!this.isContentEditable(context.element)) {
+        const textEndsWithSpace = text !== text.trimEnd();
+        const myField = this.tribute.current.element;
+        const textSuffix =
+          typeof this.tribute.replaceTextSuffix === "string"
+            ? this.tribute.replaceTextSuffix
+            : " ";
+        text = this.stripHtml(text);
+        text += textSuffix;
+        const startPos = info.mentionPosition;
+        let endPos =
+          info.mentionPosition +
+          info.mentionText.length +
+          textSuffix.length +
+          textEndsWithSpace;
+        if (!this.tribute.autocompleteMode) {
+          endPos += info.mentionTriggerChar.length - 1;
+        }
+        myField.value =
+          myField.value.substring(0, startPos) +
+          text +
+          myField.value.substring(endPos, myField.value.length);
+        myField.selectionStart = startPos + text.length;
+        myField.selectionEnd = startPos + text.length;
+      } else {
+        // add a space to the end of the pasted text
+        const textEndsWithSpace = text !== text.trimEnd();
+        const textSuffix =
+          typeof this.tribute.replaceTextSuffix === "string"
+            ? this.tribute.replaceTextSuffix
+            : "\xA0";
+        text += textSuffix;
+        let endPos =
+          info.mentionPosition + info.mentionText.length + textEndsWithSpace;
+        if (!this.tribute.autocompleteMode) {
+          endPos += info.mentionTriggerChar.length;
+        }
+        this.tribute.useHTML
+          ? this.pasteHtml(text, info.mentionPosition, endPos)
+          : this.pasteText(text, info.mentionPosition, endPos);
+      }
+
+      context.element.dispatchEvent(
+        new CustomEvent("input", { bubbles: true, detail: detail })
+      );
+      context.element.dispatchEvent(replaceEvent);
+    }
+  }
+
+  pasteHtml(html, startPos, endPos) {
+    const sel = this.getWindowSelection();
+    const range = this.getDocument().createRange();
+    range.setStart(sel.anchorNode, startPos);
+    range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
+    range.deleteContents();
+
+    const el = this.getDocument().createElement("div");
+    el.innerHTML = html;
+    const frag = this.getDocument().createDocumentFragment();
+    let node, lastNode;
+
+    while ((node = el.firstChild)) {
+      lastNode = frag.appendChild(node);
+    }
+    range.insertNode(frag);
+
+    // Preserve the selection
+    if (lastNode) {
+      const newRange = this.getDocument().createRange();
+      newRange.setStart(lastNode, lastNode.length);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      sel.collapseToEnd();
+    }
+  }
+
+  stripHtml(html) {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  }
+
+  pasteText(html, startPos, endPos) {
+    const text = this.stripHtml(html);
+    const range = this.getDocument().createRange();
+    const sel = this.getWindowSelection();
+    sel.anchorNode.nodeValue =
+      sel.anchorNode.nodeValue.substring(0, startPos) +
+      text +
+      sel.anchorNode.nodeValue.substring(
+        endPos,
+        sel.anchorNode.nodeValue.length
+      );
+    range.setStart(sel.anchorNode, startPos + text.length);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    sel.collapseToEnd();
+  }
+
+  getWindowSelection() {
+    if (this.tribute.collection.iframe) {
+      return this.tribute.collection.iframe.contentWindow.getSelection();
+    }
+
+    return this.tribute.current.element.getRootNode().getSelection();
+  }
+
+  getNodePositionInParent(element) {
+    if (element.parentNode === null) {
+      return 0;
+    }
+
+    for (let i = 0; i < element.parentNode.childNodes.length; i++) {
+      const node = element.parentNode.childNodes[i];
+
+      if (node === element) {
+        return i;
+      }
+    }
+  }
+
+  getContentEditableSelectedPath(_ctx) {
+    const sel = this.getWindowSelection();
+    let selected = sel.anchorNode;
+    const path = [];
+    let offset;
+
+    if (selected !== null) {
+      let i;
+      let ce = selected.contentEditable;
+      while (selected !== null && ce !== "true") {
+        i = this.getNodePositionInParent(selected);
+        path.push(i);
+        selected = selected.parentNode;
+        if (selected !== null) {
+          ce = selected.contentEditable;
+        }
+      }
+      path.reverse();
+
+      // getRangeAt may not exist, need alternative
+      offset = sel.getRangeAt(0).startOffset;
+
+      return {
+        selected: selected,
+        path: path,
+        offset: offset,
+      };
+    }
+  }
+
+  getWholeWordsUpToCharIndex(str, minLen) {
+    let pos = 0;
+    const arr = str
+      .split(this.tribute.autocompleteSeparator)
+      .filter(function (e) {
+        return e.trim();
+      });
+    const text = str;
+    for (let i = 0, len = arr.length; i < len; i++) {
+      const idx = str.indexOf(arr[i]);
+      pos = pos + idx;
+      str = str.slice(idx);
+      if (minLen >= pos && minLen <= pos + arr[i].length) {
+        minLen = pos + arr[i].length;
+        break;
+      }
+    }
+
+    return text.substring(0, minLen);
+  }
+  getTextPrecedingCurrentSelection() {
+    const context = this.tribute.current;
+    let text = "";
+
+    if (!this.isContentEditable(context.element)) {
+      const textComponent = this.tribute.current.element;
+      if (textComponent) {
+        const startPos = textComponent.selectionStart;
+        if (textComponent.value && startPos >= 0) {
+          text = textComponent.value.substring(0);
+          text = this.getWholeWordsUpToCharIndex(text, startPos);
+        }
+      }
+    } else {
+      const selectedElem = this.getWindowSelection().anchorNode;
+
+      if (selectedElem !== null) {
+        const workingNodeContent = selectedElem.textContent;
+        const selectStartOffset =
+          this.getWindowSelection().getRangeAt(0).startOffset;
+
+        if (workingNodeContent && selectStartOffset >= 0) {
+          text = workingNodeContent.substring(0);
+          text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);
+        }
+      }
+    }
+
+    return text;
+  }
+
+  getLastWordInText(text) {
+    const separator = this.tribute.autocompleteSeparator
+      ? this.tribute.autocompleteSeparator
+      : /\s+/;
+    const wordsArray = text.split(separator);
+
+    if (!wordsArray.length) return " ";
+    return wordsArray[wordsArray.length - 1];
+  }
+
+  getTriggerInfo(
+    menuAlreadyActive,
+    hasTrailingSpace,
+    requireLeadingSpace,
+    allowSpaces,
+    isAutocomplete
+  ) {
+    const ctx = this.tribute.current;
+    let selected, path, offset;
+
+    if (!this.isContentEditable(ctx.element)) {
+      selected = this.tribute.current.element;
+    } else {
+      const selectionInfo = this.getContentEditableSelectedPath(ctx);
+
+      if (selectionInfo) {
+        selected = selectionInfo.selected;
+        path = selectionInfo.path;
+        offset = selectionInfo.offset;
+      }
+    }
+
+    const effectiveRange = this.getTextPrecedingCurrentSelection();
+    const lastWordOfEffectiveRange = this.getLastWordInText(effectiveRange);
+
+    if (isAutocomplete) {
+      return {
+        mentionPosition:
+          effectiveRange.length - lastWordOfEffectiveRange.length,
+        mentionText: lastWordOfEffectiveRange,
+        fullText: effectiveRange,
+        mentionSelectedElement: selected,
+        mentionSelectedPath: path,
+        mentionSelectedOffset: offset,
+      };
+    }
+
+    if (effectiveRange !== undefined && effectiveRange !== null) {
+      let mostRecentTriggerCharPos = -1;
+      let triggerChar;
+
+      this.tribute.collection.forEach((config) => {
+        const c = config.trigger;
+        const idx = config.requireLeadingSpace
+          ? this.lastIndexWithLeadingSpace(effectiveRange, c)
+          : effectiveRange.lastIndexOf(c);
+
+        if (idx > mostRecentTriggerCharPos) {
+          mostRecentTriggerCharPos = idx;
+          triggerChar = c;
+          requireLeadingSpace = config.requireLeadingSpace;
+        }
+      });
+
+      if (
+        mostRecentTriggerCharPos >= 0 &&
+        (mostRecentTriggerCharPos === 0 ||
+          !requireLeadingSpace ||
+          /\s/.test(
+            effectiveRange.substring(
+              mostRecentTriggerCharPos - 1,
+              mostRecentTriggerCharPos
+            )
+          ))
+      ) {
+        let currentTriggerSnippet = effectiveRange.substring(
+          mostRecentTriggerCharPos + triggerChar.length,
+          effectiveRange.length
+        );
+
+        triggerChar = effectiveRange.substring(
+          mostRecentTriggerCharPos,
+          mostRecentTriggerCharPos + triggerChar.length
+        );
+        const firstSnippetChar = currentTriggerSnippet.substring(0, 1);
+        const leadingSpace =
+          currentTriggerSnippet.length > 0 &&
+          (firstSnippetChar === " " || firstSnippetChar === "\xA0");
+        if (hasTrailingSpace) {
+          currentTriggerSnippet = currentTriggerSnippet.trim();
         }
 
-        if (!iframe) {
-            return document
+        const regex = allowSpaces ? /[^\S ]/g : /[\xA0\s]/g;
+
+        this.tribute.hasTrailingSpace = regex.test(currentTriggerSnippet);
+
+        if (
+          !leadingSpace &&
+          (menuAlreadyActive || !regex.test(currentTriggerSnippet))
+        ) {
+          return {
+            mentionPosition: mostRecentTriggerCharPos,
+            mentionText: currentTriggerSnippet,
+            mentionSelectedElement: selected,
+            mentionSelectedPath: path,
+            mentionSelectedOffset: offset,
+            mentionTriggerChar: triggerChar,
+          };
         }
-
-        return iframe.contentWindow.document
+      }
     }
+  }
 
-    positionMenuAtCaret(scrollTo) {
-        let context = this.tribute.current,
-            coordinates;
+  lastIndexWithLeadingSpace(str, trigger) {
+    const reversedStr = str.split("").reverse().join("");
+    let index = -1;
 
-        let info = this.getTriggerInfo(false, this.tribute.hasTrailingSpace, true, this.tribute.allowSpaces, this.tribute.autocompleteMode);
+    for (let cidx = 0, len = str.length; cidx < len; cidx++) {
+      const firstChar = cidx === str.length - 1;
+      const leadingSpace = /\s/.test(reversedStr[cidx + 1]);
 
-        if (typeof info !== 'undefined') {
-
-            if(!this.tribute.positionMenu){
-                this.tribute.menu.style.display = `block`;
-                return
-            }
-
-            if (!this.isContentEditable(context.element)) {
-                coordinates = this.getTextAreaOrInputUnderlinePosition(this.tribute.current.element,
-                    info.mentionPosition + info.mentionText.length);
-            }
-            else {
-                coordinates = this.getContentEditableCaretPosition(info.mentionPosition + info.mentionText.length);
-            }
-
-            this.tribute.menu.style.top = `${coordinates.top}px`;
-            this.tribute.menu.style.left = `${coordinates.left}px`;
-            this.tribute.menu.style.right = `${coordinates.right}px`;
-            this.tribute.menu.style.bottom = `${coordinates.bottom}px`;
-            this.tribute.menu.style["max-heigh"] = `${coordinates.maxHeight || 500}px`;
-            this.tribute.menu.style["max-width"] = `${coordinates.maxWidth || 300}px`;
-            this.tribute.menu.style.position = `${coordinates.position || 'absolute'}`;
-            this.tribute.menu.style.display = `block`;
-
-            if (coordinates.left === 'auto') {
-                this.tribute.menu.style.left = 'auto';
-            }
-
-            if (coordinates.top === 'auto') {
-                this.tribute.menu.style.top = 'auto';
-            }
-
-            if (scrollTo) this.scrollIntoView();
-
-        } else {
-            this.tribute.menu.style.display = 'none';
+      let match = true;
+      for (let triggerIdx = trigger.length - 1; triggerIdx >= 0; triggerIdx--) {
+        if (trigger[triggerIdx] !== reversedStr[cidx - triggerIdx]) {
+          match = false;
+          break;
         }
+      }
+
+      if (match && (firstChar || leadingSpace)) {
+        index = str.length - 1 - cidx;
+        break;
+      }
     }
 
-    get menuContainerIsBody() {
-        return this.tribute.menuContainer === document.body || !this.tribute.menuContainer;
+    return index;
+  }
+
+  isContentEditable(element) {
+    return element.nodeName !== "INPUT" && element.nodeName !== "TEXTAREA";
+  }
+
+  isMenuOffScreen(coordinates, menuDimensions) {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const doc = document.documentElement;
+    const windowLeft =
+      (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+    const windowTop =
+      (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+
+    const menuTop =
+      typeof coordinates.top === "number"
+        ? coordinates.top
+        : coordinates.bottom - menuDimensions.height;
+    const menuRight =
+      typeof coordinates.right === "number"
+        ? coordinates.right
+        : coordinates.left + menuDimensions.width;
+    const menuBottom =
+      typeof coordinates.bottom === "number"
+        ? coordinates.bottom
+        : coordinates.top + menuDimensions.height;
+    const menuLeft =
+      typeof coordinates.left === "number"
+        ? coordinates.left
+        : coordinates.right - menuDimensions.width;
+
+    return {
+      top: menuTop < Math.floor(windowTop),
+      right: menuRight > Math.ceil(windowLeft + windowWidth),
+      bottom: menuBottom > Math.ceil(windowTop + windowHeight),
+      left: menuLeft < Math.floor(windowLeft),
+    };
+  }
+
+  getMenuDimensions() {
+    // Width of the menu depends of its contents and position
+    // We must check what its width would be without any obstruction
+    // This way, we can achieve good positioning for flipping the menu
+    const dimensions = {
+      width: null,
+      height: null,
+    };
+
+    this.tribute.menu.style.top = `0px`;
+    this.tribute.menu.style.left = `0px`;
+    this.tribute.menu.style.right = null;
+    this.tribute.menu.style.bottom = null;
+    this.tribute.menu.style.position = `fixed`;
+    this.tribute.menu.style.visibility = `hidden`;
+    this.tribute.menu.style.display = `block`;
+
+    dimensions.width = this.tribute.menu.offsetWidth;
+    dimensions.height = this.tribute.menu.offsetHeight;
+
+    this.tribute.menu.style.display = `none`;
+    this.tribute.menu.style.visibility = `visible`;
+
+    return dimensions;
+  }
+
+  getTextAreaOrInputUnderlinePosition(element, position, _flipped) {
+    const properties = [
+      "direction",
+      "boxSizing",
+      "width",
+      "height",
+      "overflowX",
+      "overflowY",
+      "borderTopWidth",
+      "borderRightWidth",
+      "borderBottomWidth",
+      "borderLeftWidth",
+      "borderStyle",
+      "paddingTop",
+      "paddingRight",
+      "paddingBottom",
+      "paddingLeft",
+      "fontStyle",
+      "fontVariant",
+      "fontWeight",
+      "fontStretch",
+      "fontSize",
+      "fontSizeAdjust",
+      "lineHeight",
+      "fontFamily",
+      "textAlign",
+      "textTransform",
+      "textIndent",
+      "textDecoration",
+      "letterSpacing",
+      "wordSpacing",
+    ];
+
+    const div = this.getDocument().createElement("div");
+    div.id = "input-textarea-caret-position-mirror-div";
+    this.getDocument().body.appendChild(div);
+
+    const style = div.style;
+    const computed = window.getComputedStyle
+      ? getComputedStyle(element)
+      : element.currentStyle;
+
+    style.whiteSpace = "pre-wrap";
+    if (element.nodeName !== "INPUT") {
+      style.wordWrap = "break-word";
     }
 
+    // position off-screen
+    style.position = "absolute";
+    style.visibility = "hidden";
 
-    selectElement(targetElement, path, offset) {
-        let range;
-        let elem = targetElement;
+    // transfer the element's properties to the div
+    properties.forEach((prop) => {
+      style[prop] = computed[prop];
+    });
 
-        if (path) {
-            for (var i = 0; i < path.length; i++) {
-                elem = elem.childNodes[path[i]];
-                if (elem === undefined) {
-                    return
-                }
-                while (elem.length < offset) {
-                    offset -= elem.length;
-                    elem = elem.nextSibling;
-                }
-                if (elem.childNodes.length === 0 && !elem.length) {
-                    elem = elem.previousSibling;
-                }
-            }
-        }
-        let sel = this.getWindowSelection();
+    //NOT SURE WHY THIS IS HERE AND IT DOESNT SEEM HELPFUL
+    // if (isFirefox) {
+    //     style.width = `${(parseInt(computed.width) - 2)}px`
+    //     if (element.scrollHeight > parseInt(computed.height))
+    //         style.overflowY = 'scroll'
+    // } else {
+    //     style.overflow = 'hidden'
+    // }
 
-        range = this.getDocument().createRange();
-        range.setStart(elem, offset);
-        range.setEnd(elem, offset);
-        range.collapse(true);
+    const span0 = document.createElement("span");
+    span0.textContent = element.value.substring(0, position);
+    div.appendChild(span0);
 
-        try {
-            sel.removeAllRanges();
-        } catch (error) {}
-
-        sel.addRange(range);
-        targetElement.focus();
+    if (element.nodeName === "INPUT") {
+      div.textContent = div.textContent.replace(/\s/g, " ");
     }
 
-    replaceTriggerText(text, requireLeadingSpace, hasTrailingSpace, originalEvent, item) {
-        let info = this.tribute.current.info;//this.getTriggerInfo(true, hasTrailingSpace, requireLeadingSpace, this.tribute.allowSpaces, this.tribute.autocompleteMode)
-
-        if (info !== undefined) {
-            let context = this.tribute.current;
-            let detail = {
-                item: item,
-                instance: context,
-                context: info,
-                event: originalEvent,
-                text: text
-            };
-            let replaceEvent = new CustomEvent('tribute-replaced', {
-                detail: detail
-            });
-
-            if (!this.isContentEditable(context.element)) {
-                let textEndsWithSpace = text !== text.trimEnd();
-                let myField = this.tribute.current.element;
-                let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
-                    ? this.tribute.replaceTextSuffix
-                    : ' ';
-                text = this.stripHtml(text);
-                text += textSuffix;
-                let startPos = info.mentionPosition;
-                let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length + textEndsWithSpace;
-                if (!this.tribute.autocompleteMode) {
-                    endPos += info.mentionTriggerChar.length - 1;
-                }
-                myField.value = myField.value.substring(0, startPos) + text +
-                    myField.value.substring(endPos, myField.value.length);
-                myField.selectionStart = startPos + text.length;
-                myField.selectionEnd = startPos + text.length;
-            } else {
-                // add a space to the end of the pasted text
-                let textEndsWithSpace = text !== text.trimEnd();
-                let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
-                    ? this.tribute.replaceTextSuffix
-                    : '\xA0';
-                text += textSuffix;
-                let endPos = info.mentionPosition + info.mentionText.length + textEndsWithSpace;
-                if (!this.tribute.autocompleteMode) {
-                    endPos += info.mentionTriggerChar.length;
-                }
-                this.tribute.useHTML ? this.pasteHtml(text, info.mentionPosition, endPos) :
-                this.pasteText(text, info.mentionPosition, endPos);
-            }
-
-            context.element.dispatchEvent(new CustomEvent('input', { bubbles: true, detail: detail }));
-            context.element.dispatchEvent(replaceEvent);
-        }
-    }
-
-    pasteHtml(html, startPos, endPos) {
-        let range, sel;
-        sel = this.getWindowSelection();
-        range = this.getDocument().createRange();
-        range.setStart(sel.anchorNode, startPos);
-        range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
-        range.deleteContents();
-
-        let el = this.getDocument().createElement('div');
-        el.innerHTML = html;
-        let frag = this.getDocument().createDocumentFragment(),
-            node, lastNode;
-        while ((node = el.firstChild)) {
-            lastNode = frag.appendChild(node);
-        }
-        range.insertNode(frag);
-
-        // Preserve the selection
-        if (lastNode) {
-            range = this.getDocument().createRange();
-            range.setStart(lastNode, lastNode.length);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            sel.collapseToEnd();
-        }
-    }
-
-    stripHtml(html) {
-        let tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-    }
-
-    pasteText(html, startPos, endPos) {
-        let text = this.stripHtml(html);
-        let range = this.getDocument().createRange();
-        let sel = this.getWindowSelection();
-        sel.anchorNode.nodeValue = sel.anchorNode.nodeValue.substring(0, startPos)
-            + text + sel.anchorNode.nodeValue.substring(endPos, sel.anchorNode.nodeValue.length);
-        range.setStart(sel.anchorNode, startPos + text.length);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        sel.collapseToEnd();
-    }
-
-    getWindowSelection() {
-        if (this.tribute.collection.iframe) {
-            return this.tribute.collection.iframe.contentWindow.getSelection()
-        }
-
-        return this.tribute.current.element.getRootNode().getSelection();
-    }
-
-    getNodePositionInParent(element) {
-        if (element.parentNode === null) {
-            return 0
-        }
-
-        for (var i = 0; i < element.parentNode.childNodes.length; i++) {
-            let node = element.parentNode.childNodes[i];
-
-            if (node === element) {
-                return i
-            }
-        }
-    }
-
-    getContentEditableSelectedPath(ctx) {
-        let sel = this.getWindowSelection();
-        let selected = sel.anchorNode;
-        let path = [];
-        let offset;
-
-        if (selected != null) {
-            let i;
-            let ce = selected.contentEditable;
-            while (selected !== null && ce !== 'true') {
-                i = this.getNodePositionInParent(selected);
-                path.push(i);
-                selected = selected.parentNode;
-                if (selected !== null) {
-                    ce = selected.contentEditable;
-                }
-            }
-            path.reverse();
-
-            // getRangeAt may not exist, need alternative
-            offset = sel.getRangeAt(0).startOffset;
-
-            return {
-                selected: selected,
-                path: path,
-                offset: offset
-            }
-        }
-    }
-
-    getWholeWordsUpToCharIndex(str, minLen)
-    {
-        var pos = 0;
-        var arr = str.split(this.tribute.autocompleteSeparator).filter(function (e) {return e.trim();});
-        var text = str;
-        for( var i = 0, len = arr.length; i < len; i++ ) {
-            var idx = str.indexOf(arr[i]);
-            pos = (pos + idx);
-            str = str.slice( idx );
-            if (minLen >= pos && minLen <= pos + arr[i].length)
-            {
-                minLen = pos + arr[i].length;
-                break
-            }
-        }
-    
-        return text.substring(0, minLen);
-    } 
-    getTextPrecedingCurrentSelection() {
-        let context = this.tribute.current,
-            text = '';
-
-        if (!this.isContentEditable(context.element)) {
-            let textComponent = this.tribute.current.element;
-            if (textComponent) {
-                let startPos = textComponent.selectionStart;
-                if (textComponent.value && startPos >= 0) {
-                    text = textComponent.value.substring(0);
-                    text = this.getWholeWordsUpToCharIndex(text, startPos);
-                }
-            }
-
-        } else {
-            let selectedElem = this.getWindowSelection().anchorNode;
-
-            if (selectedElem != null) {
-                let workingNodeContent = selectedElem.textContent;
-                let selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
-
-                if (workingNodeContent && selectStartOffset >= 0) {
-                    text = workingNodeContent.substring(0);
-                    text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);
-                }
-            }
-        }
-
-        return text
-    }
-
-    getLastWordInText(text) {
-        var separator = this.tribute.autocompleteSeparator ? this.tribute.autocompleteSeparator: /\s+/;
-        var wordsArray = text.split(separator);
-
-        if (!wordsArray.length) return " ";
-        return wordsArray[wordsArray.length - 1];
-    }
-
-    getTriggerInfo(menuAlreadyActive, hasTrailingSpace, requireLeadingSpace, allowSpaces, isAutocomplete) {
-        let ctx = this.tribute.current;
-        let selected, path, offset;
-
-        if (!this.isContentEditable(ctx.element)) {
-            selected = this.tribute.current.element;
-        } else {
-            let selectionInfo = this.getContentEditableSelectedPath(ctx);
-
-            if (selectionInfo) {
-                selected = selectionInfo.selected;
-                path = selectionInfo.path;
-                offset = selectionInfo.offset;
-            }
-        }
-
-        let effectiveRange = this.getTextPrecedingCurrentSelection();
-        let lastWordOfEffectiveRange = this.getLastWordInText(effectiveRange);
-
-        if (isAutocomplete) {
-            return {
-                mentionPosition: effectiveRange.length - lastWordOfEffectiveRange.length,
-                mentionText: lastWordOfEffectiveRange,
-                fullText: effectiveRange,
-                mentionSelectedElement: selected,
-                mentionSelectedPath: path,
-                mentionSelectedOffset: offset
-            }
-        }
-
-        if (effectiveRange !== undefined && effectiveRange !== null) {
-            let mostRecentTriggerCharPos = -1;
-            let triggerChar;
-
-            this.tribute.collection.forEach(config => {
-                let c = config.trigger;
-                let idx = config.requireLeadingSpace ?
-                    this.lastIndexWithLeadingSpace(effectiveRange, c) :
-                    effectiveRange.lastIndexOf(c);
-
-                if (idx > mostRecentTriggerCharPos) {
-                    mostRecentTriggerCharPos = idx;
-                    triggerChar = c;
-                    requireLeadingSpace = config.requireLeadingSpace;
-                }
-            });
-
-            if (mostRecentTriggerCharPos >= 0 &&
-                (
-                    mostRecentTriggerCharPos === 0 ||
-                    !requireLeadingSpace ||
-                    /\s/.test(
-                        effectiveRange.substring(
-                            mostRecentTriggerCharPos - 1,
-                            mostRecentTriggerCharPos)
-                    )
-                )
-            ) {
-                let currentTriggerSnippet = effectiveRange.substring(mostRecentTriggerCharPos + triggerChar.length,
-                    effectiveRange.length);
-
-                triggerChar = effectiveRange.substring(mostRecentTriggerCharPos, mostRecentTriggerCharPos + triggerChar.length);
-                let firstSnippetChar = currentTriggerSnippet.substring(0, 1);
-                let leadingSpace = currentTriggerSnippet.length > 0 &&
-                    (
-                        firstSnippetChar === ' ' ||
-                        firstSnippetChar === '\xA0'
-                    );
-                if (hasTrailingSpace) {
-                    currentTriggerSnippet = currentTriggerSnippet.trim();
-                }
-
-                let regex = allowSpaces ? /[^\S ]/g : /[\xA0\s]/g;
-
-                this.tribute.hasTrailingSpace = regex.test(currentTriggerSnippet);
-
-                if (!leadingSpace && (menuAlreadyActive || !(regex.test(currentTriggerSnippet)))) {
-                    return {
-                        mentionPosition: mostRecentTriggerCharPos,
-                        mentionText: currentTriggerSnippet,
-                        mentionSelectedElement: selected,
-                        mentionSelectedPath: path,
-                        mentionSelectedOffset: offset,
-                        mentionTriggerChar: triggerChar
-                    }
-                }
-            }
-        }
-    }
-
-    lastIndexWithLeadingSpace (str, trigger) {
-        let reversedStr = str.split('').reverse().join('');
-        let index = -1;
-
-        for (let cidx = 0, len = str.length; cidx < len; cidx++) {
-            let firstChar = cidx === str.length - 1;
-            let leadingSpace = /\s/.test(reversedStr[cidx + 1]);
-
-            let match = true;
-            for (let triggerIdx = trigger.length - 1; triggerIdx >= 0; triggerIdx--) {
-              if (trigger[triggerIdx] !== reversedStr[cidx-triggerIdx]) {
-                match = false;
-                break
-              }
-            }
-
-            if (match && (firstChar || leadingSpace)) {
-                index = str.length - 1 - cidx;
-                break
-            }
-        }
-
-        return index
-    }
-
-    isContentEditable(element) {
-        return element.nodeName !== 'INPUT' && element.nodeName !== 'TEXTAREA'
-    }
-
-    isMenuOffScreen(coordinates, menuDimensions) {
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-        let doc = document.documentElement;
-        let windowLeft = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
-        let windowTop = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-
-        let menuTop = typeof coordinates.top === 'number' ? coordinates.top : coordinates.bottom - menuDimensions.height;
-        let menuRight = typeof coordinates.right === 'number' ? coordinates.right : coordinates.left + menuDimensions.width;
-        let menuBottom = typeof coordinates.bottom === 'number' ? coordinates.bottom : coordinates.top + menuDimensions.height;
-        let menuLeft = typeof coordinates.left === 'number' ? coordinates.left : coordinates.right - menuDimensions.width;
-
-        return {
-            top: menuTop < Math.floor(windowTop),
-            right: menuRight > Math.ceil(windowLeft + windowWidth),
-            bottom: menuBottom > Math.ceil(windowTop + windowHeight),
-            left: menuLeft < Math.floor(windowLeft)
-        }
-    }
-
-    getMenuDimensions() {
-        // Width of the menu depends of its contents and position
-        // We must check what its width would be without any obstruction
-        // This way, we can achieve good positioning for flipping the menu
-        let dimensions = {
-            width: null,
-            height: null
-        };
-
-       this.tribute.menu.style.top = `0px`;
-       this.tribute.menu.style.left = `0px`;
-       this.tribute.menu.style.right = null;
-       this.tribute.menu.style.bottom = null;
-       this.tribute.menu.style.position = `fixed`;
-       this.tribute.menu.style.visibility = `hidden`;
-       this.tribute.menu.style.display = `block`;
-
-       dimensions.width = this.tribute.menu.offsetWidth;
-       dimensions.height = this.tribute.menu.offsetHeight;
-
-       this.tribute.menu.style.display = `none`;
-       this.tribute.menu.style.visibility = `visible`;
-
-       return dimensions
-    }
-
-    getTextAreaOrInputUnderlinePosition(element, position, flipped) {
-        let properties = ['direction', 'boxSizing', 'width', 'height', 'overflowX',
-            'overflowY', 'borderTopWidth', 'borderRightWidth',
-            'borderBottomWidth', 'borderLeftWidth', 'borderStyle', 'paddingTop',
-            'paddingRight', 'paddingBottom', 'paddingLeft',
-            'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch',
-            'fontSize', 'fontSizeAdjust', 'lineHeight', 'fontFamily',
-            'textAlign', 'textTransform', 'textIndent',
-            'textDecoration', 'letterSpacing', 'wordSpacing'
-        ];
-
-        let div = this.getDocument().createElement('div');
-        div.id = 'input-textarea-caret-position-mirror-div';
-        this.getDocument().body.appendChild(div);
-
-        let style = div.style;
-        let computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle;
-
-        style.whiteSpace = 'pre-wrap';
-        if (element.nodeName !== 'INPUT') {
-            style.wordWrap = 'break-word';
-        }
-
-        // position off-screen
-        style.position = 'absolute';
-        style.visibility = 'hidden';
-
-        // transfer the element's properties to the div
-        properties.forEach(prop => {
-            style[prop] = computed[prop];
-        });
-
-        //NOT SURE WHY THIS IS HERE AND IT DOESNT SEEM HELPFUL
-        // if (isFirefox) {
-        //     style.width = `${(parseInt(computed.width) - 2)}px`
-        //     if (element.scrollHeight > parseInt(computed.height))
-        //         style.overflowY = 'scroll'
-        // } else {
-        //     style.overflow = 'hidden'
-        // }
-
-        let span0 = document.createElement('span');
-        span0.textContent =  element.value.substring(0, position);
-        div.appendChild(span0);
-
-        if (element.nodeName === 'INPUT') {
-            div.textContent = div.textContent.replace(/\s/g, ' ');
-        }
-
-        //Create a span in the div that represents where the cursor
-        //should be
-        let span = this.getDocument().createElement('span');
-        //we give it no content as this represents the cursor
-        div.appendChild(span);
-
-        let span2 = this.getDocument().createElement('span');
-        span2.textContent = element.value.substring(position, position + 1);
-        div.appendChild(span2);
-
-        let rect = element.getBoundingClientRect();
-
-        //position the div exactly over the element
-        //so we can get the bounding client rect for the span and
-        //it should represent exactly where the cursor is
-        div.style.position = 'fixed';
-        div.style.left = rect.left + 'px';
-        div.style.top = rect.top + 'px';
-        div.style.width = rect.width + 'px';
-        div.style.height = rect.height + 'px';
-        div.scrollTop = element.scrollTop;
-
-        let spanRect = span.getBoundingClientRect();
-        let divRect = div.getBoundingClientRect();
-        this.getDocument().body.removeChild(div);
-        let clamp =  function(number, min, max) {
-            return Math.max(min, Math.min(number, max));
-        };
-        let finalRect = {
-            height: Math.min(divRect.height, spanRect.height),
-            left: clamp(spanRect.left, divRect.left, divRect.left + divRect.width),
-            top: clamp( spanRect.top, divRect.top, divRect.top + divRect.height),
-        };
-        return this.getFixedCoordinatesRelativeToRect(finalRect);
-    }
-
-    getContentEditableCaretPosition(selectedNodePosition) {
-        let range;
-        let sel = this.getWindowSelection();
-
-        range = this.getDocument().createRange();
-        range.setStart(sel.anchorNode, selectedNodePosition);
-        range.setEnd(sel.anchorNode, selectedNodePosition);
-
-        range.collapse(false);
-
-        let rect = range.getBoundingClientRect();
-
-        return this.getFixedCoordinatesRelativeToRect(rect);
-    }
-
-    getFixedCoordinatesRelativeToRect(rect) {
-        let coordinates = {
-            position: 'fixed',
-            left: rect.left,
-            top: rect.top + rect.height
-        };
-
-        let menuDimensions = this.getMenuDimensions();
-
-        var availableSpaceOnTop = rect.top;
-        var availableSpaceOnBottom = window.innerHeight - (rect.top + rect.height);
-
-        //check to see where's the right place to put the menu vertically
+    //Create a span in the div that represents where the cursor
+    //should be
+    const span = this.getDocument().createElement("span");
+    //we give it no content as this represents the cursor
+    div.appendChild(span);
+
+    const span2 = this.getDocument().createElement("span");
+    span2.textContent = element.value.substring(position, position + 1);
+    div.appendChild(span2);
+
+    const rect = element.getBoundingClientRect();
+
+    //position the div exactly over the element
+    //so we can get the bounding client rect for the span and
+    //it should represent exactly where the cursor is
+    div.style.position = "fixed";
+    div.style.left = rect.left + "px";
+    div.style.top = rect.top + "px";
+    div.style.width = rect.width + "px";
+    div.style.height = rect.height + "px";
+    div.scrollTop = element.scrollTop;
+
+    const spanRect = span.getBoundingClientRect();
+    const divRect = div.getBoundingClientRect();
+    this.getDocument().body.removeChild(div);
+    const clamp = function (number, min, max) {
+      return Math.max(min, Math.min(number, max));
+    };
+    const finalRect = {
+      height: Math.min(divRect.height, spanRect.height),
+      left: clamp(spanRect.left, divRect.left, divRect.left + divRect.width),
+      top: clamp(spanRect.top, divRect.top, divRect.top + divRect.height),
+    };
+    return this.getFixedCoordinatesRelativeToRect(finalRect);
+  }
+
+  getContentEditableCaretPosition(selectedNodePosition) {
+    const sel = this.getWindowSelection();
+    const range = this.getDocument().createRange();
+    range.setStart(sel.anchorNode, selectedNodePosition);
+    range.setEnd(sel.anchorNode, selectedNodePosition);
+
+    range.collapse(false);
+
+    const rect = range.getBoundingClientRect();
+
+    return this.getFixedCoordinatesRelativeToRect(rect);
+  }
+
+  getFixedCoordinatesRelativeToRect(rect) {
+    const coordinates = {
+      position: "fixed",
+      left: rect.left,
+      top: rect.top + rect.height,
+    };
+
+    const menuDimensions = this.getMenuDimensions();
+
+    const availableSpaceOnTop = rect.top;
+    const availableSpaceOnBottom =
+      window.innerHeight - (rect.top + rect.height);
+
+    //check to see where's the right place to put the menu vertically
+    if (availableSpaceOnBottom < menuDimensions.height) {
+      if (
+        availableSpaceOnTop >= menuDimensions.height ||
+        availableSpaceOnTop > availableSpaceOnBottom
+      ) {
+        coordinates.top = "auto";
+        coordinates.bottom = window.innerHeight - rect.top;
         if (availableSpaceOnBottom < menuDimensions.height) {
-          if (availableSpaceOnTop >= menuDimensions.height || availableSpaceOnTop > availableSpaceOnBottom) {
-            coordinates.top = 'auto';
-            coordinates.bottom = window.innerHeight - rect.top;
-            if (availableSpaceOnBottom < menuDimensions.height) {
-              coordinates.maxHeight = availableSpaceOnTop;
-            }
-          } else {
-            if (availableSpaceOnTop < menuDimensions.height) {
-              coordinates.maxHeight = availableSpaceOnBottom;
-            }
-          }
+          coordinates.maxHeight = availableSpaceOnTop;
         }
+      } else {
+        if (availableSpaceOnTop < menuDimensions.height) {
+          coordinates.maxHeight = availableSpaceOnBottom;
+        }
+      }
+    }
 
-        var availableSpaceOnLeft = rect.left;
-        var availableSpaceOnRight = window.innerWidth - rect.left;
+    const availableSpaceOnLeft = rect.left;
+    const availableSpaceOnRight = window.innerWidth - rect.left;
 
-        //check to see where's the right place to put the menu horizontally
+    //check to see where's the right place to put the menu horizontally
+    if (availableSpaceOnRight < menuDimensions.width) {
+      if (
+        availableSpaceOnLeft >= menuDimensions.width ||
+        availableSpaceOnLeft > availableSpaceOnRight
+      ) {
+        coordinates.left = "auto";
+        coordinates.right = window.innerWidth - rect.left;
         if (availableSpaceOnRight < menuDimensions.width) {
-          if (availableSpaceOnLeft >= menuDimensions.width || availableSpaceOnLeft > availableSpaceOnRight) {
-            coordinates.left = 'auto';
-            coordinates.right = window.innerWidth - rect.left;
-            if (availableSpaceOnRight < menuDimensions.width) {
-              coordinates.maxWidth = availableSpaceOnLeft;
-            }
-          } else {
-            if (availableSpaceOnLeft < menuDimensions.width) {
-              coordinates.maxWidth = availableSpaceOnRight;
-            }
-          }
+          coordinates.maxWidth = availableSpaceOnLeft;
         }
-
-        return coordinates
+      } else {
+        if (availableSpaceOnLeft < menuDimensions.width) {
+          coordinates.maxWidth = availableSpaceOnRight;
+        }
+      }
     }
 
-    scrollIntoView(elem) {
-        let reasonableBuffer = 20,
-            clientRect;
-        let maxScrollDisplacement = 100;
-        let e = this.menu;
+    return coordinates;
+  }
 
-        if (typeof e === 'undefined') return;
+  scrollIntoView(_elem) {
+    const reasonableBuffer = 20;
+    const maxScrollDisplacement = 100;
+    let clientRect;
+    let e = this.menu;
 
-        while (clientRect === undefined || clientRect.height === 0) {
-            clientRect = e.getBoundingClientRect();
+    if (typeof e === "undefined") return;
 
-            if (clientRect.height === 0) {
-                e = e.childNodes[0];
-                if (e === undefined || !e.getBoundingClientRect) {
-                    return
-                }
-            }
+    while (clientRect === undefined || clientRect.height === 0) {
+      clientRect = e.getBoundingClientRect();
+
+      if (clientRect.height === 0) {
+        e = e.childNodes[0];
+        if (e === undefined || !e.getBoundingClientRect) {
+          return;
         }
-
-        let elemTop = clientRect.top;
-        let elemBottom = elemTop + clientRect.height;
-
-        if (elemTop < 0) {
-            window.scrollTo(0, window.pageYOffset + clientRect.top - reasonableBuffer);
-        } else if (elemBottom > window.innerHeight) {
-            let maxY = window.pageYOffset + clientRect.top - reasonableBuffer;
-
-            if (maxY - window.pageYOffset > maxScrollDisplacement) {
-                maxY = window.pageYOffset + maxScrollDisplacement;
-            }
-
-            let targetY = window.pageYOffset - (window.innerHeight - elemBottom);
-
-            if (targetY > maxY) {
-                targetY = maxY;
-            }
-
-            window.scrollTo(0, targetY);
-        }
+      }
     }
+
+    const elemTop = clientRect.top;
+    const elemBottom = elemTop + clientRect.height;
+
+    if (elemTop < 0) {
+      window.scrollTo(
+        0,
+        window.pageYOffset + clientRect.top - reasonableBuffer
+      );
+    } else if (elemBottom > window.innerHeight) {
+      let maxY = window.pageYOffset + clientRect.top - reasonableBuffer;
+
+      if (maxY - window.pageYOffset > maxScrollDisplacement) {
+        maxY = window.pageYOffset + maxScrollDisplacement;
+      }
+
+      let targetY = window.pageYOffset - (window.innerHeight - elemBottom);
+
+      if (targetY > maxY) {
+        targetY = maxY;
+      }
+
+      window.scrollTo(0, targetY);
+    }
+  }
 }
+
+/*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 
 // Thanks to https://github.com/mattyork/fuzzy
 class TributeSearch {
-    constructor(tribute) {
-        this.tribute = tribute;
-        this.tribute.search = this;
+  constructor(tribute) {
+    this.tribute = tribute;
+    this.tribute.search = this;
+  }
+
+  simpleFilter(pattern, array) {
+    return array.filter((string) => {
+      return this.test(pattern, string);
+    });
+  }
+
+  test(pattern, string) {
+    return this.match(pattern, string) !== null;
+  }
+
+  match(pattern, string, opts) {
+    opts = opts || {};
+    const pre = opts.pre || "",
+      post = opts.post || "",
+      compareString = (opts.caseSensitive && string) || string.toLowerCase();
+
+    if (opts.skip) {
+      return { rendered: string, score: 0 };
     }
 
-    simpleFilter(pattern, array) {
-        return array.filter(string => {
-            return this.test(pattern, string)
-        })
+    pattern = (opts.caseSensitive && pattern) || pattern.toLowerCase();
+
+    const patternCache = this.traverse(compareString, pattern, 0, 0, []);
+    if (!patternCache) {
+      return null;
+    }
+    return {
+      rendered: this.render(string, patternCache.cache, pre, post),
+      score: patternCache.score,
+    };
+  }
+
+  traverse(string, pattern, stringIndex, patternIndex, patternCache) {
+    if (this.tribute.autocompleteSeparator) {
+      // if the pattern search at end
+      pattern = pattern.split(this.tribute.autocompleteSeparator).splice(-1)[0];
     }
 
-    test(pattern, string) {
-        return this.match(pattern, string) !== null
+    if (pattern.length === patternIndex) {
+      // calculate score and copy the cache containing the indices where it's found
+      return {
+        score: this.calculateScore(patternCache),
+        cache: patternCache.slice(),
+      };
     }
 
-    match(pattern, string, opts) {
-        opts = opts || {};
-        string.length;
-            let pre = opts.pre || '',
-            post = opts.post || '',
-            compareString = opts.caseSensitive && string || string.toLowerCase();
+    // if string at end or remaining pattern > remaining string
+    if (
+      string.length === stringIndex ||
+      pattern.length - patternIndex > string.length - stringIndex
+    ) {
+      return undefined;
+    }
 
-        if (opts.skip) {
-            return {rendered: string, score: 0}
+    const c = pattern[patternIndex];
+    let index = string.indexOf(c, stringIndex);
+    let best;
+    let temp;
+
+    while (index > -1) {
+      patternCache.push(index);
+      temp = this.traverse(
+        string,
+        pattern,
+        index + 1,
+        patternIndex + 1,
+        patternCache
+      );
+      patternCache.pop();
+
+      // if downstream traversal failed, return best answer so far
+      if (!temp) {
+        return best;
+      }
+
+      if (!best || best.score < temp.score) {
+        best = temp;
+      }
+
+      index = string.indexOf(c, index + 1);
+    }
+
+    return best;
+  }
+
+  calculateScore(patternCache) {
+    let score = 0;
+    let temp = 1;
+
+    patternCache.forEach((index, i) => {
+      if (i > 0) {
+        if (patternCache[i - 1] + 1 === index) {
+          temp += temp + 1;
+        } else {
+          temp = 1;
+        }
+      }
+
+      score += temp;
+    });
+
+    return score;
+  }
+
+  render(string, indices, pre, post) {
+    let rendered = string.substring(0, indices[0]);
+
+    indices.forEach((index, i) => {
+      rendered +=
+        pre +
+        string[index] +
+        post +
+        string.substring(
+          index + 1,
+          indices[i + 1] ? indices[i + 1] : string.length
+        );
+    });
+
+    return rendered;
+  }
+
+  filter(pattern, arr, opts) {
+    opts = opts || {};
+    return arr
+      .reduce((prev, element, idx, _arr) => {
+        let str = element;
+
+        if (opts.extract) {
+          str = opts.extract(element);
+
+          if (!str) {
+            // take care of undefineds / nulls / etc.
+            str = "";
+          }
         }
 
-        pattern = opts.caseSensitive && pattern || pattern.toLowerCase();
+        const rendered = this.match(pattern, str, opts);
 
-        let patternCache = this.traverse(compareString, pattern, 0, 0, []);
-        if (!patternCache) {
-            return null
-        }
-        return {
-            rendered: this.render(string, patternCache.cache, pre, post),
-            score: patternCache.score
-        }
-    }
-
-    traverse(string, pattern, stringIndex, patternIndex, patternCache) {
-        if (this.tribute.autocompleteSeparator) {
-            // if the pattern search at end
-            pattern = pattern.split(this.tribute.autocompleteSeparator).splice(-1)[0];
+        if (rendered !== null) {
+          prev[prev.length] = {
+            string: rendered.rendered,
+            score: rendered.score,
+            index: idx,
+            original: element,
+          };
         }
 
-        if (pattern.length === patternIndex) {
+        return prev;
+      }, [])
 
-            // calculate score and copy the cache containing the indices where it's found
-            return {
-                score: this.calculateScore(patternCache),
-                cache: patternCache.slice()
-            }
-        }
-
-        // if string at end or remaining pattern > remaining string
-        if (string.length === stringIndex || pattern.length - patternIndex > string.length - stringIndex) {
-            return undefined
-        }
-
-        let c = pattern[patternIndex];
-        let index = string.indexOf(c, stringIndex);
-        let best;
-        let temp;
-
-        while (index > -1) {
-            patternCache.push(index);
-            temp = this.traverse(string, pattern, index + 1, patternIndex + 1, patternCache);
-            patternCache.pop();
-
-            // if downstream traversal failed, return best answer so far
-            if (!temp) {
-                return best
-            }
-
-            if (!best || best.score < temp.score) {
-                best = temp;
-            }
-
-            index = string.indexOf(c, index + 1);
-        }
-
-        return best
-    }
-
-    calculateScore(patternCache) {
-        let score = 0;
-        let temp = 1;
-
-        patternCache.forEach((index, i) => {
-            if (i > 0) {
-                if (patternCache[i - 1] + 1 === index) {
-                    temp += temp + 1;
-                }
-                else {
-                    temp = 1;
-                }
-            }
-
-            score += temp;
-        });
-
-        return score
-    }
-
-    render(string, indices, pre, post) {
-        var rendered = string.substring(0, indices[0]);
-
-        indices.forEach((index, i) => {
-            rendered += pre + string[index] + post +
-                string.substring(index + 1, (indices[i + 1]) ? indices[i + 1] : string.length);
-        });
-
-        return rendered
-    }
-
-    filter(pattern, arr, opts) {
-        opts = opts || {};
-        return arr
-            .reduce((prev, element, idx, arr) => {
-                let str = element;
-
-                if (opts.extract) {
-                    str = opts.extract(element);
-
-                    if (!str) { // take care of undefineds / nulls / etc.
-                        str = '';
-                    }
-                }
-
-                let rendered = this.match(pattern, str, opts);
-
-                if (rendered != null) {
-                    prev[prev.length] = {
-                        string: rendered.rendered,
-                        score: rendered.score,
-                        index: idx,
-                        original: element
-                    };
-                }
-
-                return prev
-            }, [])
-
-        .sort((a, b) => {
-            let compare = b.score - a.score;
-            if (compare) return compare
-            return a.index - b.index
-        })
-    }
+      .sort((a, b) => {
+        const compare = b.score - a.score;
+        if (compare) return compare;
+        return a.index - b.index;
+      });
+  }
 }
 
 class Tribute {
@@ -1358,7 +1485,7 @@ class Tribute {
     menuItemLimit = null,
     menuShowMinLength = 0,
     keys = null,
-    useHTML = true
+    useHTML = true,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -1373,8 +1500,7 @@ class Tribute {
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.useHTML = useHTML;
-    if (keys)
-    {
+    if (keys) {
       TributeEvents.keys = keys;
     }
 
@@ -1412,7 +1538,7 @@ class Tribute {
           ).bind(this),
 
           // function called when menu is empty, disables hiding of menu.
-          noMatchTemplate: (t => {
+          noMatchTemplate: ((t) => {
             if (typeof t === "string") {
               if (t.trim() === "") return null;
               return t;
@@ -1423,9 +1549,9 @@ class Tribute {
 
             return (
               noMatchTemplate ||
-              function() {
+              function () {
                 return "<li>No Match Found!</li>";
-              }.bind(this)
+              }
             );
           })(noMatchTemplate),
 
@@ -1447,15 +1573,15 @@ class Tribute {
 
           menuItemLimit: menuItemLimit,
 
-          menuShowMinLength: menuShowMinLength
-        }
+          menuShowMinLength: menuShowMinLength,
+        },
       ];
     } else if (collection) {
       if (this.autocompleteMode)
         console.warn(
           "Tribute in autocomplete mode does not work for collections"
         );
-      this.collection = collection.map(item => {
+      this.collection = collection.map((item) => {
         return {
           trigger: item.trigger || trigger,
           iframe: item.iframe || iframe,
@@ -1469,7 +1595,7 @@ class Tribute {
             item.menuItemTemplate || Tribute.defaultMenuItemTemplate
           ).bind(this),
           // function called when menu is empty, disables hiding of menu.
-          noMatchTemplate: (t => {
+          noMatchTemplate: ((t) => {
             if (typeof t === "string") {
               if (t.trim() === "") return null;
               return t;
@@ -1480,9 +1606,9 @@ class Tribute {
 
             return (
               noMatchTemplate ||
-              function() {
+              function () {
                 return "<li>No Match Found!</li>";
-              }.bind(this)
+              }
             );
           })(noMatchTemplate),
           lookup: item.lookup || lookup,
@@ -1492,7 +1618,7 @@ class Tribute {
           requireLeadingSpace: item.requireLeadingSpace,
           searchOpts: item.searchOpts || searchOpts,
           menuItemLimit: item.menuItemLimit || menuItemLimit,
-          menuShowMinLength: item.menuShowMinLength || menuShowMinLength
+          menuShowMinLength: item.menuShowMinLength || menuShowMinLength,
         };
       });
     } else {
@@ -1510,10 +1636,10 @@ class Tribute {
   }
 
   set isActive(val) {
-    if (this._isActive != val) {
+    if (this._isActive !== val) {
       this._isActive = val;
       if (this.current.element) {
-        let noMatchEvent = new CustomEvent(`tribute-active-${val}`);
+        const noMatchEvent = new CustomEvent(`tribute-active-${val}`);
         this.current.element.dispatchEvent(noMatchEvent);
       }
     }
@@ -1546,7 +1672,7 @@ class Tribute {
   }
 
   triggers() {
-    return this.collection.map(config => {
+    return this.collection.map((config) => {
       return config.trigger;
     });
   }
@@ -1556,6 +1682,7 @@ class Tribute {
       throw new Error("[Tribute] Must pass in a DOM node or NodeList.");
     }
 
+    /* global jQuery */
     // Check if it is a jQuery collection
     if (typeof jQuery !== "undefined" && el instanceof jQuery) {
       el = el.get();
@@ -1567,8 +1694,8 @@ class Tribute {
       el.constructor === HTMLCollection ||
       el.constructor === Array
     ) {
-      let length = el.length;
-      for (var i = 0; i < length; ++i) {
+      const length = el.length;
+      for (let i = 0; i < length; ++i) {
         this._attach(el[i]);
       }
     } else {
@@ -1597,20 +1724,29 @@ class Tribute {
   }
 
   createMenu(containerClass, element) {
-    let properties = ['fontStyle', 'fontVariant', 'fontWeight', 'fontStretch',
-    'fontSizeAdjust', 'fontFamily'];
-    let computed = window.getComputedStyle ? getComputedStyle(element) : element.currentStyle;
-    let wrapper = this.range.getDocument().createElement("div"),
+    const properties = [
+      "fontStyle",
+      "fontVariant",
+      "fontWeight",
+      "fontStretch",
+      "fontSizeAdjust",
+      "fontFamily",
+    ];
+    const computed = window.getComputedStyle
+      ? getComputedStyle(element)
+      : element.currentStyle;
+    const wrapper = this.range.getDocument().createElement("div"),
       ul = this.range.getDocument().createElement("ul");
     wrapper.className = containerClass;
-    wrapper.setAttribute("tabindex", "0"); 
+    wrapper.setAttribute("tabindex", "0");
     wrapper.appendChild(ul);
-    wrapper.style.fontSize = Math.round(parseInt(computed.fontSize) * 0.9) + 'px';
+    wrapper.style.fontSize =
+      Math.round(parseInt(computed.fontSize) * 0.9) + "px";
     wrapper.style.display = "none";
 
-    properties.forEach(prop => {
+    properties.forEach((prop) => {
       wrapper.style[prop] = computed[prop];
-     });
+    });
 
     if (this.menuContainer) {
       return this.menuContainer.appendChild(wrapper);
@@ -1632,7 +1768,10 @@ class Tribute {
 
     // create the menu if it doesn't exist.
     if (!this.menu) {
-      this.menu = this.createMenu(this.current.collection.containerClass, element);
+      this.menu = this.createMenu(
+        this.current.collection.containerClass,
+        element
+      );
       element.tributeMenu = this.menu;
       this.menuEvents.bind(this.menu);
     }
@@ -1651,16 +1790,15 @@ class Tribute {
       }
       this.activationPending = false;
       // Element is no longer in focus - don't show menu
-      if (document.activeElement !== this.current.element)
-      {
+      if (document.activeElement !== this.current.element) {
         return;
       }
 
-      if (forceReplace)
-      {
+      if (forceReplace) {
         // Do force replace - don't show menu
         this.current.info.mentionPosition -= forceReplace.length;
-        this.current.info.mentionText = " ".repeat(forceReplace.length) + this.current.info.mentionText;
+        this.current.info.mentionText =
+          " ".repeat(forceReplace.length) + this.current.info.mentionText;
         this.replaceText(forceReplace.text, null, null);
         return;
       }
@@ -1669,7 +1807,7 @@ class Tribute {
         pre: this.current.collection.searchOpts.pre || "<span>",
         post: this.current.collection.searchOpts.post || "</span>",
         skip: this.current.collection.searchOpts.skip,
-        extract: el => {
+        extract: (el) => {
           if (typeof this.current.collection.lookup === "string") {
             return el[this.current.collection.lookup];
           } else if (typeof this.current.collection.lookup === "function") {
@@ -1679,7 +1817,7 @@ class Tribute {
               "Invalid lookup attribute, lookup must be string or function."
             );
           }
-        }
+        },
       });
 
       if (this.current.collection.menuItemLimit) {
@@ -1688,12 +1826,12 @@ class Tribute {
 
       this.current.filteredItems = items;
 
-      let ul = this.menu.querySelector("ul");
+      const ul = this.menu.querySelector("ul");
       let showMenu = false;
 
       if (!items.length) {
-        let noMatchEvent = new CustomEvent("tribute-no-match", {
-          detail: this.menu
+        const noMatchEvent = new CustomEvent("tribute-no-match", {
+          detail: this.menu,
         });
         this.current.element.dispatchEvent(noMatchEvent);
         if (
@@ -1706,20 +1844,18 @@ class Tribute {
           typeof this.current.collection.noMatchTemplate === "function"
             ? (ul.innerHTML = this.current.collection.noMatchTemplate())
             : (ul.innerHTML = this.current.collection.noMatchTemplate);
-            showMenu = true;
+          showMenu = true;
         }
-      }
-      else
-      {
+      } else {
         ul.innerHTML = "";
-        let fragment = this.range.getDocument().createDocumentFragment();
+        const fragment = this.range.getDocument().createDocumentFragment();
 
         items.forEach((item, index) => {
-          let li = this.range.getDocument().createElement("li");
+          const li = this.range.getDocument().createElement("li");
           li.setAttribute("data-index", index);
           li.className = this.current.collection.itemClass;
-          li.addEventListener("mousemove", e => {
-            let [li, index] = this._findLiTarget(e.target);
+          li.addEventListener("mousemove", (e) => {
+            const [, index] = this._findLiTarget(e.target);
             if (e.movementY !== 0) {
               this.events.setActiveLi(index);
             }
@@ -1733,8 +1869,7 @@ class Tribute {
         ul.appendChild(fragment);
         showMenu = true;
       }
-      if (showMenu)
-      {
+      if (showMenu) {
         this.isActive = true;
         this.range.positionMenuAtCaret(scrollTo);
       }
@@ -1742,7 +1877,8 @@ class Tribute {
 
     if (typeof this.current.collection.values === "function") {
       if (this.current.collection.loadingItemTemplate) {
-        this.menu.querySelector("ul").innerHTML = this.current.collection.loadingItemTemplate;
+        this.menu.querySelector("ul").innerHTML =
+          this.current.collection.loadingItemTemplate;
         this.range.positionMenuAtCaret(scrollTo);
       }
 
@@ -1778,17 +1914,17 @@ class Tribute {
   placeCaretAtEnd(el) {
     el.focus();
     if (
-      typeof window.getSelection != "undefined" &&
-      typeof document.createRange != "undefined"
+      typeof window.getSelection !== "undefined" &&
+      typeof document.createRange !== "undefined"
     ) {
-      var range = document.createRange();
+      const range = document.createRange();
       range.selectNodeContents(el);
       range.collapse(false);
-      var sel = window.getSelection();
+      const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-    } else if (typeof document.body.createTextRange != "undefined") {
-      var textRange = document.body.createTextRange();
+    } else if (typeof document.body.createTextRange !== "undefined") {
+      const textRange = document.body.createTextRange();
       textRange.moveToElementText(el);
       textRange.collapse(false);
       textRange.select();
@@ -1797,11 +1933,10 @@ class Tribute {
 
   // for contenteditable
   insertTextAtCursor(text) {
-    var sel, range;
-    sel = window.getSelection();
-    range = sel.getRangeAt(0);
+    const sel = window.getSelection();
+    const range = sel.getRangeAt(0);
     range.deleteContents();
-    var textNode = document.createTextNode(text);
+    const textNode = document.createTextNode(text);
     range.insertNode(textNode);
     range.selectNodeContents(textNode);
     range.collapse(false);
@@ -1811,11 +1946,11 @@ class Tribute {
 
   // for regular inputs
   insertAtCaret(textarea, text) {
-    var scrollPos = textarea.scrollTop;
-    var caretPos = textarea.selectionStart;
+    const scrollPos = textarea.scrollTop;
+    let caretPos = textarea.selectionStart;
 
-    var front = textarea.value.substring(0, caretPos);
-    var back = textarea.value.substring(
+    const front = textarea.value.substring(0, caretPos);
+    const back = textarea.value.substring(
       textarea.selectionEnd,
       textarea.value.length
     );
@@ -1828,8 +1963,7 @@ class Tribute {
   }
 
   hideMenu() {
-    if (this.menu)
-    {
+    if (this.menu) {
       this.menu.remove();
       this.menu = null;
     }
@@ -1840,9 +1974,10 @@ class Tribute {
   selectItemAtIndex(index, originalEvent) {
     this.hideMenu();
     index = parseInt(index);
-    if (typeof index !== "number" || isNaN(index) || !originalEvent.target) return;
-    let item = this.current.filteredItems[index];
-    let content = this.current.collection.selectTemplate(item);
+    if (typeof index !== "number" || isNaN(index) || !originalEvent.target)
+      return;
+    const item = this.current.filteredItems[index];
+    const content = this.current.collection.selectTemplate(item);
     if (content !== null) this.replaceText(content, originalEvent, item);
   }
 
@@ -1861,11 +1996,11 @@ class Tribute {
   }
 
   append(collectionIndex, newValues, replace) {
-    let index = parseInt(collectionIndex);
+    const index = parseInt(collectionIndex);
     if (typeof index !== "number")
       throw new Error("please provide an index for the collection to update.");
 
-    let collection = this.collection[index];
+    const collection = this.collection[index];
 
     this._append(collection, newValues, replace);
   }
@@ -1896,8 +2031,8 @@ class Tribute {
       el.constructor === HTMLCollection ||
       el.constructor === Array
     ) {
-      let length = el.length;
-      for (var i = 0; i < length; ++i) {
+      const length = el.length;
+      for (let i = 0; i < length; ++i) {
         this._detach(el[i]);
       }
     } else {
