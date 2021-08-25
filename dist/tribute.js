@@ -1,3 +1,5 @@
+
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -660,7 +662,8 @@
         return this.tribute.collection.iframe.contentWindow.getSelection();
       }
 
-      return this.tribute.current.element.getRootNode().getSelection();
+      const rootNode = this.tribute.current.element.getRootNode();
+      if (rootNode.getSelection) return rootNode.getSelection();else return window.getSelection();
     }
 
     getNodePositionInParent(element) {
