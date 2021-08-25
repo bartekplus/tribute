@@ -44,7 +44,21 @@ export default [
       resolve(),
       commonjs(),
       babel({
-        exclude: ["node_modules/**"],
+        babelHelpers: "bundled",
+        exclude: "node_modules/**",
+        presets: [
+          [
+            "@babel/env",
+            {
+              modules: false,
+              targets: {
+                browsers:
+                  "last 2 chrome version, last 2 firefox version, firefox ESR",
+              },
+              useBuiltIns: false,
+            },
+          ],
+        ],
       }),
       !production && serve({ openPage: "/", contentBase: ["example"] }),
       !production &&
