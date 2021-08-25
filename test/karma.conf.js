@@ -29,8 +29,7 @@ module.exports = function(config) {
 
     // add preprocessor to the files that should be processed via browserify
     preprocessors: {
-      "../test/spec/*.js": ["browserify"],
-      "../dist/tribute.js": ["coverage"]
+      "../test/spec/*.js": ["browserify"]
     },
 
     reporters: ["kjhtml", "spec", "coverage"],
