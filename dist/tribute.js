@@ -147,9 +147,8 @@
           }
         }
 
-        tribute.selectItemAtIndex(li.getAttribute("data-index"), event); // TODO: should fire with externalTrigger and target is outside of menu
-      } else if (tribute.current.element && !tribute.current.externalTrigger) {
-        tribute.current.externalTrigger = false;
+        tribute.selectItemAtIndex(li.getAttribute("data-index"), event);
+      } else {
         tribute.hideMenu();
       }
     }
@@ -597,9 +596,22 @@
 
     pasteHtml(html, startPos, endPos) {
       const sel = this.getWindowSelection();
-      const range = this.getDocument().createRange();
-      range.setStart(sel.anchorNode, Math.min(startPos, sel.anchorNode.length));
-      range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
+      let range;
+
+      if (sel.modify) {
+        sel.collapseToEnd();
+
+        for (let index = 0; index < endPos - startPos; index++) {
+          sel.modify("extend", "backward", "character");
+        }
+
+        range = sel.getRangeAt(0);
+      } else {
+        range = this.getDocument().createRange();
+        range.setStart(sel.anchorNode, Math.min(startPos, sel.anchorNode.length));
+        range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
+      }
+
       range.deleteContents();
       const el = this.getDocument().createElement("div");
       el.innerHTML = html;
@@ -731,9 +743,18 @@
           }
         }
       } else {
-        const selectedElem = this.getWindowSelection().anchorNode;
+        const sel = this.getWindowSelection();
 
-        if (selectedElem !== null) {
+        if (sel.modify) {
+          const range = sel.getRangeAt(0);
+          sel.collapseToEnd();
+          sel.modify("extend", "backward", "line");
+          text = sel.toString(); // restore selection
+
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          const selectedElem = sel.anchorNode;
           const workingNodeContent = selectedElem.textContent;
           const selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
 
@@ -966,11 +987,23 @@
 
     getContentEditableCaretPosition(selectedNodePosition) {
       const sel = this.getWindowSelection();
-      const range = this.getDocument().createRange();
-      const textNode = sel.anchorNode.nodeType === Node.TEXT_NODE ? sel.anchorNode : sel.anchorNode.childNodes[0];
-      range.setStart(textNode, selectedNodePosition);
-      range.setEnd(textNode, selectedNodePosition);
-      range.collapse(false);
+      let range = null;
+
+      if (sel.modify) {
+        const rangeOrig = sel.getRangeAt(0);
+        sel.collapseToEnd();
+        range = sel.getRangeAt(0); // restore selection
+
+        sel.removeAllRanges();
+        sel.addRange(rangeOrig);
+      } else {
+        range = this.getDocument().createRange();
+        const textNode = sel.anchorNode.nodeType === Node.TEXT_NODE ? sel.anchorNode : sel.anchorNode.childNodes[0];
+        range.setStart(textNode, selectedNodePosition);
+        range.setEnd(textNode, selectedNodePosition);
+        range.collapse(false);
+      }
+
       const rect = range.getBoundingClientRect();
       return this.getFixedCoordinatesRelativeToRect(rect);
     }
@@ -1592,7 +1625,6 @@
       }
 
       this.current.collection = this.collection[collectionIndex || 0];
-      this.current.externalTrigger = true;
       this.current.element = element;
       this.showMenuFor(element);
     } // TODO: make sure this works for inputs/textareas
