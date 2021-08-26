@@ -1,3 +1,5 @@
+
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -141,11 +143,9 @@
     }
 
     input(instance, event) {
-      if (event instanceof CustomEvent) {
-        const str = event.detail.text;
-        event.keyCode = str.charCodeAt(str.length - 1);
-        setTimeout(instance.keyup.bind(this, instance, event), 0);
-      } else instance.keyup.call(this, instance, event);
+      if (!(event instanceof CustomEvent)) {
+        instance.keyup.call(this, instance, event);
+      }
     }
 
     click(instance, event) {

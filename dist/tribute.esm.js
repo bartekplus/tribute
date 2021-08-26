@@ -154,11 +154,9 @@ class TributeEvents {
   }
 
   input(instance, event) {
-    if (event instanceof CustomEvent) {
-      const str = event.detail.text;
-      event.keyCode = str.charCodeAt(str.length - 1);
-      setTimeout(instance.keyup.bind(this, instance, event), 0);
-    } else instance.keyup.call(this, instance, event);
+    if (!(event instanceof CustomEvent)) {
+      instance.keyup.call(this, instance, event);
+    }
   }
 
   click(instance, event) {
