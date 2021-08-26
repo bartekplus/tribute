@@ -445,6 +445,7 @@ class Tribute {
   }
 
   showMenuForCollection(element, collectionIndex) {
+    if (!this.events.updateSelection(element)) return;
     if (element !== document.activeElement) {
       this.placeCaretAtEnd(element);
     }

@@ -123,7 +123,6 @@ class TributeEvents {
       if (controlKeyPressed) return;
     }
 
-    console.log(instance.tribute.isActive);
     if (instance.tribute.isActive) {
       TributeEvents.keys().forEach((key) => {
         if (key === event.code) {
@@ -1886,6 +1885,7 @@ class Tribute {
   }
 
   showMenuForCollection(element, collectionIndex) {
+    if (!this.events.updateSelection(element)) return;
     if (element !== document.activeElement) {
       this.placeCaretAtEnd(element);
     }
