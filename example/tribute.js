@@ -1588,7 +1588,7 @@
           this.range.positionMenuAtCaret(scrollTo);
         }
 
-        this.current.collection.values(this.current.fullText, processValues);
+        this.current.collection.values(this.current.mentionText, processValues, this.current.fullText);
       } else {
         processValues(this.current.collection.values);
       }

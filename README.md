@@ -418,8 +418,11 @@ If your data set is large or would like to pre filter your data you can load dyn
 {
   //..other config options
   // function retrieving an array of objects
-  values: function (text, cb) {
-    remoteSearch(text, users => cb(users));
+  // trigger: text that trigger the lookup
+  // cb: callback function, to be called with values
+  // ctx: trigger char plus a text preceding it
+  values: function (trigger, cb, ctx) {
+    remoteSearch(trigger, users => cb(users));
   },
   lookup: 'name',
   fillAttr: 'name'
