@@ -323,7 +323,7 @@ describe("Tribute autocomplete mode cases", function() {
 
       fillIn(input, " none");
       let popupListWrapper = document.querySelector(".tribute-container");
-      expect(popupListWrapper.style.display).toBe("none");
+      expect(popupListWrapper).toBe(null);
 
       detachTribute(tribute, input.id);
     });
@@ -711,7 +711,7 @@ describe("Multi-char tests", function() {
       };
 
       let tribute = attachTribute(collectionObject, input.id);
-      fillIn(input, "@random-text");
+      fillIn(input, "@Tribu");
 
       let popupList = document.querySelectorAll(".tribute-container > ul > li");
       expect(eventSpy).toHaveBeenCalled();
@@ -746,7 +746,7 @@ describe("Multi-char tests", function() {
       };
 
       let tribute = attachTribute(collectionObject, input.id);
-      fillIn(input, "@random-text");
+      fillIn(input, "@Tribu");
 
       let popupList = document.querySelectorAll(".tribute-container > ul > li");
       expect(eventSpy).toHaveBeenCalled();
