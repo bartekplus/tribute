@@ -6,28 +6,7 @@ class TributeEvents {
   }
 
   static keys() {
-    return [
-      {
-        key: 9,
-        value: "TAB",
-      },
-      {
-        key: 13,
-        value: "ENTER",
-      },
-      {
-        key: 27,
-        value: "ESCAPE",
-      },
-      {
-        key: 38,
-        value: "UP",
-      },
-      {
-        key: 40,
-        value: "DOWN",
-      },
-    ];
+    return ["Tab", "Enter", "Escape", "ArrowUp", "ArrowDown"];
   }
 
   static modifiers() {
@@ -80,9 +59,9 @@ class TributeEvents {
     }
 
     if (instance.tribute.isActive) {
-      TributeEvents.keys().forEach((o) => {
-        if (o.key === event.keyCode) {
-          instance.callbacks()[o.value.toLowerCase()](event, this);
+      TributeEvents.keys().forEach((key) => {
+        if (key === event.code) {
+          instance.callbacks()[key](event, this);
         }
       });
     }
@@ -128,8 +107,8 @@ class TributeEvents {
         }
       });
       // Check for control keys
-      TributeEvents.keys().forEach((o) => {
-        if (o.key === keyCode) {
+      TributeEvents.keys().forEach((key) => {
+        if (key === event.code) {
           controlKeyPressed = true;
           return;
         }
@@ -139,7 +118,7 @@ class TributeEvents {
 
     if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
       instance.tribute.hasTrailingSpace = false;
-      instance.callbacks()["space"](event, this);
+      instance.callbacks().Space(event, this);
       return;
     }
 
@@ -191,8 +170,8 @@ class TributeEvents {
 
   shouldDeactivate(event) {
     let controlKeyPressed = false;
-    TributeEvents.keys().forEach((o) => {
-      if (event.keyCode === o.key) {
+    TributeEvents.keys().forEach((key) => {
+      if (key === event.code) {
         controlKeyPressed = true;
         return;
       }
@@ -250,7 +229,7 @@ class TributeEvents {
 
   callbacks() {
     return {
-      enter: (e, _el) => {
+      Enter: (e, _el) => {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
@@ -258,21 +237,21 @@ class TributeEvents {
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
         }
       },
-      escape: (e, _el) => {
+      Escape: (e, _el) => {
         if (this.tribute.isActive) {
           e.preventDefault();
           e.stopPropagation();
           this.tribute.hideMenu();
         }
       },
-      tab: (e, el) => {
+      Tab: (e, el) => {
         // choose first match
-        this.callbacks().enter(e, el);
+        this.callbacks().Enter(e, el);
       },
-      space: (e, el) => {
+      Space: (e, el) => {
         if (this.tribute.isActive) {
           if (this.tribute.spaceSelectsMatch) {
-            this.callbacks().enter(e, el);
+            this.callbacks().Enter(e, el);
           } else if (!this.tribute.allowSpaces) {
             e.stopPropagation();
             setTimeout(() => {
@@ -281,7 +260,7 @@ class TributeEvents {
           }
         }
       },
-      up: (e, _el) => {
+      ArrowUp: (e, _el) => {
         // navigate up ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
@@ -299,7 +278,7 @@ class TributeEvents {
           }
         }
       },
-      down: (e, _el) => {
+      ArrowDown: (e, _el) => {
         // navigate down ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
@@ -317,7 +296,7 @@ class TributeEvents {
           }
         }
       },
-      delete: (e, el) => {
+      Delete: (e, el) => {
         if (
           this.tribute.isActive &&
           this.tribute.current.mentionText.length < 1

@@ -1,5 +1,3 @@
-
-(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -77,22 +75,7 @@
     }
 
     static keys() {
-      return [{
-        key: 9,
-        value: "TAB"
-      }, {
-        key: 13,
-        value: "ENTER"
-      }, {
-        key: 27,
-        value: "ESCAPE"
-      }, {
-        key: 38,
-        value: "UP"
-      }, {
-        key: 40,
-        value: "DOWN"
-      }];
+      return ["Tab", "Enter", "Escape", "ArrowUp", "ArrowDown"];
     }
 
     static modifiers() {
@@ -133,10 +116,12 @@
         if (controlKeyPressed) return;
       }
 
+      console.log(instance.tribute.isActive);
+
       if (instance.tribute.isActive) {
-        TributeEvents.keys().forEach(o => {
-          if (o.key === event.keyCode) {
-            instance.callbacks()[o.value.toLowerCase()](event, this);
+        TributeEvents.keys().forEach(key => {
+          if (key === event.code) {
+            instance.callbacks()[key](event, this);
           }
         });
       }
@@ -184,8 +169,8 @@
           }
         }); // Check for control keys
 
-        TributeEvents.keys().forEach(o => {
-          if (o.key === keyCode) {
+        TributeEvents.keys().forEach(key => {
+          if (key === event.code) {
             controlKeyPressed = true;
             return;
           }
@@ -195,7 +180,7 @@
 
       if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
         instance.tribute.hasTrailingSpace = false;
-        instance.callbacks()["space"](event, this);
+        instance.callbacks().Space(event, this);
         return;
       } // Get and validate trigger char
 
@@ -227,8 +212,8 @@
 
     shouldDeactivate(event) {
       let controlKeyPressed = false;
-      TributeEvents.keys().forEach(o => {
-        if (event.keyCode === o.key) {
+      TributeEvents.keys().forEach(key => {
+        if (key === event.code) {
           controlKeyPressed = true;
           return;
         }
@@ -272,7 +257,7 @@
 
     callbacks() {
       return {
-        enter: (e, _el) => {
+        Enter: (e, _el) => {
           // choose selection
           if (this.tribute.isActive && this.tribute.current.filteredItems) {
             e.preventDefault();
@@ -280,21 +265,21 @@
             this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
           }
         },
-        escape: (e, _el) => {
+        Escape: (e, _el) => {
           if (this.tribute.isActive) {
             e.preventDefault();
             e.stopPropagation();
             this.tribute.hideMenu();
           }
         },
-        tab: (e, el) => {
+        Tab: (e, el) => {
           // choose first match
-          this.callbacks().enter(e, el);
+          this.callbacks().Enter(e, el);
         },
-        space: (e, el) => {
+        Space: (e, el) => {
           if (this.tribute.isActive) {
             if (this.tribute.spaceSelectsMatch) {
-              this.callbacks().enter(e, el);
+              this.callbacks().Enter(e, el);
             } else if (!this.tribute.allowSpaces) {
               e.stopPropagation();
               setTimeout(() => {
@@ -303,7 +288,7 @@
             }
           }
         },
-        up: (e, _el) => {
+        ArrowUp: (e, _el) => {
           // navigate up ul
           if (this.tribute.isActive && this.tribute.current.filteredItems) {
             e.preventDefault();
@@ -321,7 +306,7 @@
             }
           }
         },
-        down: (e, _el) => {
+        ArrowDown: (e, _el) => {
           // navigate down ul
           if (this.tribute.isActive && this.tribute.current.filteredItems) {
             e.preventDefault();
@@ -339,7 +324,7 @@
             }
           }
         },
-        delete: (e, el) => {
+        Delete: (e, el) => {
           if (this.tribute.isActive && this.tribute.current.mentionText.length < 1) {
             this.tribute.hideMenu();
           } else if (this.tribute.isActive) {
