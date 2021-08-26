@@ -193,7 +193,7 @@ class TributeRange {
   pasteHtml(html, startPos, endPos) {
     const sel = this.getWindowSelection();
     const range = this.getDocument().createRange();
-    range.setStart(sel.anchorNode, startPos);
+    range.setStart(sel.anchorNode, Math.min(startPos, sel.anchorNode.length));
     range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
     range.deleteContents();
 

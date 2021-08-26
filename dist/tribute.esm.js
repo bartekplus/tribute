@@ -695,7 +695,7 @@ class TributeRange {
   pasteHtml(html, startPos, endPos) {
     const sel = this.getWindowSelection();
     const range = this.getDocument().createRange();
-    range.setStart(sel.anchorNode, startPos);
+    range.setStart(sel.anchorNode, Math.min(startPos, sel.anchorNode.length));
     range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
     range.deleteContents();
 
@@ -1888,15 +1888,14 @@ class Tribute {
     if (!this.events.updateSelection(element)) return;
     if (element !== document.activeElement) {
       this.placeCaretAtEnd(element);
+      if (element.isContentEditable)
+        this.insertTextAtCursor(this.current.collection.trigger);
+      else this.insertAtCaret(element, this.current.collection.trigger);
     }
 
     this.current.collection = this.collection[collectionIndex || 0];
     this.current.externalTrigger = true;
     this.current.element = element;
-
-    if (element.isContentEditable)
-      this.insertTextAtCursor(this.current.collection.trigger);
-    else this.insertAtCaret(element, this.current.collection.trigger);
 
     this.showMenuFor(element);
   }

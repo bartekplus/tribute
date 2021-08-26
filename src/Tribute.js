@@ -448,15 +448,14 @@ class Tribute {
     if (!this.events.updateSelection(element)) return;
     if (element !== document.activeElement) {
       this.placeCaretAtEnd(element);
+      if (element.isContentEditable)
+        this.insertTextAtCursor(this.current.collection.trigger);
+      else this.insertAtCaret(element, this.current.collection.trigger);
     }
 
     this.current.collection = this.collection[collectionIndex || 0];
     this.current.externalTrigger = true;
     this.current.element = element;
-
-    if (element.isContentEditable)
-      this.insertTextAtCursor(this.current.collection.trigger);
-    else this.insertAtCaret(element, this.current.collection.trigger);
 
     this.showMenuFor(element);
   }
