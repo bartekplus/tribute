@@ -195,6 +195,7 @@ class TributeRange {
     let range;
     if (sel.modify) {
       sel.collapseToEnd();
+      sel.modify("move", "forward", "word");
       for (let index = 0; index < endPos - startPos; index++) {
         sel.modify("extend", "backward", "character");
       }
@@ -341,21 +342,33 @@ class TributeRange {
       }
     } else {
       const sel = this.getWindowSelection();
+      const selectedElem = sel.anchorNode;
+      const workingNodeContent = selectedElem.textContent;
+      const selectStartOffset =
+        this.getWindowSelection().getRangeAt(0).startOffset;
+
       if (sel.modify) {
+        const lastChar = workingNodeContent.substring(
+          selectStartOffset - 1,
+          selectStartOffset
+        );
+        const addWhiteSpace = lastChar !== lastChar.trim();
         const range = sel.getRangeAt(0);
-        sel.collapseToEnd();
-        sel.modify("extend", "backward", "line");
-        text = sel.toString();
+        sel.collapseToStart();
+        sel.modify("move", "forward", "word");
+        for (
+          let index = 0;
+          index < this.tribute.numberOfWordsInContextText;
+          index++
+        ) {
+          sel.modify("extend", "backward", "word");
+        }
+        text = sel.toString().trim() + (addWhiteSpace ? " " : "");
 
         // restore selection
         sel.removeAllRanges();
         sel.addRange(range);
       } else {
-        const selectedElem = sel.anchorNode;
-        const workingNodeContent = selectedElem.textContent;
-        const selectStartOffset =
-          this.getWindowSelection().getRangeAt(0).startOffset;
-
         if (workingNodeContent && selectStartOffset >= 0) {
           text = workingNodeContent.substring(0);
           text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);

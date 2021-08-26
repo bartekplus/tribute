@@ -32,6 +32,7 @@ class Tribute {
     menuShowMinLength = 0,
     keys = null,
     useHTML = true,
+    numberOfWordsInContextText = 5,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -46,6 +47,7 @@ class Tribute {
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.useHTML = useHTML;
+    this.numberOfWordsInContextText = numberOfWordsInContextText;
     if (keys) {
       TributeEvents.keys = keys;
     }
