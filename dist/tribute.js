@@ -82,22 +82,30 @@
       return ["CapsLock", "Control", "Fn", "Hyper", "Meta", "OS", "Super", "Symbol", "Win"];
     }
 
+    debounce(func, timeout) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(this, args);
+        }, timeout);
+      };
+    }
+
     bind(element) {
       element.boundKeyDown = this.keydown.bind(element, this);
-      element.boundKeyUp = this.keyup.bind(element, this);
-      element.boundInput = this.input.bind(element, this);
+      element.boundKeyUpInput = this.debounce(this.input.bind(element, this), 16);
       element.addEventListener("keydown", element.boundKeyDown, true);
-      element.addEventListener("keyup", element.boundKeyUp, true);
-      element.addEventListener("input", element.boundInput, true);
+      element.addEventListener("keyup", element.boundKeyUpInput, true);
+      element.addEventListener("input", element.boundKeyUpInput, true);
     }
 
     unbind(element) {
       element.removeEventListener("keydown", element.boundKeyDown, true);
-      element.removeEventListener("keyup", element.boundKeyUp, true);
-      element.removeEventListener("input", element.boundInput, true);
+      element.removeEventListener("keyup", element.boundKeyUpInput, true);
+      element.removeEventListener("input", element.boundKeyUpInput, true);
       delete element.boundKeyDown;
-      delete element.boundKeyUp;
-      delete element.boundInput;
+      delete element.boundKeyUpInput;
     }
 
     keydown(instance, event) {
@@ -154,9 +162,7 @@
     }
 
     keyup(instance, event) {
-      if (!instance.updateSelection(this)) return;
-      const keyCode = instance.getKeyCode(instance, this, event); // Check for modifiers keys
-
+      // Check for modifiers keys
       if (event instanceof KeyboardEvent) {
         let controlKeyPressed = false;
         TributeEvents.modifiers().forEach(o => {
@@ -175,33 +181,33 @@
         if (controlKeyPressed) return;
       }
 
+      if (!instance.updateSelection(this)) return;
+
       if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
         instance.tribute.hasTrailingSpace = false;
         instance.callbacks().Space(event, this);
         return;
-      } // Get and validate trigger char
-
-
-      if (keyCode && !isNaN(keyCode)) {
-        if (instance.tribute.autocompleteMode && String.fromCharCode(keyCode).match(/(\w|\s)/g)) {
-          instance.tribute.current.trigger = "";
-        } else {
-          instance.tribute.current.trigger = instance.tribute.triggers().find(trigger => {
-            return trigger.charCodeAt(0) === keyCode;
-          });
-        }
-      } else if (instance.tribute.autocompleteMode && event instanceof InputEvent) {
-        instance.tribute.current.trigger = "";
       }
 
-      if (!(instance.tribute.current.trigger || instance.tribute.current.trigger === "" && instance.tribute.autocompleteMode)) return; // Get and validate collection
+      const keyCode = instance.getKeyCode(event); // Exit if no keyCode
 
-      instance.tribute.current.collection = instance.tribute.collection.find(item => {
-        return item.trigger === instance.tribute.current.trigger;
-      });
-
-      if (!instance.tribute.current.collection || instance.tribute.current.collection.menuShowMinLength > instance.tribute.current.mentionText.length) {
+      if (isNaN(keyCode)) {
         return;
+      }
+
+      if (!instance.tribute.autocompleteMode) {
+        const trigger = instance.tribute.triggers().find(trigger => {
+          return trigger.charCodeAt(0) === keyCode;
+        });
+        if (!trigger) return;
+        const collection = instance.tribute.collection.find(item => {
+          return item.trigger === trigger;
+        });
+        if (!collection) return;
+        if (collection.menuShowMinLength > instance.tribute.current.mentionText.length) return;
+        instance.tribute.current.collection = collection;
+      } else {
+        instance.tribute.current.collection = instance.tribute.collection[0];
       }
 
       instance.tribute.showMenuFor(this, true);
@@ -220,9 +226,11 @@
       return false;
     }
 
-    getKeyCode(instance, el, event) {
-      if (event.keyCode || event.which || event.code) {
-        return event.keyCode || event.which || event.code;
+    getKeyCode(event) {
+      const keyCode = event.keyCode || event.which || event.code;
+
+      if (keyCode) {
+        return keyCode;
       } else {
         if (this.tribute.current.mentionTriggerChar) return this.tribute.current.mentionTriggerChar.charCodeAt(0);else if (this.tribute.current.mentionText) return this.tribute.current.mentionText.charCodeAt(this.tribute.current.mentionText.length - 1);
       }
@@ -409,21 +417,13 @@
       }
     }
 
-    debounce(func, wait, immediate) {
-      let timeout;
-      return () => {
-        const context = this,
-              args = arguments;
-
-        const later = () => {
-          timeout = null;
-          if (!immediate) func.apply(context, args);
-        };
-
-        const callNow = immediate && !timeout;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-        if (callNow) func.apply(context, args);
+    debounce(func, timeout) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(this, args);
+        }, timeout);
       };
     }
 

@@ -69,19 +69,13 @@ class TributeMenuEvents {
     }
   }
 
-  debounce(func, wait, immediate) {
-    let timeout;
-    return () => {
-      const context = this,
-        args = arguments;
-      const later = () => {
-        timeout = null;
-        if (!immediate) func.apply(context, args);
-      };
-      const callNow = immediate && !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (callNow) func.apply(context, args);
+  debounce(func, timeout) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, timeout);
     };
   }
 }
