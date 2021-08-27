@@ -199,6 +199,7 @@ class TributeRange {
       }
       range = sel.getRangeAt(0);
     } else {
+      range = this.getDocument().createRange();
       range.setStart(sel.anchorNode, Math.min(startPos, sel.anchorNode.length));
       range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
     }
@@ -216,11 +217,11 @@ class TributeRange {
 
     // Preserve the selection
     if (lastNode) {
-      const newRange = this.getDocument().createRange();
-      newRange.setStart(lastNode, lastNode.length);
-      newRange.collapse(true);
+      range.setStart(lastNode, lastNode.length);
+      range.setEnd(lastNode, lastNode.length);
+      range.collapse(true);
       sel.removeAllRanges();
-      sel.addRange(newRange);
+      sel.addRange(range);
       sel.collapseToEnd();
     }
   }
@@ -268,13 +269,20 @@ class TributeRange {
       this.getWindowSelection().getRangeAt(0).startOffset;
 
     if (sel.modify) {
-      const nextChar =
+      let nextChar =
         workingNodeContent.length > selectStartOffset
           ? workingNodeContent[selectStartOffset]
           : null;
-      const nextCharisWhitespce = nextChar && nextChar !== nextChar.trim();
+      if (nextChar === null) {
+        if (selectedElem.nextSibling && selectedElem.nextSibling.textContent) {
+          const nextNodeText = selectedElem.nextSibling.textContent;
+          nextChar = nextNodeText.length ? nextNodeText[0] : null;
+        }
+      }
+      const nextCharIsSeparator =
+        nextChar && nextChar.match(this.tribute.autocompleteSeparator);
       sel.collapseToEnd();
-      if (nextChar && !nextCharisWhitespce && moveToEndofWord)
+      if (nextChar && !nextCharIsSeparator && moveToEndofWord)
         sel.modify("move", "forward", "word");
     }
     return { sel, range };
@@ -322,7 +330,7 @@ class TributeRange {
 
       if (sel.modify) {
         const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
-        const addWhiteSpace = lastChar !== lastChar.trim();
+        const addWhiteSpace = lastChar && lastChar !== lastChar.trim();
         for (
           let index = 0;
           index < this.tribute.numberOfWordsInContextText;
