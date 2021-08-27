@@ -813,8 +813,7 @@ class TributeRange {
       .split(this.tribute.autocompleteSeparator)
       .filter(function (e) {
         return e.trim();
-      })
-      .slice(-this.tribute.numberOfWordsInContextText);
+      });
     const text = str;
     for (let i = 0, len = arr.length; i < len; i++) {
       const idx = str.indexOf(arr[i]);

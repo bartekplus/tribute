@@ -711,7 +711,7 @@
       let pos = 0;
       const arr = str.split(this.tribute.autocompleteSeparator).filter(function (e) {
         return e.trim();
-      }).slice(-this.tribute.numberOfWordsInContextText);
+      });
       const text = str;
 
       for (let i = 0, len = arr.length; i < len; i++) {
