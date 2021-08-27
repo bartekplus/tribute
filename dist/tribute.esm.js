@@ -595,23 +595,15 @@ class TributeRange {
       myField.selectionStart = startPos + text.length;
       myField.selectionEnd = startPos + text.length;
     } else {
-      // add a space to the end of the pasted text
-      const textEndsWithSpace = text !== text.trimEnd();
       const textSuffix =
         typeof this.tribute.replaceTextSuffix === "string"
           ? this.tribute.replaceTextSuffix
           : "\xA0";
       text += textSuffix;
-      let endPos =
-        context.mentionPosition +
-        context.mentionText.length +
-        textEndsWithSpace;
-      if (!this.tribute.autocompleteMode) {
-        endPos += context.mentionTriggerChar.length;
-      }
-      this.tribute.useHTML
-        ? this.pasteHtml(text, context.mentionPosition, endPos)
-        : this.pasteText(text, context.mentionPosition, endPos);
+      this.pasteHtml(
+        text,
+        context.mentionText.length + context.mentionTriggerChar.length
+      );
     }
 
     context.element.dispatchEvent(
@@ -620,23 +612,14 @@ class TributeRange {
     context.element.dispatchEvent(replaceEvent);
   }
 
-  pasteHtml(html, startPos, endPos) {
+  pasteHtml(html, numOfCharsToRemove) {
     const { sel } = this.getContentEditableSelectionStart(true);
     if (sel) {
       let range = null;
-      if (sel.modify) {
-        for (let index = 0; index < endPos - startPos; index++) {
-          sel.modify("extend", "backward", "character");
-        }
-        range = sel.getRangeAt(0);
-      } else {
-        range = this.getDocument().createRange();
-        range.setStart(
-          sel.anchorNode,
-          Math.min(startPos, sel.anchorNode.length)
-        );
-        range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
+      for (let index = 0; index < numOfCharsToRemove; index++) {
+        sel.modify("extend", "backward", "character");
       }
+      range = sel.getRangeAt(0);
       range.deleteContents();
 
       const el = this.getDocument().createElement("div");
@@ -667,24 +650,6 @@ class TributeRange {
     return tmp.textContent || tmp.innerText || "";
   }
 
-  pasteText(html, startPos, endPos) {
-    const text = this.stripHtml(html);
-    const range = this.getDocument().createRange();
-    const sel = this.getWindowSelection();
-    sel.anchorNode.nodeValue =
-      sel.anchorNode.nodeValue.substring(0, startPos) +
-      text +
-      sel.anchorNode.nodeValue.substring(
-        endPos,
-        sel.anchorNode.nodeValue.length
-      );
-    range.setStart(sel.anchorNode, startPos + text.length);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    sel.collapseToEnd();
-  }
-
   getWindowSelection() {
     if (this.tribute.collection.iframe) {
       return this.tribute.collection.iframe.contentWindow.getSelection();
@@ -705,24 +670,22 @@ class TributeRange {
     const selectedElem = sel.anchorNode;
     const workingNodeContent = selectedElem.textContent;
     const selectStartOffset = range.startOffset;
-
-    if (sel.modify) {
-      let nextChar =
-        workingNodeContent.length > selectStartOffset
-          ? workingNodeContent[selectStartOffset]
-          : null;
-      if (nextChar === null) {
-        if (selectedElem.nextSibling && selectedElem.nextSibling.textContent) {
-          const nextNodeText = selectedElem.nextSibling.textContent;
-          nextChar = nextNodeText.length ? nextNodeText[0] : null;
-        }
+    let nextChar =
+      workingNodeContent.length > selectStartOffset
+        ? workingNodeContent[selectStartOffset]
+        : null;
+    if (nextChar === null) {
+      if (selectedElem.nextSibling && selectedElem.nextSibling.textContent) {
+        const nextNodeText = selectedElem.nextSibling.textContent;
+        nextChar = nextNodeText.length ? nextNodeText[0] : null;
       }
-      const nextCharIsSeparator =
-        nextChar && nextChar.match(this.tribute.autocompleteSeparator);
-      sel.collapseToEnd();
-      if (nextChar && !nextCharIsSeparator && moveToEndOfWord)
-        sel.modify("move", "forward", "word");
     }
+    const nextCharIsSeparator =
+      nextChar && nextChar.match(this.tribute.autocompleteSeparator);
+    sel.collapseToEnd();
+    if (nextChar && !nextCharIsSeparator && moveToEndOfWord)
+      sel.modify("move", "forward", "word");
+
     return { sel, range, direction };
   }
 
@@ -769,26 +732,18 @@ class TributeRange {
         const workingNodeContent = selectedElem.textContent;
         const selectStartOffset = range.startOffset;
 
-        if (sel.modify) {
-          const lastChar =
-            workingNodeContent[Math.max(0, selectStartOffset - 1)];
-          const addWhiteSpace = lastChar && lastChar !== lastChar.trim();
-          for (
-            let index = 0;
-            index < this.tribute.numberOfWordsInContextText;
-            index++
-          ) {
-            sel.modify("extend", "backward", "word");
-          }
-          text = sel.toString().trim() + (addWhiteSpace ? " " : "");
-
-          this.restoreSelection(sel, range, direction);
-        } else {
-          if (workingNodeContent && selectStartOffset >= 0) {
-            text = workingNodeContent.substring(0);
-            text = this.getWholeWordsUpToCharIndex(text, selectStartOffset);
-          }
+        const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
+        const addWhiteSpace = lastChar && lastChar !== lastChar.trim();
+        for (
+          let index = 0;
+          index < this.tribute.numberOfWordsInContextText;
+          index++
+        ) {
+          sel.modify("extend", "backward", "word");
         }
+        text = sel.toString().trim() + (addWhiteSpace ? " " : "");
+
+        this.restoreSelection(sel, range, direction);
       }
     }
 
@@ -822,6 +777,7 @@ class TributeRange {
           effectiveRange.length - lastWordOfEffectiveRange.length,
         mentionText: lastWordOfEffectiveRange,
         fullText: effectiveRange,
+        mentionTriggerChar: "",
       };
     }
 
@@ -882,6 +838,7 @@ class TributeRange {
             mentionPosition: mostRecentTriggerCharPos,
             mentionText: currentTriggerSnippet,
             mentionTriggerChar: triggerChar,
+            fullText: effectiveRange,
           };
         }
       }
@@ -1413,7 +1370,6 @@ class Tribute {
     menuItemLimit = null,
     menuShowMinLength = 0,
     keys = null,
-    useHTML = true,
     numberOfWordsInContextText = 5,
   }) {
     this.autocompleteMode = autocompleteMode;
@@ -1428,7 +1384,6 @@ class Tribute {
     this.positionMenu = positionMenu;
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
-    this.useHTML = useHTML;
     this.numberOfWordsInContextText = numberOfWordsInContextText;
     if (keys) {
       TributeEvents.keys = keys;
