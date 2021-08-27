@@ -668,61 +668,16 @@
       const selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
 
       if (sel.modify) {
-        const nextChar = workingNodeContent.length >= selectStartOffset ? workingNodeContent[selectStartOffset] : null;
+        const nextChar = workingNodeContent.length > selectStartOffset ? workingNodeContent[selectStartOffset] : null;
         const nextCharisWhitespce = nextChar && nextChar !== nextChar.trim();
         sel.collapseToEnd();
-        if (!nextCharisWhitespce && moveToEndofWord) sel.modify("move", "forward", "word");
+        if (nextChar && !nextCharisWhitespce && moveToEndofWord) sel.modify("move", "forward", "word");
       }
 
       return {
         sel,
         range
       };
-    }
-
-    getNodePositionInParent(element) {
-      if (element.parentNode === null) {
-        return 0;
-      }
-
-      for (let i = 0; i < element.parentNode.childNodes.length; i++) {
-        const node = element.parentNode.childNodes[i];
-
-        if (node === element) {
-          return i;
-        }
-      }
-    }
-
-    getContentEditableSelectedPath(_ctx) {
-      const sel = this.getWindowSelection();
-      let selected = sel.anchorNode;
-      const path = [];
-      let offset;
-
-      if (selected !== null) {
-        let i;
-        let ce = selected.contentEditable;
-
-        while (selected !== null && ce !== "true") {
-          i = this.getNodePositionInParent(selected);
-          path.push(i);
-          selected = selected.parentNode;
-
-          if (selected !== null) {
-            ce = selected.contentEditable;
-          }
-        }
-
-        path.reverse(); // getRangeAt may not exist, need alternative
-
-        offset = sel.getRangeAt(0).startOffset;
-        return {
-          selected: selected,
-          path: path,
-          offset: offset
-        };
-      }
     }
 
     getWholeWordsUpToCharIndex(str, minLen) {
@@ -801,21 +756,6 @@
     }
 
     getTriggerInfo(menuAlreadyActive, hasTrailingSpace, requireLeadingSpace, allowSpaces, isAutocomplete) {
-      const ctx = this.tribute.current;
-      let selected, path, offset;
-
-      if (!this.isContentEditable(ctx.element)) {
-        selected = this.tribute.current.element;
-      } else {
-        const selectionInfo = this.getContentEditableSelectedPath(ctx);
-
-        if (selectionInfo) {
-          selected = selectionInfo.selected;
-          path = selectionInfo.path;
-          offset = selectionInfo.offset;
-        }
-      }
-
       const effectiveRange = this.getTextPrecedingCurrentSelection();
       const lastWordOfEffectiveRange = this.getLastWordInText(effectiveRange);
 
@@ -823,10 +763,7 @@
         return {
           mentionPosition: effectiveRange.length - lastWordOfEffectiveRange.length,
           mentionText: lastWordOfEffectiveRange,
-          fullText: effectiveRange,
-          mentionSelectedElement: selected,
-          mentionSelectedPath: path,
-          mentionSelectedOffset: offset
+          fullText: effectiveRange
         };
       }
 
@@ -861,9 +798,6 @@
             return {
               mentionPosition: mostRecentTriggerCharPos,
               mentionText: currentTriggerSnippet,
-              mentionSelectedElement: selected,
-              mentionSelectedPath: path,
-              mentionSelectedOffset: offset,
               mentionTriggerChar: triggerChar
             };
           }
