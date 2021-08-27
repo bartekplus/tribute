@@ -336,7 +336,7 @@ class Tribute {
       }
       this.activationPending = false;
       // Element is no longer in focus - don't show menu
-      if (document.activeElement !== this.current.element) {
+      if (this.range.getDocument().activeElement !== this.current.element) {
         return;
       }
 
@@ -446,7 +446,7 @@ class Tribute {
 
   showMenuForCollection(element, collectionIndex) {
     if (!this.events.updateSelection(element)) return;
-    if (element !== document.activeElement) {
+    if (element !== this.range.getDocument().activeElement) {
       this.placeCaretAtEnd(element);
       if (element.isContentEditable)
         this.insertTextAtCursor(this.current.collection.trigger);
@@ -464,16 +464,18 @@ class Tribute {
     el.focus();
     if (
       typeof window.getSelection !== "undefined" &&
-      typeof document.createRange !== "undefined"
+      typeof this.range.getDocument().createRange !== "undefined"
     ) {
-      const range = document.createRange();
+      const range = this.range.getDocument().createRange();
       range.selectNodeContents(el);
       range.collapse(false);
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-    } else if (typeof document.body.createTextRange !== "undefined") {
-      const textRange = document.body.createTextRange();
+    } else if (
+      typeof this.range.getDocument().body.createTextRange !== "undefined"
+    ) {
+      const textRange = this.range.getDocument().body.createTextRange();
       textRange.moveToElementText(el);
       textRange.collapse(false);
       textRange.select();
@@ -485,7 +487,7 @@ class Tribute {
     const sel = window.getSelection();
     const range = sel.getRangeAt(0);
     range.deleteContents();
-    const textNode = document.createTextNode(text);
+    const textNode = this.range.getDocument().createTextNode(text);
     range.insertNode(textNode);
     range.selectNodeContents(textNode);
     range.collapse(false);

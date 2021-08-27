@@ -487,7 +487,7 @@
     }
 
     get menuContainerIsBody() {
-      return this.tribute.menuContainer === document.body || !this.tribute.menuContainer;
+      return this.tribute.menuContainer === this.getDocument().body || !this.tribute.menuContainer;
     }
 
     replaceTriggerText(text, originalEvent, item) {
@@ -566,7 +566,7 @@
     }
 
     stripHtml(html) {
-      const tmp = document.createElement("DIV");
+      const tmp = this.getDocument().createElement("DIV");
       tmp.innerHTML = html;
       return tmp.textContent || tmp.innerText || "";
     }
@@ -770,7 +770,7 @@
     isMenuOffScreen(coordinates, menuDimensions) {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
-      const doc = document.documentElement;
+      const doc = this.getDocument().documentElement;
       const windowLeft = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
       const windowTop = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
       const menuTop = typeof coordinates.top === "number" ? coordinates.top : coordinates.bottom - menuDimensions.height;
@@ -827,7 +827,7 @@
       properties.forEach(prop => {
         style[prop] = computed[prop];
       });
-      const span0 = document.createElement("span");
+      const span0 = this.getDocument().createElement("span");
       span0.textContent = element.value.substring(0, position);
       div.appendChild(span0);
 
@@ -1421,7 +1421,7 @@
 
         this.activationPending = false; // Element is no longer in focus - don't show menu
 
-        if (document.activeElement !== this.current.element) {
+        if (this.range.getDocument().activeElement !== this.current.element) {
           return;
         }
 
@@ -1521,7 +1521,7 @@
     showMenuForCollection(element, collectionIndex) {
       if (!this.events.updateSelection(element)) return;
 
-      if (element !== document.activeElement) {
+      if (element !== this.range.getDocument().activeElement) {
         this.placeCaretAtEnd(element);
         if (element.isContentEditable) this.insertTextAtCursor(this.current.collection.trigger);else this.insertAtCaret(element, this.current.collection.trigger);
       }
@@ -1535,15 +1535,15 @@
     placeCaretAtEnd(el) {
       el.focus();
 
-      if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
-        const range = document.createRange();
+      if (typeof window.getSelection !== "undefined" && typeof this.range.getDocument().createRange !== "undefined") {
+        const range = this.range.getDocument().createRange();
         range.selectNodeContents(el);
         range.collapse(false);
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-      } else if (typeof document.body.createTextRange !== "undefined") {
-        const textRange = document.body.createTextRange();
+      } else if (typeof this.range.getDocument().body.createTextRange !== "undefined") {
+        const textRange = this.range.getDocument().body.createTextRange();
         textRange.moveToElementText(el);
         textRange.collapse(false);
         textRange.select();
@@ -1555,7 +1555,7 @@
       const sel = window.getSelection();
       const range = sel.getRangeAt(0);
       range.deleteContents();
-      const textNode = document.createTextNode(text);
+      const textNode = this.range.getDocument().createTextNode(text);
       range.insertNode(textNode);
       range.selectNodeContents(textNode);
       range.collapse(false);

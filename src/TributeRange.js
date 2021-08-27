@@ -64,7 +64,7 @@ class TributeRange {
 
   get menuContainerIsBody() {
     return (
-      this.tribute.menuContainer === document.body ||
+      this.tribute.menuContainer === this.getDocument().body ||
       !this.tribute.menuContainer
     );
   }
@@ -154,7 +154,7 @@ class TributeRange {
   }
 
   stripHtml(html) {
-    const tmp = document.createElement("DIV");
+    const tmp = this.getDocument().createElement("DIV");
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || "";
   }
@@ -386,7 +386,7 @@ class TributeRange {
   isMenuOffScreen(coordinates, menuDimensions) {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const doc = document.documentElement;
+    const doc = this.getDocument().documentElement;
     const windowLeft =
       (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
     const windowTop =
@@ -499,7 +499,7 @@ class TributeRange {
       style[prop] = computed[prop];
     });
 
-    const span0 = document.createElement("span");
+    const span0 = this.getDocument().createElement("span");
     span0.textContent = element.value.substring(0, position);
     div.appendChild(span0);
 
