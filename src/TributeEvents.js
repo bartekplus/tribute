@@ -182,27 +182,20 @@ class TributeEvents {
   }
 
   getKeyCode(instance, el, event) {
-    const tribute = instance.tribute;
-    const info = tribute.range.getTriggerInfo(
-      false,
-      tribute.hasTrailingSpace,
-      true,
-      tribute.allowSpaces,
-      tribute.autocompleteMode
-    );
-
     if (event.keyCode || event.which || event.code) {
       return event.keyCode || event.which || event.code;
-    } else if (info) {
-      if (info.mentionTriggerChar) return info.mentionTriggerChar.charCodeAt(0);
-      else return info.mentionText.charCodeAt(info.mentionText.length - 1);
     } else {
-      return NaN;
+      if (this.tribute.current.mentionTriggerChar)
+        return this.tribute.current.mentionTriggerChar.charCodeAt(0);
+      else if (this.tribute.current.mentionText)
+        return this.tribute.current.mentionText.charCodeAt(
+          this.tribute.current.mentionText.length - 1
+        );
     }
+    return NaN;
   }
 
   updateSelection(el) {
-    let success = false;
     this.tribute.current.element = el;
     const info = this.tribute.range.getTriggerInfo(
       false,
@@ -213,16 +206,14 @@ class TributeEvents {
     );
 
     if (info) {
-      this.tribute.current.selectedPath = info.mentionSelectedPath;
+      this.tribute.current.mentionTriggerChar = info.mentionTriggerChar;
       this.tribute.current.mentionText = info.mentionText;
+      this.tribute.current.mentionPosition = info.mentionPosition;
       this.tribute.current.fullText = info.fullText;
-      this.tribute.current.selectedOffset = info.mentionSelectedOffset;
-      this.tribute.current.info = info;
-      success = true;
-    } else {
-      this.tribute.current = {};
+      return true;
     }
-    return success;
+
+    return false;
   }
 
   callbacks() {

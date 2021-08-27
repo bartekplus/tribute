@@ -344,9 +344,9 @@ class Tribute {
 
       if (forceReplace) {
         // Do force replace - don't show menu
-        this.current.info.mentionPosition -= forceReplace.length;
-        this.current.info.mentionText =
-          " ".repeat(forceReplace.length) + this.current.info.mentionText;
+        this.current.mentionPosition -= forceReplace.length;
+        this.current.mentionText =
+          " ".repeat(forceReplace.length) + this.current.mentionText;
         this.replaceText(forceReplace.text, null, null);
         return;
       }
@@ -520,20 +520,21 @@ class Tribute {
     }
     this.isActive = false;
     this.activationPending = false;
+    this.current = {};
   }
 
   selectItemAtIndex(index, originalEvent) {
-    this.hideMenu();
     index = parseInt(index);
-    if (typeof index !== "number" || isNaN(index) || !originalEvent.target)
-      return;
-    const item = this.current.filteredItems[index];
-    const content = this.current.collection.selectTemplate(item);
-    if (content !== null) this.replaceText(content, originalEvent, item);
+    if (!(typeof index !== "number" || isNaN(index) || !originalEvent.target)) {
+      const item = this.current.filteredItems[index];
+      const content = this.current.collection.selectTemplate(item);
+      if (content !== null) this.replaceText(content, originalEvent, item);
+    }
+    this.hideMenu();
   }
 
   replaceText(content, originalEvent, item) {
-    this.range.replaceTriggerText(content, true, true, originalEvent, item);
+    this.range.replaceTriggerText(content, originalEvent, item);
   }
 
   _append(collection, newValues, replace) {
