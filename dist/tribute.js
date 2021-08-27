@@ -82,19 +82,9 @@
       return ["CapsLock", "Control", "Fn", "Hyper", "Meta", "OS", "Super", "Symbol", "Win"];
     }
 
-    debounce(func, timeout) {
-      let timer;
-      return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          func.apply(this, args);
-        }, timeout);
-      };
-    }
-
     bind(element) {
       element.boundKeyDown = this.keydown.bind(element, this);
-      element.boundKeyUpInput = this.debounce(this.input.bind(element, this), 16);
+      element.boundKeyUpInput = this.tribute.debounce(this.input.bind(element, this), 16);
       element.addEventListener("keydown", element.boundKeyDown, true);
       element.addEventListener("keyup", element.boundKeyUpInput, true);
       element.addEventListener("input", element.boundKeyUpInput, true);
@@ -381,10 +371,10 @@
 
     bind(_menu) {
       this.menuClickEvent = this.tribute.events.click.bind(null, this);
-      this.menuContainerScrollEvent = this.debounce(() => {
+      this.menuContainerScrollEvent = this.tribute.debounce(() => {
         this.tribute.hideMenu();
       }, 10, false);
-      this.windowResizeEvent = this.debounce(() => {
+      this.windowResizeEvent = this.tribute.debounce(() => {
         this.tribute.hideMenu();
       }, 10, false);
 
@@ -415,16 +405,6 @@
       } else {
         window.removeEventListener("scroll", this.menuContainerScrollEvent);
       }
-    }
-
-    debounce(func, timeout) {
-      let timer;
-      return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          func.apply(this, args);
-        }, timeout);
-      };
     }
 
   }
@@ -1667,6 +1647,16 @@
           el.tributeMenu.remove();
         }
       });
+    }
+
+    debounce(func, timeout) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(this, args);
+        }, timeout);
+      };
     }
 
   }

@@ -23,19 +23,12 @@ class TributeEvents {
     ];
   }
 
-  debounce(func, timeout) {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        func.apply(this, args);
-      }, timeout);
-    };
-  }
-
   bind(element) {
     element.boundKeyDown = this.keydown.bind(element, this);
-    element.boundKeyUpInput = this.debounce(this.input.bind(element, this), 16);
+    element.boundKeyUpInput = this.tribute.debounce(
+      this.input.bind(element, this),
+      16
+    );
 
     element.addEventListener("keydown", element.boundKeyDown, true);
     element.addEventListener("keyup", element.boundKeyUpInput, true);
