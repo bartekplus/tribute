@@ -191,18 +191,14 @@ class TributeRange {
   }
 
   pasteHtml(html, startPos, endPos) {
-    const sel = this.getWindowSelection();
-    let range;
+    const { sel } = this.getContentEditableSelectionStart(true);
+    let range = null;
     if (sel.modify) {
-      sel.collapseToEnd();
-      sel.modify("move", "forward", "word");
       for (let index = 0; index < endPos - startPos; index++) {
         sel.modify("extend", "backward", "character");
       }
-
       range = sel.getRangeAt(0);
     } else {
-      range = this.getDocument().createRange();
       range.setStart(sel.anchorNode, Math.min(startPos, sel.anchorNode.length));
       range.setEnd(sel.anchorNode, Math.min(endPos, sel.anchorNode.length));
     }
@@ -261,6 +257,27 @@ class TributeRange {
     const rootNode = this.tribute.current.element.getRootNode();
     if (rootNode.getSelection) return rootNode.getSelection();
     else return window.getSelection();
+  }
+
+  getContentEditableSelectionStart(moveToEndofWord) {
+    const sel = this.getWindowSelection();
+    const range = sel.getRangeAt(0);
+    const selectedElem = sel.anchorNode;
+    const workingNodeContent = selectedElem.textContent;
+    const selectStartOffset =
+      this.getWindowSelection().getRangeAt(0).startOffset;
+
+    if (sel.modify) {
+      const nextChar =
+        workingNodeContent.length >= selectStartOffset
+          ? workingNodeContent[selectStartOffset]
+          : null;
+      const nextCharisWhitespce = nextChar && nextChar !== nextChar.trim();
+      sel.collapseToEnd();
+      if (!nextCharisWhitespce && moveToEndofWord)
+        sel.modify("move", "forward", "word");
+    }
+    return { sel, range };
   }
 
   getNodePositionInParent(element) {
@@ -341,21 +358,15 @@ class TributeRange {
         }
       }
     } else {
-      const sel = this.getWindowSelection();
+      const { sel, range } = this.getContentEditableSelectionStart(true);
       const selectedElem = sel.anchorNode;
       const workingNodeContent = selectedElem.textContent;
       const selectStartOffset =
         this.getWindowSelection().getRangeAt(0).startOffset;
 
       if (sel.modify) {
-        const lastChar = workingNodeContent.substring(
-          selectStartOffset - 1,
-          selectStartOffset
-        );
+        const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
         const addWhiteSpace = lastChar !== lastChar.trim();
-        const range = sel.getRangeAt(0);
-        sel.collapseToStart();
-        sel.modify("move", "forward", "word");
         for (
           let index = 0;
           index < this.tribute.numberOfWordsInContextText;
@@ -690,28 +701,14 @@ class TributeRange {
     return this.getFixedCoordinatesRelativeToRect(finalRect);
   }
 
-  getContentEditableCaretPosition(selectedNodePosition) {
-    const sel = this.getWindowSelection();
-    let range = null;
-    if (sel.modify) {
-      const rangeOrig = sel.getRangeAt(0);
-      sel.collapseToEnd();
-      range = sel.getRangeAt(0);
-      // restore selection
-      sel.removeAllRanges();
-      sel.addRange(rangeOrig);
-    } else {
-      range = this.getDocument().createRange();
-      const textNode =
-        sel.anchorNode.nodeType === Node.TEXT_NODE
-          ? sel.anchorNode
-          : sel.anchorNode.childNodes[0];
-      range.setStart(textNode, selectedNodePosition);
-      range.setEnd(textNode, selectedNodePosition);
-      range.collapse(false);
-    }
+  getContentEditableCaretPosition(_selectedNodePosition) {
+    const { sel, range } = this.getContentEditableSelectionStart(false);
+    const newRange = sel.getRangeAt(0);
+    // restore selection
+    sel.removeAllRanges();
+    sel.addRange(range);
 
-    const rect = range.getBoundingClientRect();
+    const rect = newRange.getBoundingClientRect();
     return this.getFixedCoordinatesRelativeToRect(rect);
   }
 
