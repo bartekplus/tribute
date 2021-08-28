@@ -645,12 +645,19 @@
           const selectStartOffset = range.startOffset;
           const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
           const addWhiteSpace = lastChar && lastChar !== lastChar.trim();
+          text = sel.toString().trim();
 
           for (let index = 0; index < this.tribute.numberOfWordsInContextText; index++) {
             sel.modify("extend", "backward", "word");
+            const newText = sel.toString().trim();
+
+            if (newText.length > text.length && newText.endsWith(text)) {
+              // Workarounds Firefox issue, where selection sometimes collapse or move instead of extend
+              text = newText;
+            }
           }
 
-          text = sel.toString().trim() + (addWhiteSpace ? " " : "");
+          text += addWhiteSpace ? " " : "";
           this.restoreSelection(sel, range, direction);
         }
       }
