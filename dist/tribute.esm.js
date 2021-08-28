@@ -144,7 +144,7 @@ class TributeEvents {
     if (tribute.menu && tribute.menu.contains(event.target)) {
       let li = event.target;
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       while (li.nodeName.toLowerCase() !== "li") {
         li = li.parentNode;
         if (!li || li === tribute.menu) {
@@ -271,14 +271,14 @@ class TributeEvents {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
-          e.stopPropagation();
+          e.stopImmediatePropagation();
           this.tribute.selectItemAtIndex(this.tribute.menuSelected, e);
         }
       },
       Escape: (e, _el) => {
         if (this.tribute.isActive) {
           e.preventDefault();
-          e.stopPropagation();
+          e.stopImmediatePropagation();
           this.tribute.hideMenu();
         }
       },
@@ -291,7 +291,7 @@ class TributeEvents {
           if (this.tribute.spaceSelectsMatch) {
             this.callbacks().Enter(e, el);
           } else if (!this.tribute.allowSpaces) {
-            e.stopPropagation();
+            e.stopImmediatePropagation();
             setTimeout(() => {
               this.tribute.hideMenu();
             }, 0);
@@ -302,7 +302,7 @@ class TributeEvents {
         // navigate up ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
-          e.stopPropagation();
+          e.stopImmediatePropagation();
           const count = this.tribute.current.filteredItems.length,
             selected = this.tribute.menuSelected;
 
@@ -320,7 +320,7 @@ class TributeEvents {
         // navigate down ul
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
           e.preventDefault();
-          e.stopPropagation();
+          e.stopImmediatePropagation();
           const count = this.tribute.current.filteredItems.length - 1,
             selected = this.tribute.menuSelected;
 
