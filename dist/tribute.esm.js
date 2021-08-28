@@ -568,13 +568,13 @@ class TributeRange {
       myField.selectionStart = startPos + text.length;
       myField.selectionEnd = startPos + text.length;
     } else {
-      const strippedText = this.stripHtml(text);
-      const isHTML = text !== strippedText;
       const textSuffix =
         typeof this.tribute.replaceTextSuffix === "string"
           ? this.tribute.replaceTextSuffix
           : "\xA0";
       text += textSuffix;
+      const strippedText = this.stripHtml(text);
+      const isHTML = text !== strippedText;
       if (isHTML)
         this.pasteHtml(
           text,
@@ -595,17 +595,16 @@ class TributeRange {
 
   pasteText(text, numOfCharsToRemove) {
     const { sel, range } = this.getContentEditableSelectionStart(true);
-    for (let index = 0; index < numOfCharsToRemove; index++) {
-      sel.modify("extend", "backward", "character");
-    }
-    const pre = sel.anchorNode.nodeValue.substring(0, sel.anchorOffset - 1);
+    const pre = sel.anchorNode.nodeValue.substring(
+      0,
+      sel.anchorOffset - numOfCharsToRemove
+    );
     const post = sel.anchorNode.nodeValue.substring(
-      sel.anchorOffset - 1,
+      sel.anchorOffset,
       sel.anchorNode.nodeValue.length
     );
-
     sel.anchorNode.nodeValue = pre + text + post;
-    range.setStart(sel.anchorNode, sel.anchorOffset - 1 + text.length);
+    range.setStart(sel.anchorNode, pre.length + text.length);
     range.collapse(true);
     sel.removeAllRanges();
     sel.addRange(range);
@@ -730,7 +729,7 @@ class TributeRange {
       if (sel) {
         const selectedElem = sel.anchorNode;
         const workingNodeContent = selectedElem.textContent;
-        const selectStartOffset = range.startOffset;
+        const selectStartOffset = sel.getRangeAt(0).startOffset;
         const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
         const addWhiteSpace = lastChar && lastChar !== lastChar.trim();
         text = sel.toString().trim();
