@@ -161,6 +161,11 @@ class TributeEvents {
   keyup(instance, event) {
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
+      if (event.key || event.key.length > 1) {
+        // Not a Character exit early
+        return;
+      }
+
       let controlKeyPressed = false;
       TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
