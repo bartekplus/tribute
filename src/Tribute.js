@@ -431,7 +431,8 @@ class Tribute {
       this.current.collection.values(
         this.current.mentionText,
         processValues,
-        this.current.fullText
+        this.current.fullText,
+        this.current.nextChar
       );
     } else {
       processValues(this.current.collection.values);

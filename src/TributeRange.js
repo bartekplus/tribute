@@ -80,7 +80,6 @@ class TributeRange {
     const replaceEvent = new CustomEvent("tribute-replaced");
 
     if (!this.isContentEditable(context.element)) {
-      const textEndsWithSpace = text !== text.trimEnd();
       const myField = this.tribute.current.element;
       const textSuffix =
         typeof this.tribute.replaceTextSuffix === "string"
@@ -92,8 +91,7 @@ class TributeRange {
       let endPos =
         context.mentionPosition +
         context.mentionText.length +
-        textSuffix.length +
-        textEndsWithSpace;
+        textSuffix.length;
       if (!this.tribute.autocompleteMode) {
         endPos += context.mentionTriggerChar.length - 1;
       }
@@ -245,12 +243,14 @@ class TributeRange {
         break;
       }
     }
+    const nextChar = text.length > minLen ? text[minLen] : "";
 
-    return text.substring(0, minLen);
+    return [text.substring(0, minLen), nextChar];
   }
-  getTextPrecedingCurrentSelection() {
+  getTextForCurrentSelection() {
     const context = this.tribute.current;
-    let text = null;
+    let effectiveRange = null;
+    let nextChar = "";
 
     if (!this.isContentEditable(context.element)) {
       const textComponent = this.tribute.current.element;
@@ -259,8 +259,12 @@ class TributeRange {
         const endPos = textComponent.selectionEnd;
 
         if (textComponent.value && startPos >= 0 && startPos === endPos) {
-          text = textComponent.value.substring(0);
-          text = this.getWholeWordsUpToCharIndex(text, startPos);
+          const result = this.getWholeWordsUpToCharIndex(
+            textComponent.value,
+            startPos
+          );
+          effectiveRange = result[0];
+          nextChar = result[1];
         }
       }
     } else {
@@ -272,7 +276,11 @@ class TributeRange {
         const selectStartOffset = sel.getRangeAt(0).startOffset;
         const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
         const addWhiteSpace = lastChar && lastChar !== lastChar.trim();
-        text = sel.toString().trim();
+        effectiveRange = sel.toString().trim();
+        nextChar =
+          workingNodeContent.length > selectStartOffset
+            ? workingNodeContent[selectStartOffset]
+            : "";
 
         for (
           let index = 0;
@@ -281,18 +289,21 @@ class TributeRange {
         ) {
           sel.modify("extend", "backward", "word");
           const newText = sel.toString().trim();
-          if (newText.length > text.length && newText.endsWith(text)) {
+          if (
+            newText.length > effectiveRange.length &&
+            newText.endsWith(effectiveRange)
+          ) {
             // Workarounds Firefox issue, where selection sometimes collapse or move instead of extend
-            text = newText;
+            effectiveRange = newText;
           }
         }
-        text += addWhiteSpace ? " " : "";
+        effectiveRange += addWhiteSpace ? " " : "";
 
         this.restoreSelection(sel, range, direction);
       }
     }
 
-    return text;
+    return { effectiveRange, nextChar };
   }
 
   getLastWordInText(text) {
@@ -312,7 +323,7 @@ class TributeRange {
     allowSpaces,
     isAutocomplete
   ) {
-    const effectiveRange = this.getTextPrecedingCurrentSelection();
+    const { effectiveRange, nextChar } = this.getTextForCurrentSelection();
     if (effectiveRange === null) return null;
     const lastWordOfEffectiveRange = this.getLastWordInText(effectiveRange);
 
@@ -322,6 +333,7 @@ class TributeRange {
           effectiveRange.length - lastWordOfEffectiveRange.length,
         mentionText: lastWordOfEffectiveRange,
         fullText: effectiveRange,
+        nextChar: nextChar,
         mentionTriggerChar: "",
       };
     }
@@ -384,6 +396,7 @@ class TributeRange {
             mentionText: currentTriggerSnippet,
             mentionTriggerChar: triggerChar,
             fullText: effectiveRange,
+            nextChar: "",
           };
         }
       }

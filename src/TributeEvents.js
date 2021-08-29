@@ -199,6 +199,7 @@ class TributeEvents {
       this.tribute.current.mentionText = info.mentionText;
       this.tribute.current.mentionPosition = info.mentionPosition;
       this.tribute.current.fullText = info.fullText;
+      this.tribute.current.nextChar = info.nextChar;
       return true;
     }
 
