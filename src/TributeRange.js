@@ -109,18 +109,10 @@ class TributeRange {
           ? this.tribute.replaceTextSuffix
           : "\xA0";
       text += textSuffix;
-      const strippedText = this.stripHtml(text);
-      const isHTML = text !== strippedText;
-      if (isHTML)
-        this.pasteHtml(
-          text,
-          context.mentionText.length + context.mentionTriggerChar.length
-        );
-      else
-        this.pasteText(
-          strippedText,
-          context.mentionText.length + context.mentionTriggerChar.length
-        );
+      this.pasteContentEditable(
+        text,
+        context.mentionText.length + context.mentionTriggerChar.length
+      );
     }
 
     context.element.dispatchEvent(
@@ -129,8 +121,24 @@ class TributeRange {
     context.element.dispatchEvent(replaceEvent);
   }
 
-  pasteText(text, numOfCharsToRemove) {
+  pasteContentEditable(html, numOfCharsToRemove) {
     const { sel, range } = this.getContentEditableSelectionStart(true);
+    if (sel) {
+      const strippedText = this.stripHtml(html);
+      const isHTML = html !== strippedText;
+      const useSimpleReplace =
+        !isHTML &&
+        sel.anchorOffset >= numOfCharsToRemove &&
+        sel.anchorOffset <= sel.anchorNode.nodeValue.length;
+      if (useSimpleReplace) {
+        this.pasteText(sel, range, strippedText, numOfCharsToRemove);
+      } else {
+        this.pasteHtml(sel, range, html, numOfCharsToRemove);
+      }
+    }
+  }
+
+  pasteText(sel, range, text, numOfCharsToRemove) {
     const pre = sel.anchorNode.nodeValue.substring(
       0,
       sel.anchorOffset - numOfCharsToRemove
@@ -147,35 +155,31 @@ class TributeRange {
     sel.collapseToEnd();
   }
 
-  pasteHtml(html, numOfCharsToRemove) {
-    const { sel } = this.getContentEditableSelectionStart(true);
-    if (sel) {
-      let range = null;
-      for (let index = 0; index < numOfCharsToRemove; index++) {
-        sel.modify("extend", "backward", "character");
-      }
-      range = sel.getRangeAt(0);
-      range.deleteContents();
+  pasteHtml(sel, _range, html, numOfCharsToRemove) {
+    for (let index = 0; index < numOfCharsToRemove; index++) {
+      sel.modify("extend", "backward", "character");
+    }
+    const newRange = sel.getRangeAt(0);
+    newRange.deleteContents();
 
-      const el = this.getDocument().createElement("div");
-      el.innerHTML = html;
-      const frag = this.getDocument().createDocumentFragment();
-      let node, lastNode;
+    const el = this.getDocument().createElement("div");
+    el.innerHTML = html;
+    const frag = this.getDocument().createDocumentFragment();
+    let node, lastNode;
 
-      while ((node = el.firstChild)) {
-        lastNode = frag.appendChild(node);
-      }
-      range.insertNode(frag);
+    while ((node = el.firstChild)) {
+      lastNode = frag.appendChild(node);
+    }
+    newRange.insertNode(frag);
 
-      // Preserve the selection
-      if (lastNode) {
-        range.setStart(lastNode, lastNode.length);
-        range.setEnd(lastNode, lastNode.length);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        sel.collapseToEnd();
-      }
+    // Preserve the selection
+    if (lastNode) {
+      newRange.setStart(lastNode, lastNode.length);
+      newRange.setEnd(lastNode, lastNode.length);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      sel.collapseToEnd();
     }
   }
 
