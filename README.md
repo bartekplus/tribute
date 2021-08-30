@@ -201,6 +201,7 @@ Collection object shown with defaults:
     pre: '<span>',
     post: '</span>',
     skip: false // true will skip local search, useful if doing server-side search
+    caseSensitive: false
   },
 
   // Limits the number of items in the menu

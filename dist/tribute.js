@@ -1468,7 +1468,8 @@
         let items = this.search.filter(this.current.mentionText, values, {
           pre: this.current.collection.searchOpts.pre || "<span>",
           post: this.current.collection.searchOpts.post || "</span>",
-          skip: this.current.collection.searchOpts.skip,
+          skip: this.current.collection.searchOpts.skip || false,
+          caseSensitive: this.current.collection.searchOpts.caseSensitive || false,
           extract: el => {
             if (typeof this.current.collection.lookup === "string") {
               return el[this.current.collection.lookup];
