@@ -92,7 +92,7 @@ class TributeEvents {
     element.boundKeyDown = this.keydown.bind(element, this);
     element.boundKeyUpInput = this.tribute.debounce(
       this.input.bind(element, this),
-      16
+      32
     );
 
     element.addEventListener("keydown", element.boundKeyDown, true);
@@ -1970,13 +1970,18 @@ class Tribute {
     });
   }
 
-  debounce(func, timeout) {
-    let timer;
+  debounce(func, wait, option = { leading: true, trailing: true }) {
+    let timer = null;
     return (...args) => {
+      const timerExpired = (callFunc) => {
+        timer = null;
+        if (callFunc) func.apply(this, args);
+      };
+      const callNow = option.leading && timer === null;
+      const timeoutFn = timerExpired.bind(this, !callNow && option.trailing);
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        func.apply(this, args);
-      }, timeout);
+      timer = setTimeout(timeoutFn, wait);
+      if (callNow) func.apply(this, args);
     };
   }
 }

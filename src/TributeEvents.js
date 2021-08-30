@@ -27,7 +27,7 @@ class TributeEvents {
     element.boundKeyDown = this.keydown.bind(element, this);
     element.boundKeyUpInput = this.tribute.debounce(
       this.input.bind(element, this),
-      16
+      32
     );
 
     element.addEventListener("keydown", element.boundKeyDown, true);
