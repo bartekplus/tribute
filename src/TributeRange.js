@@ -228,28 +228,29 @@ class TributeRange {
   }
 
   getWholeWordsUpToCharIndex(str, minLen) {
-    const text = str;
     if (this.tribute.autocompleteSeparator) {
-      let pos = 0;
+      let searchPos = 0;
       const arr = str
         .split(this.tribute.autocompleteSeparator)
         .filter(function (e) {
           return e.trim();
         });
+
       for (let i = 0, len = arr.length; i < len; i++) {
-        const idx = str.indexOf(arr[i]);
-        pos = pos + idx;
-        str = str.slice(idx);
-        if (minLen >= pos && minLen <= pos + arr[i].length) {
-          minLen = pos + arr[i].length;
+        const idx = str.indexOf(arr[i], searchPos);
+        searchPos += arr[i].length;
+
+        if (minLen >= idx && minLen <= idx + arr[i].length) {
+          minLen = idx + arr[i].length;
           break;
         }
       }
     }
-    const nextChar = text.length > minLen ? text[minLen] : "";
 
-    return [text.substring(0, minLen), nextChar];
+    const nextChar = str.length > minLen ? str[minLen] : "";
+    return [str.substring(0, minLen), nextChar];
   }
+
   getTextForCurrentSelection() {
     const context = this.tribute.current;
     let effectiveRange = null;

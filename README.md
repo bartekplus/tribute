@@ -427,7 +427,8 @@ If your data set is large or would like to pre filter your data you can load dyn
   // trigger: text that trigger the lookup
   // cb: callback function, to be called with values
   // ctx: trigger char plus a text preceding it
-  values: function (trigger, cb, ctx) {
+  // nextChar: char following trigger text
+  values: function (trigger, cb, ctx, nextChar) {
     remoteSearch(trigger, users => cb(users));
   },
   lookup: 'name',
