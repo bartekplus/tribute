@@ -208,6 +208,11 @@ Collection object shown with defaults:
 
   // specify the minimum number of characters that must be typed before menu appears
   menuShowMinLength: 0
+
+  // specify a regex to define after which characters the autocomplete option should open
+  // If null is used then it will not split the string & search in the whole line
+  // default value is /\s+/ means it will split on whitespace when this is not specified
+  autocompleteSeparator: /\s+/,
 }
 ```
 

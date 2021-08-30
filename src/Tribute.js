@@ -14,7 +14,7 @@ class Tribute {
     itemClass = "",
     trigger = "@",
     autocompleteMode = false,
-    autocompleteSeparator = null,
+    autocompleteSeparator = RegExp(/\s+/),
     selectTemplate = null,
     menuItemTemplate = null,
     lookup = "key",

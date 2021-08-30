@@ -218,7 +218,8 @@ class TributeRange {
       }
     }
     const nextCharIsSeparator =
-      nextChar && nextChar.match(this.tribute.autocompleteSeparator);
+      !this.tribute.autocompleteSeparator ||
+      (nextChar && nextChar.match(this.tribute.autocompleteSeparator));
     sel.collapseToEnd();
     if (nextChar && !nextCharIsSeparator && moveToEndOfWord)
       sel.modify("move", "forward", "word");
@@ -227,20 +228,22 @@ class TributeRange {
   }
 
   getWholeWordsUpToCharIndex(str, minLen) {
-    let pos = 0;
-    const arr = str
-      .split(this.tribute.autocompleteSeparator)
-      .filter(function (e) {
-        return e.trim();
-      });
     const text = str;
-    for (let i = 0, len = arr.length; i < len; i++) {
-      const idx = str.indexOf(arr[i]);
-      pos = pos + idx;
-      str = str.slice(idx);
-      if (minLen >= pos && minLen <= pos + arr[i].length) {
-        minLen = pos + arr[i].length;
-        break;
+    if (this.tribute.autocompleteSeparator) {
+      let pos = 0;
+      const arr = str
+        .split(this.tribute.autocompleteSeparator)
+        .filter(function (e) {
+          return e.trim();
+        });
+      for (let i = 0, len = arr.length; i < len; i++) {
+        const idx = str.indexOf(arr[i]);
+        pos = pos + idx;
+        str = str.slice(idx);
+        if (minLen >= pos && minLen <= pos + arr[i].length) {
+          minLen = pos + arr[i].length;
+          break;
+        }
       }
     }
     const nextChar = text.length > minLen ? text[minLen] : "";
@@ -307,13 +310,12 @@ class TributeRange {
   }
 
   getLastWordInText(text) {
-    const separator = this.tribute.autocompleteSeparator
-      ? this.tribute.autocompleteSeparator
-      : /\s+/;
-    const wordsArray = text.split(separator);
-
-    if (!wordsArray.length) return " ";
-    return wordsArray[wordsArray.length - 1];
+    if (this.tribute.autocompleteSeparator) {
+      const wordsArray = text.split(this.tribute.autocompleteSeparator);
+      if (!wordsArray.length) return " ";
+      return wordsArray[wordsArray.length - 1];
+    }
+    return text;
   }
 
   getTriggerInfo(
