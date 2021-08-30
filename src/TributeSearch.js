@@ -40,7 +40,7 @@ class TributeSearch {
   }
 
   traverse(string, pattern, stringIndex, patternIndex, patternCache) {
-    if (this.tribute.autocompleteSeparator) {
+    if (this.tribute.autocompleteMode && this.tribute.autocompleteSeparator) {
       // if the pattern search at end
       pattern = pattern.split(this.tribute.autocompleteSeparator).splice(-1)[0];
     }

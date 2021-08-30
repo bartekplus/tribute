@@ -319,13 +319,8 @@ class TributeRange {
     return text;
   }
 
-  getTriggerInfo(
-    menuAlreadyActive,
-    hasTrailingSpace,
-    requireLeadingSpace,
-    allowSpaces,
-    isAutocomplete
-  ) {
+  getTriggerInfo(allowSpaces, isAutocomplete) {
+    let requireLeadingSpace = true;
     const { effectiveRange, nextChar } = this.getTextForCurrentSelection();
     if (effectiveRange === null) return null;
     const lastWordOfEffectiveRange = this.getLastWordInText(effectiveRange);
@@ -369,7 +364,7 @@ class TributeRange {
             )
           ))
       ) {
-        let currentTriggerSnippet = effectiveRange.substring(
+        const currentTriggerSnippet = effectiveRange.substring(
           mostRecentTriggerCharPos + triggerChar.length,
           effectiveRange.length
         );
@@ -382,18 +377,11 @@ class TributeRange {
         const leadingSpace =
           currentTriggerSnippet.length > 0 &&
           (firstSnippetChar === " " || firstSnippetChar === "\xA0");
-        if (hasTrailingSpace) {
-          currentTriggerSnippet = currentTriggerSnippet.trim();
-        }
 
-        const regex = allowSpaces ? /[^\S ]/g : /[\xA0\s]/g;
+        const trailingSpace =
+          currentTriggerSnippet !== currentTriggerSnippet.trimEnd();
 
-        this.tribute.hasTrailingSpace = regex.test(currentTriggerSnippet);
-
-        if (
-          !leadingSpace &&
-          (menuAlreadyActive || !regex.test(currentTriggerSnippet))
-        ) {
+        if (!leadingSpace && (allowSpaces || !trailingSpace)) {
           return {
             mentionPosition: mostRecentTriggerCharPos,
             mentionText: currentTriggerSnippet,

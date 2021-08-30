@@ -43,7 +43,6 @@ class Tribute {
     this.allowSpaces = allowSpaces;
     this.replaceTextSuffix = replaceTextSuffix;
     this.positionMenu = positionMenu;
-    this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.numberOfWordsInContextText = numberOfWordsInContextText;
     if (keys) {

@@ -24,10 +24,14 @@ class TributeEvents {
   }
 
   bind(element) {
-    element.boundKeyDown = this.keydown.bind(element, this);
+    const KEY_EVENT_TIMEOUT_MS = 32;
+    element.boundKeyDown = this.tribute.debounce(
+      this.keydown.bind(element, this),
+      KEY_EVENT_TIMEOUT_MS
+    );
     element.boundKeyUpInput = this.tribute.debounce(
       this.input.bind(element, this),
-      32
+      KEY_EVENT_TIMEOUT_MS
     );
 
     element.addEventListener("keydown", element.boundKeyDown, true);
@@ -45,27 +49,28 @@ class TributeEvents {
   }
 
   keydown(instance, event) {
-    if (instance.shouldDeactivate(event)) {
-      instance.tribute.hideMenu();
-    }
+    let controlKeyPressed = false;
+    let keyProcessed = false;
+
     if (event instanceof KeyboardEvent) {
-      let controlKeyPressed = false;
       TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
           controlKeyPressed = true;
           return;
         }
       });
-      if (controlKeyPressed) return;
     }
 
-    if (instance.tribute.isActive) {
+    if (instance.tribute.isActive && !controlKeyPressed) {
       TributeEvents.keys().forEach((key) => {
         if (key === event.code) {
           instance.callbacks()[key](event, this);
+          keyProcessed = true;
+          return;
         }
       });
     }
+    if (!keyProcessed) instance.tribute.hideMenu();
   }
 
   input(instance, event) {
@@ -120,12 +125,6 @@ class TributeEvents {
 
     if (!instance.updateSelection(this)) return;
 
-    if (!instance.tribute.allowSpaces && instance.tribute.hasTrailingSpace) {
-      instance.tribute.hasTrailingSpace = false;
-      instance.callbacks().Space(event, this);
-      return;
-    }
-
     const keyCode = instance.getKeyCode(event);
     // Exit if no keyCode
     if (isNaN(keyCode)) {
@@ -154,21 +153,6 @@ class TributeEvents {
     instance.tribute.showMenuFor(this, true);
   }
 
-  shouldDeactivate(event) {
-    let controlKeyPressed = false;
-    TributeEvents.keys().forEach((key) => {
-      if (key === event.code) {
-        controlKeyPressed = true;
-        return;
-      }
-    });
-
-    if (controlKeyPressed) return false;
-    if (this.tribute.isActive) return true;
-
-    return false;
-  }
-
   getKeyCode(event) {
     const keyCode = event.keyCode || event.which || event.code;
     if (keyCode) {
@@ -187,9 +171,6 @@ class TributeEvents {
   updateSelection(el) {
     this.tribute.current.element = el;
     const info = this.tribute.range.getTriggerInfo(
-      false,
-      this.tribute.hasTrailingSpace,
-      true,
       this.tribute.allowSpaces,
       this.tribute.autocompleteMode
     );
@@ -231,11 +212,8 @@ class TributeEvents {
         if (this.tribute.isActive) {
           if (this.tribute.spaceSelectsMatch) {
             this.callbacks().Enter(e, el);
-          } else if (!this.tribute.allowSpaces) {
-            e.stopImmediatePropagation();
-            setTimeout(() => {
-              this.tribute.hideMenu();
-            }, 0);
+          } else {
+            this.tribute.hideMenu();
           }
         }
       },
@@ -269,16 +247,6 @@ class TributeEvents {
             this.setActiveLi(0);
             this.tribute.menu.scrollTop = 0;
           }
-        }
-      },
-      Delete: (e, el) => {
-        if (
-          this.tribute.isActive &&
-          this.tribute.current.mentionText.length < 1
-        ) {
-          this.tribute.hideMenu();
-        } else if (this.tribute.isActive) {
-          this.tribute.showMenuFor(el);
         }
       },
     };
