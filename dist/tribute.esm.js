@@ -313,11 +313,9 @@ class TributeEvents {
             selected = this.tribute.menuSelected;
 
           if (count > selected && selected > 0) {
-            this.tribute.menuSelected--;
-            this.setActiveLi();
+            this.setActiveLi(selected - 1);
           } else if (selected === 0) {
-            this.tribute.menuSelected = count - 1;
-            this.setActiveLi();
+            this.setActiveLi(count - 1);
             this.tribute.menu.scrollTop = this.tribute.menu.scrollHeight;
           }
         }
@@ -331,11 +329,9 @@ class TributeEvents {
             selected = this.tribute.menuSelected;
 
           if (count > selected) {
-            this.tribute.menuSelected++;
-            this.setActiveLi();
+            this.setActiveLi(selected + 1);
           } else if (count === selected) {
-            this.tribute.menuSelected = 0;
-            this.setActiveLi();
+            this.setActiveLi(0);
             this.tribute.menu.scrollTop = 0;
           }
         }
@@ -357,7 +353,7 @@ class TributeEvents {
     const lis = this.tribute.menu.querySelectorAll("li"),
       length = lis.length >>> 0;
 
-    if (index) this.tribute.menuSelected = parseInt(index);
+    this.tribute.menuSelected = index;
 
     for (let i = 0; i < length; i++) {
       const li = lis[i];
@@ -1767,12 +1763,13 @@ class Tribute {
           const li = this.range.getDocument().createElement("li");
           li.setAttribute("data-index", index);
           li.className = this.current.collection.itemClass;
-          li.addEventListener("mousemove", (e) => {
-            const [, index] = this._findLiTarget(e.target);
-            if (e.movementY !== 0) {
+          li.addEventListener(
+            "mouseover",
+            function (index) {
               this.events.setActiveLi(index);
-            }
-          });
+            }.bind(this, index)
+          );
+
           if (this.menuSelected === index) {
             li.classList.add(this.current.collection.selectClass);
           }
@@ -1804,12 +1801,6 @@ class Tribute {
     } else {
       processValues(this.current.collection.values);
     }
-  }
-
-  _findLiTarget(el) {
-    if (!el) return [];
-    const index = el.getAttribute("data-index");
-    return !index ? this._findLiTarget(el.parentNode) : [el, index];
   }
 
   showMenuForCollection(element, collectionIndex) {

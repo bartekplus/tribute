@@ -402,12 +402,13 @@ class Tribute {
           const li = this.range.getDocument().createElement("li");
           li.setAttribute("data-index", index);
           li.className = this.current.collection.itemClass;
-          li.addEventListener("mousemove", (e) => {
-            const [, index] = this._findLiTarget(e.target);
-            if (e.movementY !== 0) {
+          li.addEventListener(
+            "mouseover",
+            function (index) {
               this.events.setActiveLi(index);
-            }
-          });
+            }.bind(this, index)
+          );
+
           if (this.menuSelected === index) {
             li.classList.add(this.current.collection.selectClass);
           }
@@ -439,12 +440,6 @@ class Tribute {
     } else {
       processValues(this.current.collection.values);
     }
-  }
-
-  _findLiTarget(el) {
-    if (!el) return [];
-    const index = el.getAttribute("data-index");
-    return !index ? this._findLiTarget(el.parentNode) : [el, index];
   }
 
   showMenuForCollection(element, collectionIndex) {
