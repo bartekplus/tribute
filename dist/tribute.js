@@ -270,13 +270,14 @@
     }
 
     bind(_menu) {
+      const DEBOUNCE_TIMEOUT_MS = 100;
       this.menuClickEvent = this.tribute.events.click.bind(null, this);
       this.menuContainerScrollEvent = this.tribute.debounce(() => {
         this.tribute.hideMenu();
-      }, 10, false);
+      }, DEBOUNCE_TIMEOUT_MS);
       this.windowResizeEvent = this.tribute.debounce(() => {
         this.tribute.hideMenu();
-      }, 10, false);
+      }, DEBOUNCE_TIMEOUT_MS);
 
       this.windowBlurEvent = () => {
         this.tribute.hideMenu();
@@ -1058,7 +1059,7 @@
       positionMenu = true,
       spaceSelectsMatch = false,
       searchOpts = {},
-      menuItemLimit = null,
+      menuItemLimit = undefined,
       menuShowMinLength = 0,
       keys = null,
       numberOfWordsInContextText = 5
@@ -1335,11 +1336,7 @@
             }
           }
         });
-
-        if (this.current.collection.menuItemLimit) {
-          items = items.slice(0, this.current.collection.menuItemLimit);
-        }
-
+        items = items.slice(0, this.current.collection.menuItemLimit);
         this.current.filteredItems = items;
         const ul = this.menu.querySelector("ul");
         let showMenu = false;

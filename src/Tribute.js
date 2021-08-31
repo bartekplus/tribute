@@ -27,7 +27,7 @@ class Tribute {
     positionMenu = true,
     spaceSelectsMatch = false,
     searchOpts = {},
-    menuItemLimit = null,
+    menuItemLimit = undefined,
     menuShowMinLength = 0,
     keys = null,
     numberOfWordsInContextText = 5,
@@ -366,9 +366,7 @@ class Tribute {
         },
       });
 
-      if (this.current.collection.menuItemLimit) {
-        items = items.slice(0, this.current.collection.menuItemLimit);
-      }
+      items = items.slice(0, this.current.collection.menuItemLimit);
 
       this.current.filteredItems = items;
 

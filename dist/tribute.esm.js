@@ -290,21 +290,14 @@ class TributeMenuEvents {
   }
 
   bind(_menu) {
+    const DEBOUNCE_TIMEOUT_MS = 100;
     this.menuClickEvent = this.tribute.events.click.bind(null, this);
-    this.menuContainerScrollEvent = this.tribute.debounce(
-      () => {
-        this.tribute.hideMenu();
-      },
-      10,
-      false
-    );
-    this.windowResizeEvent = this.tribute.debounce(
-      () => {
-        this.tribute.hideMenu();
-      },
-      10,
-      false
-    );
+    this.menuContainerScrollEvent = this.tribute.debounce(() => {
+      this.tribute.hideMenu();
+    }, DEBOUNCE_TIMEOUT_MS);
+    this.windowResizeEvent = this.tribute.debounce(() => {
+      this.tribute.hideMenu();
+    }, DEBOUNCE_TIMEOUT_MS);
 
     this.windowBlurEvent = () => {
       this.tribute.hideMenu();
@@ -1235,7 +1228,7 @@ class Tribute {
     positionMenu = true,
     spaceSelectsMatch = false,
     searchOpts = {},
-    menuItemLimit = null,
+    menuItemLimit = undefined,
     menuShowMinLength = 0,
     keys = null,
     numberOfWordsInContextText = 5,
@@ -1574,9 +1567,7 @@ class Tribute {
         },
       });
 
-      if (this.current.collection.menuItemLimit) {
-        items = items.slice(0, this.current.collection.menuItemLimit);
-      }
+      items = items.slice(0, this.current.collection.menuItemLimit);
 
       this.current.filteredItems = items;
 

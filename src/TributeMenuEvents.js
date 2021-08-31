@@ -8,21 +8,14 @@ class TributeMenuEvents {
   }
 
   bind(_menu) {
+    const DEBOUNCE_TIMEOUT_MS = 100;
     this.menuClickEvent = this.tribute.events.click.bind(null, this);
-    this.menuContainerScrollEvent = this.tribute.debounce(
-      () => {
-        this.tribute.hideMenu();
-      },
-      10,
-      false
-    );
-    this.windowResizeEvent = this.tribute.debounce(
-      () => {
-        this.tribute.hideMenu();
-      },
-      10,
-      false
-    );
+    this.menuContainerScrollEvent = this.tribute.debounce(() => {
+      this.tribute.hideMenu();
+    }, DEBOUNCE_TIMEOUT_MS);
+    this.windowResizeEvent = this.tribute.debounce(() => {
+      this.tribute.hideMenu();
+    }, DEBOUNCE_TIMEOUT_MS);
 
     this.windowBlurEvent = () => {
       this.tribute.hideMenu();
