@@ -7,16 +7,6 @@ class TributeSearch {
     this.tribute.search = this;
   }
 
-  simpleFilter(pattern, array) {
-    return array.filter((string) => {
-      return this.test(pattern, string);
-    });
-  }
-
-  test(pattern, string) {
-    return this.match(pattern, string) !== null;
-  }
-
   match(pattern, string, opts) {
     opts = opts || {};
     const pre = opts.pre || "",

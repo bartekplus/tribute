@@ -766,6 +766,7 @@ describe("Tribute loadingItemTemplate", function() {
       let input = createDomElement(elementType);
 
       let collectionObject = {
+        requireLeadingSpace: false,
         loadingItemTemplate: '<div class="loading">Loading</div>',
         values: function(_, cb) {
           setTimeout(() => cb([

@@ -278,19 +278,6 @@ class TributeEvents {
       }
     }
   }
-
-  getFullHeight(elem, includeMargin) {
-    const height = elem.getBoundingClientRect().height;
-
-    if (includeMargin) {
-      const style = elem.currentStyle || window.getComputedStyle(elem);
-      return (
-        height + parseFloat(style.marginTop) + parseFloat(style.marginBottom)
-      );
-    }
-
-    return height;
-  }
 }
 
 export default TributeEvents;

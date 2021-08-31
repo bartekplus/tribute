@@ -278,19 +278,6 @@ class TributeEvents {
       }
     }
   }
-
-  getFullHeight(elem, includeMargin) {
-    const height = elem.getBoundingClientRect().height;
-
-    if (includeMargin) {
-      const style = elem.currentStyle || window.getComputedStyle(elem);
-      return (
-        height + parseFloat(style.marginTop) + parseFloat(style.marginBottom)
-      );
-    }
-
-    return height;
-  }
 }
 
 /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
@@ -420,13 +407,6 @@ class TributeRange {
     }
 
     if (scrollTo) this.scrollIntoView();
-  }
-
-  get menuContainerIsBody() {
-    return (
-      this.tribute.menuContainer === this.getDocument().body ||
-      !this.tribute.menuContainer
-    );
   }
 
   replaceTriggerText(text, originalEvent, item) {
@@ -652,7 +632,8 @@ class TributeRange {
           index++
         ) {
           sel.modify("extend", "backward", "word");
-          const newText = sel.toString().trim();
+          const newText = sel.toString();
+
           if (
             newText.length > effectiveRange.length &&
             newText.endsWith(effectiveRange)
@@ -679,6 +660,10 @@ class TributeRange {
     return text;
   }
 
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
   getTriggerInfo(allowSpaces, isAutocomplete) {
     let requireLeadingSpace = true;
     const { effectiveRange, nextChar } = this.getTextForCurrentSelection();
@@ -702,9 +687,18 @@ class TributeRange {
 
       this.tribute.collection.forEach((config) => {
         const c = config.trigger;
-        const idx = config.requireLeadingSpace
-          ? this.lastIndexWithLeadingSpace(effectiveRange, c)
-          : effectiveRange.lastIndexOf(c);
+        const regExpStr =
+          "(" +
+          (config.requireLeadingSpace ? "\\s" : "") +
+          this.escapeRegExp(c) +
+          ")(?!.*\\1)";
+        const searchRes = effectiveRange.match(RegExp(regExpStr));
+        const idx = (() => {
+          if (searchRes)
+            return searchRes.index + (config.requireLeadingSpace ? 1 : 0);
+          if (effectiveRange.startsWith(c)) return 0;
+          return -1;
+        })();
 
         if (idx > mostRecentTriggerCharPos) {
           mostRecentTriggerCharPos = idx;
@@ -752,31 +746,6 @@ class TributeRange {
         }
       }
     }
-  }
-
-  lastIndexWithLeadingSpace(str, trigger) {
-    const reversedStr = str.split("").reverse().join("");
-    let index = -1;
-
-    for (let cidx = 0, len = str.length; cidx < len; cidx++) {
-      const firstChar = cidx === str.length - 1;
-      const leadingSpace = /\s/.test(reversedStr[cidx + 1]);
-
-      let match = true;
-      for (let triggerIdx = trigger.length - 1; triggerIdx >= 0; triggerIdx--) {
-        if (trigger[triggerIdx] !== reversedStr[cidx - triggerIdx]) {
-          match = false;
-          break;
-        }
-      }
-
-      if (match && (firstChar || leadingSpace)) {
-        index = str.length - 1 - cidx;
-        break;
-      }
-    }
-
-    return index;
   }
 
   isContentEditable(element) {
@@ -1092,16 +1061,6 @@ class TributeSearch {
   constructor(tribute) {
     this.tribute = tribute;
     this.tribute.search = this;
-  }
-
-  simpleFilter(pattern, array) {
-    return array.filter((string) => {
-      return this.test(pattern, string);
-    });
-  }
-
-  test(pattern, string) {
-    return this.match(pattern, string) !== null;
   }
 
   match(pattern, string, opts) {
