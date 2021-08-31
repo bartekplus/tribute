@@ -291,10 +291,8 @@
 
       this.windowBlurEvent = () => {
         this.tribute.hideMenu();
-      }; // fixes IE11 issues with mousedown
+      };
 
-
-      this.tribute.range.getDocument().addEventListener("MSPointerDown", this.menuClickEvent, false);
       this.tribute.range.getDocument().addEventListener("mousedown", this.menuClickEvent, false);
       window.addEventListener("resize", this.windowResizeEvent);
       window.addEventListener("blur", this.windowBlurEvent);
@@ -308,8 +306,8 @@
 
     unbind(_menu) {
       this.tribute.range.getDocument().removeEventListener("mousedown", this.menuClickEvent, false);
-      this.tribute.range.getDocument().removeEventListener("MSPointerDown", this.menuClickEvent, false);
       window.removeEventListener("resize", this.windowResizeEvent);
+      window.removeEventListener("blur", this.windowBlurEvent);
 
       if (this.menuContainer) {
         this.menuContainer.removeEventListener("scroll", this.menuContainerScrollEvent, false);
