@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Tribute = factory());
-}(this, (function () { 'use strict';
+})(this, (function () { 'use strict';
 
   /*eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
   class TributeEvents {
@@ -1572,4 +1572,4 @@
 
   return Tribute;
 
-})));
+}));
