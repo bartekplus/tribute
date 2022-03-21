@@ -74,9 +74,20 @@ class TributeEvents {
   }
 
   input(instance, event) {
-    if (!(event instanceof CustomEvent)) {
-      instance.keyup.call(this, instance, event);
+    const cEvent = event instanceof CustomEvent;
+    const iEvent = event instanceof InputEvent;
+    const iEventHandle = iEvent && (event.inputType == "insertText"
+      || event.inputType == "insertCompositionText"
+      || event.inputType.startsWith("deleteContent"));
+    
+    if (cEvent) {
+      return;
     }
+    if (iEvent && !iEventHandle) {
+      return;
+    }
+    
+    instance.keyup.call(this, instance, event);
   }
 
   click(instance, event) {
