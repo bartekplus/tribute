@@ -6,7 +6,7 @@ class TributeEvents {
   }
 
   static keys() {
-    return ["Tab", "Enter", "Escape", "ArrowUp", "ArrowDown"];
+    return ["Tab", "Enter", "Escape", "ArrowUp", "ArrowDown", "Backspace"];
   }
 
   static modifiers() {
@@ -61,16 +61,23 @@ class TributeEvents {
       });
     }
 
-    if (instance.tribute.isActive && !controlKeyPressed) {
+    if (!controlKeyPressed) {
       TributeEvents.keys().forEach((key) => {
-        if (key === event.code) {
-          instance.callbacks()[key](event, this);
-          keyProcessed = true;
-          return;
+        if (
+          key === event.code &&
+          // Special handling of Backspace
+          (instance.tribute.isActive || event.code == "Backspace")) {
+            instance.callbacks()[key](event, this);
+            keyProcessed = true;
+            return;
         }
       });
     }
-    if (!keyProcessed) instance.tribute.hideMenu();
+
+    if (!keyProcessed) {
+      instance.tribute.lastReplacement = null;
+      instance.tribute.hideMenu();
+    }
   }
 
   input(instance, event) {
@@ -200,6 +207,18 @@ class TributeEvents {
 
   callbacks() {
     return {
+      Backspace: (e, _el) => {
+        if (this.tribute.lastReplacement) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          this.tribute.current = {...this.tribute.lastReplacement};
+          this.tribute.current.mentionText =this.tribute.lastReplacement.content;
+          this.tribute.replaceText(this.tribute.lastReplacement.mentionText, e, null);
+          this.tribute.lastReplacement = null;
+          this.tribute.current = {};
+        }
+      },
       Enter: (e, _el) => {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {

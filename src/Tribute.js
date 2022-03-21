@@ -31,11 +31,13 @@ class Tribute {
     menuShowMinLength = 0,
     keys = null,
     numberOfWordsInContextText = 5,
+    supportRevert = false,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
     this.menuSelected = 0;
     this.current = {};
+    this.lastReplacement = null;
     this.isActive = false;
     this.activationPending = false;
     this.menuContainer = menuContainer;
@@ -44,6 +46,7 @@ class Tribute {
     this.positionMenu = positionMenu;
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.numberOfWordsInContextText = numberOfWordsInContextText;
+    this.supportRevert = supportRevert;
     if (keys) {
       TributeEvents.keys = keys;
     }
@@ -528,6 +531,11 @@ class Tribute {
   }
 
   replaceText(content, originalEvent, item) {
+    if (this.supportRevert) {
+      this.lastReplacement = {...this.current};
+      this.lastReplacement.content = content;
+    }
+
     this.range.replaceTriggerText(content, originalEvent, item);
   }
 
