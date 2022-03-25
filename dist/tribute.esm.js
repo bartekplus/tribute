@@ -175,14 +175,18 @@ class TributeEvents {
     const keyCode = event.keyCode || event.which || event.code;
     if (keyCode) {
       return keyCode;
-    } else {
-      if (this.tribute.current.mentionTriggerChar)
-        return this.tribute.current.mentionTriggerChar.charCodeAt(0);
-      else if (this.tribute.current.mentionText)
-        return this.tribute.current.mentionText.charCodeAt(
-          this.tribute.current.mentionText.length - 1
-        );
     }
+    if (event instanceof InputEvent && event.data) {
+      return event.data.charCodeAt(event.data.length - 1);
+    }
+    if (this.tribute.current.mentionTriggerChar) {
+      return this.tribute.current.mentionTriggerChar.charCodeAt(0);
+    }
+    if (this.tribute.current.mentionText) {
+      return this.tribute.current.mentionText.charCodeAt(
+          this.tribute.current.mentionText.length - 1);
+    }
+
     return NaN;
   }
 
