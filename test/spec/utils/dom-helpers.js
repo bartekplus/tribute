@@ -27,7 +27,7 @@ export const fillIn = function(input, text) {
   input.focus();
   $(input).sendkeys(text);
   input.dispatchEvent(new KeyboardEvent('keydown'));
-  input.dispatchEvent(new KeyboardEvent('keyup'));
+  input.dispatchEvent(new Event('input', {bubbles:true}));
 }
 
 export const simulateMouseClick = function(targetNode) {
