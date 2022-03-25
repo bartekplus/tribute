@@ -1350,7 +1350,7 @@
         if (forceReplace) {
           // Do force replace - don't show menu
           this.current.mentionPosition -= forceReplace.length;
-          this.current.mentionText = " ".repeat(forceReplace.length) + this.current.mentionText;
+          this.current.mentionText = this.current.fullText.slice(-forceReplace.length);
           this.replaceText(forceReplace.text, null, null);
           return;
         }
