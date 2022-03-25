@@ -186,12 +186,15 @@
       return {
         Backspace: (e, _el) => {
           if (this.tribute.lastReplacement) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            this.tribute.current = { ...this.tribute.lastReplacement
-            };
-            this.tribute.current.mentionText = this.tribute.lastReplacement.content;
-            this.tribute.replaceText(this.tribute.lastReplacement.mentionText, e, null);
+            if (this.tribute.events.updateSelection(_el) && this.tribute.current.mentionPosition == this.tribute.lastReplacement.mentionPosition + this.tribute.lastReplacement.content.length) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              this.tribute.current = { ...this.tribute.lastReplacement
+              };
+              this.tribute.current.mentionText = this.tribute.lastReplacement.content;
+              this.tribute.replaceText(this.tribute.lastReplacement.mentionText, e, null);
+            }
+
             this.tribute.lastReplacement = null;
             this.tribute.current = {};
           }
