@@ -22,14 +22,14 @@
     "karma-chrome-launcher": "^3.1.1",
     "karma-coverage": "^2.2.0",
     "karma-jasmine": "4.0.2",
-    "karma-jasmine-html-reporter": "latest",
+    "karma-jasmine-html-reporter": "^2.0.0",
     "karma-spec-reporter": "^0.0.33",
     "puppeteer": "^13.5.2",
     "rollup": "^2.70.1",
     "rollup-plugin-eslint": "latest",
     "rollup-plugin-livereload": "latest",
     "rollup-plugin-sass": "^1.2.12",
-    "rollup-plugin-serve": "latest",
+    "rollup-plugin-serve": "^2.0.0",
     "rollup-plugin-terser": "latest",
     "watchify": "latest"
   },
@@ -47,7 +47,7 @@
   "license": "MIT",
   "dependencies": {
     "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "latest",
+    "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.6.1"
   }
 }

@@ -32,6 +32,7 @@ class Tribute {
     keys = null,
     numberOfWordsInContextText = 5,
     supportRevert = false,
+    selectByDigit = false,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -47,6 +48,7 @@ class Tribute {
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.numberOfWordsInContextText = numberOfWordsInContextText;
     this.supportRevert = supportRevert;
+    this.selectByDigit = selectByDigit;
     if (keys) {
       TributeEvents.keys = keys;
     }
@@ -411,6 +413,9 @@ class Tribute {
             li.classList.add(this.current.collection.selectClass);
           }
           li.innerHTML = this.current.collection.menuItemTemplate(item);
+          if (this.selectByDigit) {
+            li.innerHTML = ( (index +1 ) % 10).toString() + '. ' + li.innerHTML;
+          }
           fragment.appendChild(li);
         });
         ul.appendChild(fragment);

@@ -9,6 +9,10 @@ class TributeEvents {
     return ["Tab", "Enter", "Escape", "ArrowUp", "ArrowDown", "Backspace"];
   }
 
+  static digits() {
+    return ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0"]
+  }
+
   static modifiers() {
     return [
       "CapsLock",
@@ -72,6 +76,18 @@ class TributeEvents {
             return;
         }
       });
+      if (instance.tribute.selectByDigit) {
+        TributeEvents.digits().forEach((key, index) => {
+          if (key === event.code && instance.tribute.isActive) {
+            const count = instance.tribute.current.filteredItems.length;
+            if (index < count) {
+              instance.callbacks()['Digit'](event, index, this);
+              keyProcessed = true;
+              return;
+            }
+          }
+        });
+      }
     }
 
     if (!keyProcessed) {
@@ -229,6 +245,10 @@ class TributeEvents {
         }
         this.tribute.hideMenu();
       },
+      Digit: (e, digit, el) => {
+        this.setActiveLi(digit);
+        this.callbacks().Enter(e, el);
+     },
       Enter: (e, _el) => {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {
@@ -1274,6 +1294,7 @@ class Tribute {
     keys = null,
     numberOfWordsInContextText = 5,
     supportRevert = false,
+    selectByDigit = false,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -1289,6 +1310,7 @@ class Tribute {
     this.spaceSelectsMatch = spaceSelectsMatch;
     this.numberOfWordsInContextText = numberOfWordsInContextText;
     this.supportRevert = supportRevert;
+    this.selectByDigit = selectByDigit;
     if (keys) {
       TributeEvents.keys = keys;
     }
@@ -1653,6 +1675,9 @@ class Tribute {
             li.classList.add(this.current.collection.selectClass);
           }
           li.innerHTML = this.current.collection.menuItemTemplate(item);
+          if (this.selectByDigit) {
+            li.innerHTML = ( (index +1 ) % 10).toString() + '. ' + li.innerHTML;
+          }
           fragment.appendChild(li);
         });
         ul.appendChild(fragment);
