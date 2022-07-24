@@ -332,7 +332,7 @@ class Tribute {
       this.current.mentionText = "";
     }
 
-    const processValues = (values, forceReplace) => {
+    const processValues = (values, forceReplace, header=null) => {
       // Tribute may not be active any more by the time the value callback returns
       if (!this.activationPending) {
         return;
@@ -395,8 +395,13 @@ class Tribute {
           showMenu = true;
         }
       } else {
-        ul.innerHTML = "";
         const fragment = this.range.getDocument().createDocumentFragment();
+        ul.innerHTML = "";
+        if (header) {
+          const lh = this.range.getDocument().createElement("lh");
+          lh.innerHTML = header;
+          ul.appendChild(lh)
+        }
 
         items.forEach((item, index) => {
           const li = this.range.getDocument().createElement("li");

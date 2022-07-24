@@ -120,6 +120,8 @@ class TributeEvents {
       event.preventDefault();
       event.stopImmediatePropagation();
       while (li.nodeName.toLowerCase() !== "li") {
+        if (li.nodeName.toLowerCase() === "lh") return;
+        
         li = li.parentNode;
         if (!li || li === tribute.menu) {
           throw new Error("cannot find the <li> container for the click");
