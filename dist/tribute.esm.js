@@ -10,7 +10,7 @@ class TributeEvents {
   }
 
   static digits() {
-    return ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0"]
+    return ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
   }
 
   static modifiers() {
@@ -78,7 +78,7 @@ class TributeEvents {
       });
       if (instance.tribute.selectByDigit) {
         TributeEvents.digits().forEach((key, index) => {
-          if (key === event.code && instance.tribute.isActive) {
+          if (key === event.key && instance.tribute.isActive) {
             const count = instance.tribute.current.filteredItems.length;
             if (index < count) {
               instance.callbacks()['Digit'](event, index, this);
