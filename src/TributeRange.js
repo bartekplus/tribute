@@ -270,8 +270,6 @@ class TributeRange {
         const selectedElem = sel.anchorNode;
         const workingNodeContent = selectedElem.textContent;
         const selectStartOffset = sel.getRangeAt(0).startOffset;
-        const lastChar = workingNodeContent[Math.max(0, selectStartOffset - 1)];
-        let addWhiteSpace = lastChar && lastChar !== lastChar.trim();
         effectiveRange = sel.toString().trim();
         nextChar =
           workingNodeContent.length > selectStartOffset
@@ -294,8 +292,6 @@ class TributeRange {
             effectiveRange = newText;
           }
         }
-        addWhiteSpace = addWhiteSpace && effectiveRange === effectiveRange.trimEnd();
-        effectiveRange += addWhiteSpace ? " " : "";
 
         this.restoreSelection(sel, range, direction);
       }
