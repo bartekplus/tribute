@@ -84,7 +84,7 @@ class TributeRange {
         context.mentionPosition +
         context.mentionText.length +
         textSuffix.length;
-      if (!this.tribute.autocompleteMode) {
+      if (!this.tribute.autocompleteMode && context.mentionTriggerChar.length) {
         endPos += context.mentionTriggerChar.length - 1;
       }
       myField.value =

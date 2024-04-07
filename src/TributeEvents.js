@@ -176,16 +176,15 @@ class TributeEvents {
         return item.trigger === trigger;
       });
       if (!collection) return;
-      if (
-        collection.menuShowMinLength >
-        instance.tribute.current.mentionText.length
-      )
-        return;
       instance.tribute.current.collection = collection;
     } else {
       instance.tribute.current.collection = instance.tribute.collection[0];
     }
-
+    if (
+      instance.tribute.current.collection.menuShowMinLength >
+      instance.tribute.current.mentionText.length
+    )
+    return;
     instance.tribute.showMenuFor(this, true);
   }
 
