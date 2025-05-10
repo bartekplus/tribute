@@ -5,7 +5,7 @@ import terser from '@rollup/plugin-terser';
 import sass from "rollup-plugin-sass";
 import serve from "rollup-plugin-serve";
 import livereload from "rollup-plugin-livereload";
-import pkg from "./package.json" assert { type: "json" };
+import pkg from "./package.json" with { type: "json" };
 import { writeFileSync } from "fs";
 
 /* global process */
