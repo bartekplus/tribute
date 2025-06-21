@@ -1222,7 +1222,7 @@
           // Do force replace - don't show menu
           this.current.mentionPosition -= forceReplace.length;
           this.current.mentionText = this.current.fullText.slice(-forceReplace.length);
-          this.replaceText(forceReplace.text, null, null);
+          this.replaceText(forceReplace, null, null);
           return;
         }
         let items = this.search.filter(this.current.mentionText, values, {
