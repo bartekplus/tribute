@@ -434,8 +434,19 @@
       div.style.fontStyle = computedStyle.fontStyle;
       div.style.fontVariant = computedStyle.fontVariant;
       div.style.letterSpacing = computedStyle.letterSpacing;
+      div.style.wordSpacing = computedStyle.wordSpacing;
       div.style.textTransform = computedStyle.textTransform;
       div.style.lineHeight = computedStyle.lineHeight;
+      div.style.direction = computedStyle.direction;
+
+      // Preserve font feature settings and rendering for subpixel matching
+      div.style.fontFeatureSettings = computedStyle.fontFeatureSettings;
+      div.style.fontKerning = computedStyle.fontKerning;
+      div.style.textAlign = computedStyle.textAlign;
+
+      // Preserve OS-level font smoothing (often causes mismatches if missing, especially on macOS)
+      div.style.WebkitFontSmoothing = computedStyle.WebkitFontSmoothing;
+      div.style.MozOsxFontSmoothing = computedStyle.MozOsxFontSmoothing;
       if (coordinates.maxWidth) {
         div.style.maxWidth = coordinates.maxWidth + "px";
       }
