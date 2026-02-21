@@ -29,13 +29,10 @@ class TributeEvents {
 
   bind(element) {
     const KEY_EVENT_TIMEOUT_MS = 32;
-    element.boundKeyDown = this.tribute.debounce(
-      this.keydown.bind(element, this),
-      KEY_EVENT_TIMEOUT_MS
-    );
+    element.boundKeyDown = this.keydown.bind(element, this);
     element.boundKeyUpInput = this.tribute.debounce(
       this.input.bind(element, this),
-      KEY_EVENT_TIMEOUT_MS
+      this.tribute.inputDebounce || KEY_EVENT_TIMEOUT_MS
     );
 
     element.addEventListener("keydown", element.boundKeyDown, true);
@@ -56,6 +53,41 @@ class TributeEvents {
     let controlKeyPressed = false;
     let keyProcessed = false;
 
+    const isTab =
+      event.code === "Tab" || event.key === "Tab" || event.keyCode === 9;
+    const inlineElement =
+      instance.tribute.current.inlineSuggestion ||
+      instance.tribute.range
+        .getDocument()
+        .querySelector(".tribute-inline");
+    if (isTab && inlineElement) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      instance.tribute.current.inlineSuggestion = inlineElement;
+      instance.tribute.range.hideInlineSuggestion();
+      instance.tribute.current.element = this;
+      if (
+        !instance.tribute.current.mentionTriggerChar &&
+        instance.tribute.current.collection
+      ) {
+        instance.tribute.current.mentionTriggerChar =
+          instance.tribute.current.collection.trigger || "";
+      }
+      const item = instance.tribute.current.inlineSuggestionItem;
+      if (item) {
+        const content = instance.tribute.current.collection.selectTemplate(item);
+        if (content !== null) {
+          setTimeout(() => {
+            instance.tribute.replaceText(content, event, item);
+            instance.tribute.hideMenu();
+          }, 0);
+          return; /* return early to avoid hiding menu too early */
+        }
+      }
+      instance.tribute.hideMenu();
+      return;
+    }
+
     if (event instanceof KeyboardEvent) {
       TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
@@ -71,11 +103,12 @@ class TributeEvents {
           key === event.code &&
           // Special handling of Backspace
           (instance.tribute.isActive || event.code == "Backspace")) {
-            instance.callbacks()[key](event, this);
-            keyProcessed = true;
-            return;
+          instance.callbacks()[key](event, this);
+          keyProcessed = true;
+          return;
         }
       });
+
       if (instance.tribute.selectByDigit) {
         TributeEvents.digits().forEach((key, index) => {
           if (key === event.key && instance.tribute.isActive) {
@@ -109,7 +142,7 @@ class TributeEvents {
     if (iEvent && !iEventHandle) {
       return;
     }
-    
+
     instance.keyup.call(this, instance, event);
   }
 
@@ -121,7 +154,7 @@ class TributeEvents {
       event.stopImmediatePropagation();
       while (li.nodeName.toLowerCase() !== "li") {
         if (li.nodeName.toLowerCase() === "lh") return;
-        
+
         li = li.parentNode;
         if (!li || li === tribute.menu) {
           throw new Error("cannot find the <li> container for the click");
@@ -159,7 +192,9 @@ class TributeEvents {
       if (controlKeyPressed) return;
     }
 
-    if (!instance.updateSelection(this)) return;
+    if (!instance.updateSelection(this)) {
+      return;
+    }
 
     const keyCode = instance.getKeyCode(event);
     // Exit if no keyCode
@@ -171,20 +206,22 @@ class TributeEvents {
       const trigger = instance.tribute.triggers().find((trigger) => {
         return trigger.charCodeAt(0) === keyCode;
       });
-      if (!trigger) return;
-      const collection = instance.tribute.collection.find((item) => {
-        return item.trigger === trigger;
-      });
-      if (!collection) return;
-      instance.tribute.current.collection = collection;
+
+      if (instance.tribute.isActive) {
+        // already active, so just update
+      } else if (trigger) {
+        // not active, but we found a trigger
+        instance.tribute.current.collection = instance.tribute.collection.find((item) => {
+          return item.trigger === trigger;
+        });
+      } else {
+        // not active and not a trigger
+        return;
+      }
     } else {
       instance.tribute.current.collection = instance.tribute.collection[0];
     }
-    if (
-      instance.tribute.current.collection.menuShowMinLength >
-      instance.tribute.current.mentionText.length
-    )
-    return;
+
     instance.tribute.showMenuFor(this, true);
   }
 
@@ -201,7 +238,7 @@ class TributeEvents {
     }
     if (this.tribute.current.mentionText) {
       return this.tribute.current.mentionText.charCodeAt(
-          this.tribute.current.mentionText.length - 1);
+        this.tribute.current.mentionText.length - 1);
     }
 
     return NaN;
@@ -213,6 +250,7 @@ class TributeEvents {
       this.tribute.allowSpaces,
       this.tribute.autocompleteMode
     );
+
 
     if (info) {
       this.tribute.current.mentionTriggerChar = info.mentionTriggerChar;
@@ -231,13 +269,13 @@ class TributeEvents {
       Backspace: (e, _el) => {
         if (this.tribute.lastReplacement) {
           if (this.tribute.events.updateSelection(_el) &&
-             (this.tribute.current.mentionPosition + this.tribute.current.mentionText.length) ==
+            (this.tribute.current.mentionPosition + this.tribute.current.mentionText.length) ==
             (this.tribute.lastReplacement.mentionPosition + this.tribute.lastReplacement.content.length)) {
             e.preventDefault();
             e.stopImmediatePropagation();
             const addSpace = false;//this.tribute.lastReplacement.content !== this.tribute.lastReplacement.content.trimEnd();
 
-            this.tribute.current = {...this.tribute.lastReplacement};
+            this.tribute.current = { ...this.tribute.lastReplacement };
             this.tribute.current.mentionText = this.tribute.lastReplacement.content;
             this.tribute.replaceText(this.tribute.lastReplacement.mentionText + (addSpace ? " " : ""), e, null);
           }
@@ -249,7 +287,7 @@ class TributeEvents {
       Digit: (e, digit, el) => {
         this.setActiveLi(digit);
         this.callbacks().Enter(e, el);
-     },
+      },
       Enter: (e, _el) => {
         // choose selection
         if (this.tribute.isActive && this.tribute.current.filteredItems) {

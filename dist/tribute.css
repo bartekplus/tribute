@@ -38,3 +38,8 @@
 .tribute-container .menu-highlighted {
   font-weight: bold;
 }
+
+.tribute-inline {
+  pointer-events: none;
+  white-space: pre-wrap;
+}
