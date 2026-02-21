@@ -517,7 +517,9 @@
         event: originalEvent,
         text: text
       };
-      const replaceEvent = new CustomEvent("tribute-replaced");
+      const replaceEvent = new CustomEvent("tribute-replaced", {
+        detail: detail
+      });
       if (!this.isContentEditable(context.element)) {
         const myField = this.tribute.current.element;
         const textSuffix = typeof this.tribute.replaceTextSuffix === "string" ? this.tribute.replaceTextSuffix : " ";
