@@ -45,7 +45,7 @@ class TributeRange {
     this.tribute.menu.style.left = `${coordinates.left}px`;
     this.tribute.menu.style.right = `${coordinates.right}px`;
     this.tribute.menu.style.bottom = `${coordinates.bottom}px`;
-    this.tribute.menu.style["max-heigh"] = `${coordinates.maxHeight || 500}px`;
+    this.tribute.menu.style["max-height"] = `${coordinates.maxHeight || 500}px`;
     this.tribute.menu.style["max-width"] = `${coordinates.maxWidth || 300}px`;
     this.tribute.menu.style.position = `${coordinates.position || "absolute"}`;
     this.tribute.menu.style.display = `block`;
@@ -61,8 +61,106 @@ class TributeRange {
     if (scrollTo) this.scrollIntoView();
   }
 
+  showInlineSuggestion(text) {
+    const context = this.tribute.current;
+    this.hideInlineSuggestion();
+
+    const isContentEditable = this.isContentEditable(context.element);
+    const coordinates = isContentEditable
+      ? this.getContentEditableInlinePosition()
+      : this.getTextAreaOrInputUnderlinePosition(
+          context.element,
+          context.mentionPosition + context.mentionText.length
+        );
+    if (!coordinates) {
+      return;
+    }
+
+    let div = this.getDocument().createElement("div");
+    div.className = "tribute-inline";
+    div.innerText = text;
+
+    // Calculate dynamic color
+    const computedStyle = getComputedStyle(context.element);
+    div.style.color = computedStyle.color;
+    div.style.opacity = 0.5;
+
+    div.style.position = "fixed";
+    div.style.left = coordinates.left + "px";
+    const inlineTop =
+      typeof coordinates.height === "number"
+        ? coordinates.top - coordinates.height
+        : coordinates.top;
+    div.style.top = inlineTop + "px"; // Align with text baseline
+    div.style.pointerEvents = "none";
+    div.style.whiteSpace = "pre-wrap";
+    div.style.zIndex = 10000;
+    div.style.font = computedStyle.font;
+    div.style.lineHeight = computedStyle.lineHeight;
+
+    if (coordinates.maxWidth) {
+      div.style.maxWidth = coordinates.maxWidth + "px";
+    }
+
+    this.getDocument().body.appendChild(div);
+    this.tribute.current.inlineSuggestion = div;
+  }
+
+  getContentEditableInlinePosition() {
+    const selection = this.getWindowSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+
+    const originalRange = selection.getRangeAt(0).cloneRange();
+    let rect = originalRange.getBoundingClientRect();
+
+    if (!rect || rect.height === 0) {
+      const marker = this.getDocument().createTextNode("\u200b");
+      originalRange.insertNode(marker);
+      rect = marker.getBoundingClientRect();
+      if (marker.parentNode) {
+        marker.parentNode.removeChild(marker);
+      }
+      selection.removeAllRanges();
+      selection.addRange(originalRange);
+    }
+
+    if (!rect) return null;
+
+    const computedStyle = getComputedStyle(this.tribute.current.element);
+    const fontSize = parseFloat(computedStyle.fontSize) || 0;
+    let lineHeight = parseFloat(computedStyle.lineHeight);
+    if (!lineHeight || Number.isNaN(lineHeight)) {
+      lineHeight = fontSize ? fontSize * 1.2 : 0;
+    }
+    const height = Math.max(rect.height || 0, lineHeight || 0);
+    const top = rect.top - Math.max(0, height - (rect.height || 0)) / 2;
+    const elementRect = this.tribute.current.element.getBoundingClientRect();
+    const maxWidth = Math.max(0, elementRect.right - rect.left);
+
+    return {
+      position: "fixed",
+      left: rect.left,
+      top: top + height,
+      height,
+      maxWidth,
+    };
+  }
+
+  hideInlineSuggestion() {
+    const inlineSuggestion = this.tribute.current.inlineSuggestion;
+    if (inlineSuggestion && inlineSuggestion.parentNode) {
+      inlineSuggestion.parentNode.removeChild(inlineSuggestion);
+    }
+    this.tribute.current.inlineSuggestion = null;
+    const leftovers = this.getDocument().querySelectorAll(".tribute-inline");
+    leftovers.forEach((node) => {
+      if (node.parentNode) node.parentNode.removeChild(node);
+    });
+  }
+
   replaceTriggerText(text, originalEvent, item) {
     const context = this.tribute.current;
+    this.hideInlineSuggestion();
     const detail = {
       item: item,
       context: context,
@@ -94,26 +192,11 @@ class TributeRange {
       myField.selectionStart = startPos + text.length;
       myField.selectionEnd = startPos + text.length;
     } else {
-      const {
-        sel,
-        range
-      } = this.getContentEditableSelectionStart(true);
-      const staticRange = new StaticRange({startContainer: sel.anchorNode, startOffset: sel.anchorOffset - context.mentionText.length, endContainer: sel.anchorNode, endOffset: sel.anchorOffset });
       const textSuffix =
         typeof this.tribute.replaceTextSuffix === "string"
           ? this.tribute.replaceTextSuffix
           : "\xA0";
       text += textSuffix;
-
-      context.element.dispatchEvent(new InputEvent("beforeinput", {
-        bubbles: true,
-        data: text,
-        cancelable: true,
-        inputType: "insertReplacementText",
-        targetRanges: [staticRange],
-
-      }));
-
       this.pasteContentEditable(
         text,
         context.mentionText.length + context.mentionTriggerChar.length
@@ -128,13 +211,14 @@ class TributeRange {
 
   pasteContentEditable(html, numOfCharsToRemove) {
     const { sel, range } = this.getContentEditableSelectionStart(true);
-    if (sel) {
+    if (sel && sel.anchorNode) {
       const strippedText = this.stripHtml(html);
       const isHTML = html !== strippedText;
+      const anchorNodeValue = sel.anchorNode.nodeValue || "";
       const useSimpleReplace =
         !isHTML &&
         sel.anchorOffset >= numOfCharsToRemove &&
-        sel.anchorOffset <= sel.anchorNode.nodeValue.length;
+        sel.anchorOffset <= anchorNodeValue.length;
       if (useSimpleReplace) {
         this.pasteText(sel, range, strippedText, numOfCharsToRemove);
       } else {
@@ -161,11 +245,19 @@ class TributeRange {
   }
 
   pasteHtml(sel, _range, html, numOfCharsToRemove) {
-    for (let index = 0; index < numOfCharsToRemove; index++) {
-      sel.modify("extend", "backward", "character");
+    const range = sel.getRangeAt(0);
+    let newRange;
+    if (range.startContainer.nodeType === 3 && range.startOffset >= numOfCharsToRemove) {
+      range.setStart(range.startContainer, range.startOffset - numOfCharsToRemove);
+      range.deleteContents();
+      newRange = range;
+    } else {
+      for (let index = 0; index < numOfCharsToRemove; index++) {
+        sel.modify("extend", "backward", "character");
+      }
+      newRange = sel.getRangeAt(0);
+      newRange.deleteContents();
     }
-    const newRange = sel.getRangeAt(0);
-    newRange.deleteContents();
 
     const el = this.getDocument().createElement("div");
     el.innerHTML = html;
@@ -211,8 +303,27 @@ class TributeRange {
     }
     const direction = sel.anchorOffset <= sel.focusOffset;
     const range = sel.getRangeAt(0);
-    const selectedElem = sel.anchorNode;
-    const workingNodeContent = selectedElem.textContent;
+    let selectedElem = sel.anchorNode;
+
+    if (selectedElem && selectedElem.nodeType !== 3) {
+      const childNodes = selectedElem.childNodes;
+      if (childNodes && childNodes.length) {
+        const fallbackIndex = Math.max(
+          0,
+          Math.min(range.startOffset - 1, childNodes.length - 1)
+        );
+        const textNode = childNodes[fallbackIndex];
+        if (textNode && textNode.nodeType === 3) {
+          range.setStart(textNode, textNode.textContent.length);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          selectedElem = textNode;
+        }
+      }
+    }
+
+    const workingNodeContent = selectedElem.textContent || "";
     const selectStartOffset = range.startOffset;
     let nextChar =
       workingNodeContent.length > selectStartOffset
@@ -320,6 +431,9 @@ class TributeRange {
       const wordsArray = text.split(this.tribute.autocompleteSeparator);
       if (!wordsArray.length) return " ";
       return wordsArray[wordsArray.length - 1];
+    } else if (this.tribute.autocompleteMode) {
+      const wordsArray = text.split(/\s+/);
+      return wordsArray.length ? wordsArray[wordsArray.length - 1] : "";
     }
     return text;
   }
@@ -563,15 +677,28 @@ class TributeRange {
     div.scrollTop = element.scrollTop;
 
     const spanRect = span.getBoundingClientRect();
+    const span2Rect = span2.getBoundingClientRect();
     const divRect = div.getBoundingClientRect();
+    const fontSize = parseFloat(computed.fontSize) || 0;
+    let lineHeight = parseFloat(computed.lineHeight);
+    if (!lineHeight || Number.isNaN(lineHeight)) {
+      lineHeight = fontSize ? fontSize * 1.2 : 0;
+    }
+    const fallbackHeight = lineHeight || fontSize || divRect.height;
+    const glyphRect =
+      span2.textContent && span2Rect.height ? span2Rect : spanRect;
+    const glyphHeight = glyphRect.height || fallbackHeight;
+    const lineBoxHeight = Math.max(glyphHeight, fallbackHeight);
+    const extraLeading = Math.max(0, lineBoxHeight - glyphHeight);
+    const lineBoxTop = glyphRect.top - extraLeading / 2;
     this.getDocument().body.removeChild(div);
     const clamp = function (number, min, max) {
       return Math.max(min, Math.min(number, max));
     };
     const finalRect = {
-      height: Math.min(divRect.height, spanRect.height),
+      height: Math.min(divRect.height, lineBoxHeight),
       left: clamp(spanRect.left, divRect.left, divRect.left + divRect.width),
-      top: clamp(spanRect.top, divRect.top, divRect.top + divRect.height),
+      top: clamp(lineBoxTop, divRect.top, divRect.top + divRect.height),
     };
     return this.getFixedCoordinatesRelativeToRect(finalRect);
   }
@@ -605,11 +732,14 @@ class TributeRange {
     return this.getFixedCoordinatesRelativeToRect(rect);
   }
 
+
   getFixedCoordinatesRelativeToRect(rect) {
     const coordinates = {
       position: "fixed",
       left: rect.left,
       top: rect.top + rect.height,
+      height: rect.height,
+      width: rect.width,
     };
 
     const menuDimensions = this.getMenuDimensions();

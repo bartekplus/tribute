@@ -85,6 +85,9 @@ export type TributeCollection<T extends {}> = {
 
   // specify if the current match should be selected when the spacebar is hit
   spaceSelectsMatch?: boolean;
+
+  // show inline (ghost text) suggestion and disable the menu
+  inline?: boolean;
 };
 
 export type TributeOptions<T> =

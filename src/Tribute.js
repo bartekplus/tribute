@@ -33,6 +33,7 @@ class Tribute {
     numberOfWordsInContextText = 5,
     supportRevert = false,
     selectByDigit = false,
+    inline = false,
   }) {
     this.autocompleteMode = autocompleteMode;
     this.autocompleteSeparator = autocompleteSeparator;
@@ -49,6 +50,7 @@ class Tribute {
     this.numberOfWordsInContextText = numberOfWordsInContextText;
     this.supportRevert = supportRevert;
     this.selectByDigit = selectByDigit;
+    this.inline = inline;
     if (keys) {
       TributeEvents.keys = keys;
     }
@@ -123,6 +125,7 @@ class Tribute {
           menuItemLimit: menuItemLimit,
 
           menuShowMinLength: menuShowMinLength,
+          inline: inline,
         },
       ];
     } else if (collection) {
@@ -168,6 +171,7 @@ class Tribute {
           searchOpts: item.searchOpts || searchOpts,
           menuItemLimit: item.menuItemLimit || menuItemLimit,
           menuShowMinLength: item.menuShowMinLength || menuShowMinLength,
+          inline: item.inline !== undefined ? item.inline : inline,
         };
       });
     } else {
@@ -187,9 +191,9 @@ class Tribute {
   set isActive(val) {
     if (this._isActive !== val) {
       this._isActive = val;
-      if (this.current.element) {
-        const noMatchEvent = new CustomEvent(`tribute-active-${val}`);
-        this.current.element.dispatchEvent(noMatchEvent);
+      if (this.current && this.current.element) {
+        const activeEvent = new CustomEvent(`tribute-active-${val}`);
+        this.current.element.dispatchEvent(activeEvent);
       }
     }
   }
@@ -305,7 +309,6 @@ class Tribute {
   }
 
   showMenuFor(element, scrollTo) {
-    // Only proceed if menu isn't already shown for the current element & mentionText
     if (
       this.isActive &&
       this.current.element === element &&
@@ -313,6 +316,7 @@ class Tribute {
     ) {
       return;
     }
+    this.current.element = element;
     this.currentMentionTextSnapshot = this.current.mentionText;
 
     // create the menu if it doesn't exist.
@@ -332,7 +336,7 @@ class Tribute {
       this.current.mentionText = "";
     }
 
-    const processValues = (values, forceReplace, header=null) => {
+    const processValues = (values, forceReplace, header = null) => {
       // Tribute may not be active any more by the time the value callback returns
       if (!this.activationPending) {
         return;
@@ -374,27 +378,155 @@ class Tribute {
 
       this.current.filteredItems = items;
 
+      const inlineConfig = this.current.collection.inline;
+      const inlineEnabled = inlineConfig === true;
+      let inlineShown = false;
+
       const ul = this.menu.querySelector("ul");
       let showMenu = false;
 
       if (!items.length) {
+        this.range.hideInlineSuggestion();
+        this.current.inlineSuggestionItem = null;
+        this.current.inlineSuggestionText = null;
         const noMatchEvent = new CustomEvent("tribute-no-match", {
           detail: this.menu,
         });
         this.current.element.dispatchEvent(noMatchEvent);
-        if (
-          (typeof this.current.collection.noMatchTemplate === "function" &&
-            !this.current.collection.noMatchTemplate()) ||
-          !this.current.collection.noMatchTemplate
-        ) {
+        if (inlineEnabled) {
           showMenu = false;
         } else {
-          typeof this.current.collection.noMatchTemplate === "function"
-            ? (ul.innerHTML = this.current.collection.noMatchTemplate())
-            : (ul.innerHTML = this.current.collection.noMatchTemplate);
-          showMenu = true;
+          if (
+            (typeof this.current.collection.noMatchTemplate === "function" &&
+              !this.current.collection.noMatchTemplate()) ||
+            !this.current.collection.noMatchTemplate
+          ) {
+            showMenu = false;
+          } else {
+            typeof this.current.collection.noMatchTemplate === "function"
+              ? (ul.innerHTML = this.current.collection.noMatchTemplate())
+              : (ul.innerHTML = this.current.collection.noMatchTemplate);
+            showMenu = true;
+          }
         }
       } else {
+        if (inlineEnabled) {
+          this.range.hideInlineSuggestion();
+          if (this.current.element) {
+            this.events.updateSelection(this.current.element);
+          }
+          let mentionTextForMatch = this.current.mentionText || "";
+          const triggerForMatch =
+            this.current.mentionTriggerChar ||
+            (this.current.collection && this.current.collection.trigger) ||
+            "";
+          if (this.current.element) {
+            let fullTextForMatch = null;
+            if (!this.range.isContentEditable(this.current.element)) {
+              const elementValue = this.current.element.value || "";
+              const selectionStart = this.current.element.selectionStart;
+              fullTextForMatch =
+                typeof selectionStart === "number"
+                  ? elementValue.substring(0, selectionStart)
+                  : elementValue;
+            } else {
+              const selection = this.range.getContentEditableSelectionStart(false);
+              if (selection && selection.range) {
+                const preRange = selection.range.cloneRange();
+                preRange.selectNodeContents(this.current.element);
+                preRange.setEnd(
+                  selection.range.startContainer,
+                  selection.range.startOffset
+                );
+                fullTextForMatch = preRange.toString();
+              } else {
+                fullTextForMatch =
+                  this.current.element.textContent ||
+                  this.current.fullText ||
+                  "";
+              }
+            }
+            let matchedTrigger = triggerForMatch;
+            let start =
+              matchedTrigger && fullTextForMatch
+                ? fullTextForMatch.lastIndexOf(matchedTrigger)
+                : -1;
+            if (start < 0) {
+              let lastTriggerIndex = -1;
+              let lastTrigger = "";
+              this.collection.forEach((config) => {
+                if (!config.trigger) return;
+                const idx =
+                  fullTextForMatch && config.trigger
+                    ? fullTextForMatch.lastIndexOf(config.trigger)
+                    : -1;
+                if (idx > lastTriggerIndex) {
+                  lastTriggerIndex = idx;
+                  lastTrigger = config.trigger;
+                }
+              });
+              if (lastTriggerIndex >= 0) {
+                matchedTrigger = lastTrigger;
+                start = lastTriggerIndex;
+              }
+            }
+            if (start >= 0 && matchedTrigger) {
+              const candidate = fullTextForMatch.substring(
+                start + matchedTrigger.length
+              );
+              if (candidate.length || !mentionTextForMatch) {
+                mentionTextForMatch = candidate;
+                this.current.mentionPosition = start;
+                this.current.mentionTriggerChar = matchedTrigger;
+              }
+            }
+          }
+          if (mentionTextForMatch !== this.current.mentionText) {
+            this.current.mentionText = mentionTextForMatch;
+          }
+          const firstMatch = items[0];
+          if (firstMatch) {
+            let text =
+              firstMatch.original[this.current.collection.fillAttr || "value"];
+            if (!text) {
+              text = this.current.collection.menuItemTemplate(firstMatch);
+            }
+            if (
+              text
+                .toLowerCase()
+                .startsWith(mentionTextForMatch.toLowerCase())
+            ) {
+              const suffix = text.substring(mentionTextForMatch.length);
+              if (suffix) {
+                this.range.showInlineSuggestion(suffix);
+                inlineShown = true;
+                this.current.inlineSuggestionText = text;
+                this.current.inlineSuggestionItem = firstMatch;
+              } else {
+                this.range.hideInlineSuggestion();
+              }
+            } else {
+              this.range.hideInlineSuggestion();
+            }
+          } else {
+            this.range.hideInlineSuggestion();
+          }
+
+          if (!inlineShown) {
+            this.current.inlineSuggestionItem = null;
+            this.current.inlineSuggestionText = null;
+          }
+          if (this.menu) {
+            this.menu.style.display = "none";
+          }
+          this.isActive = inlineShown;
+          return;
+        } else {
+          this.range.hideInlineSuggestion();
+          this.current.inlineSuggestionItem = null;
+          this.current.inlineSuggestionText = null;
+        }
+
         const fragment = this.range.getDocument().createDocumentFragment();
         ul.innerHTML = "";
         if (header) {
@@ -419,7 +551,7 @@ class Tribute {
           }
           li.innerHTML = this.current.collection.menuItemTemplate(item);
           if (this.selectByDigit) {
-            li.innerHTML = ( (index +1 ) % 10).toString() + '. ' + li.innerHTML;
+            li.innerHTML = ((index + 1) % 10).toString() + '. ' + li.innerHTML;
           }
           fragment.appendChild(li);
         });
@@ -429,6 +561,9 @@ class Tribute {
       if (showMenu) {
         this.isActive = true;
         this.range.positionMenuAtCaret(scrollTo);
+      } else if (this.isActive) {
+        this.isActive = false;
+        this.hideMenu();
       }
     };
 
@@ -460,7 +595,6 @@ class Tribute {
     }
 
     this.current.collection = this.collection[collectionIndex || 0];
-    this.current.element = element;
 
     this.showMenuFor(element);
   }
@@ -524,6 +658,7 @@ class Tribute {
       this.menu.remove();
       this.menu = null;
     }
+    this.range.hideInlineSuggestion();
     this.isActive = false;
     this.activationPending = false;
     this.current = {};
@@ -541,7 +676,7 @@ class Tribute {
 
   replaceText(content, originalEvent, item) {
     if (this.supportRevert) {
-      this.lastReplacement = {...this.current};
+      this.lastReplacement = { ...this.current };
       this.lastReplacement.content = content;
     }
 
