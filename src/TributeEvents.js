@@ -77,11 +77,7 @@ class TributeEvents {
       if (item) {
         const content = instance.tribute.current.collection.selectTemplate(item);
         if (content !== null) {
-          setTimeout(() => {
-            instance.tribute.replaceText(content, event, item);
-            instance.tribute.hideMenu();
-          }, 0);
-          return; /* return early to avoid hiding menu too early */
+          instance.tribute.replaceText(content, event, item);
         }
       }
       instance.tribute.hideMenu();
