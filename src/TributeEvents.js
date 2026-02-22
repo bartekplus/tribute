@@ -221,7 +221,11 @@ class TributeEvents {
     } else {
       instance.tribute.current.collection = instance.tribute.collection[0];
     }
-
+    const minLength = instance.tribute.current.collection.menuShowMinLength;
+    if (instance.tribute.current.mentionText.length < minLength) {
+      instance.tribute.hideMenu();
+      return;
+    }
     instance.tribute.showMenuFor(this, true);
   }
 
