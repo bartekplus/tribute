@@ -2,6 +2,8 @@ export const createDomElement = function(element = 'text') {
   let elementToCreate = 'input';
   if (element === 'contenteditable') {
     elementToCreate = 'div';
+  } else if (element === 'textarea') {
+    elementToCreate = 'textarea';
   }
   let wrapperDiv = document.createElement('div');
   wrapperDiv.id = 'tribute-wrapper-div';

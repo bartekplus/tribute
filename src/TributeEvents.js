@@ -27,6 +27,14 @@ class TributeEvents {
     ];
   }
 
+  static isSpaceKey(event) {
+    return event.code === "Space" || event.key === " " || event.key === "Spacebar" || event.key === "Space";
+  }
+
+  static isTextInputKey(event) {
+    return TributeEvents.isSpaceKey(event) || (event.key && event.key.length === 1);
+  }
+
   bind(element) {
     const KEY_EVENT_TIMEOUT_MS = 32;
     element.boundKeyDown = this.keydown.bind(element, this);
@@ -52,6 +60,14 @@ class TributeEvents {
   keydown(instance, event) {
     let controlKeyPressed = false;
     let keyProcessed = false;
+    instance.tribute.lastKeydownEvent = {
+      key: event.key,
+      code: event.code,
+      keyCode: event.keyCode,
+      which: event.which,
+      handled: false,
+      defaultPrevented: false,
+    };
 
     const isTab =
       event.code === "Tab" || event.key === "Tab" || event.keyCode === 9;
@@ -81,6 +97,8 @@ class TributeEvents {
         }
       }
       instance.tribute.hideMenu();
+      instance.tribute.lastKeydownEvent.handled = true;
+      instance.tribute.lastKeydownEvent.defaultPrevented = event.defaultPrevented;
       return;
     }
 
@@ -123,6 +141,9 @@ class TributeEvents {
       instance.tribute.lastReplacement = null;
       instance.tribute.hideMenu();
     }
+
+    instance.tribute.lastKeydownEvent.handled = keyProcessed;
+    instance.tribute.lastKeydownEvent.defaultPrevented = event.defaultPrevented;
   }
 
   input(instance, event) {
@@ -166,11 +187,6 @@ class TributeEvents {
   keyup(instance, event) {
     // Check for modifiers keys
     if (event instanceof KeyboardEvent) {
-      if (event.key && event.key.length > 1) {
-        // Not a Character exit early
-        return;
-      }
-
       let controlKeyPressed = false;
       TributeEvents.modifiers().forEach((o) => {
         if (event.getModifierState(o)) {
@@ -179,26 +195,50 @@ class TributeEvents {
         }
       });
       // Check for control keys
+      const lastKeydownEvent = instance.tribute.lastKeydownEvent;
+      const keydownHandled =
+        lastKeydownEvent &&
+        lastKeydownEvent.handled &&
+        (lastKeydownEvent.code === event.code ||
+          lastKeydownEvent.key === event.key ||
+          (event.keyCode && lastKeydownEvent.keyCode === event.keyCode) ||
+          (event.which && lastKeydownEvent.which === event.which));
+      const keydownPrevented =
+        keydownHandled &&
+        lastKeydownEvent.defaultPrevented;
+
       TributeEvents.keys().forEach((key) => {
-        if (key === event.code) {
-          controlKeyPressed = true;
+        if (key === event.code || key === event.key) {
+          if (!instance.tribute.autocompleteMode) {
+            controlKeyPressed = true;
+            return;
+          }
+
+          if (keydownPrevented || !TributeEvents.isTextInputKey(event)) {
+            controlKeyPressed = true;
+          }
           return;
         }
       });
       if (controlKeyPressed) return;
+
+      if (!instance.tribute.autocompleteMode && event.key && event.key.length > 1) {
+        // Not a Character exit early
+        return;
+      }
     }
 
     if (!instance.updateSelection(this)) {
       return;
     }
 
-    const keyCode = instance.getKeyCode(event);
-    // Exit if no keyCode
-    if (isNaN(keyCode)) {
-      return;
-    }
-
     if (!instance.tribute.autocompleteMode) {
+      const keyCode = instance.getKeyCode(event);
+      // Exit if no keyCode
+      if (isNaN(keyCode)) {
+        return;
+      }
+
       const trigger = instance.tribute.triggers().find((trigger) => {
         return trigger.charCodeAt(0) === keyCode;
       });
